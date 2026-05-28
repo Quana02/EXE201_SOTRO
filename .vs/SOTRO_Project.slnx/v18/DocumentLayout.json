@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "D:\\PRN232\\SOTRO_Project\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|d:\\prn232\\sotro_project\\sotro_project\\components\\pages\\nhatro.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|solutionrelative:sotro_project\\components\\pages\\nhatro.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|d:\\prn232\\sotro_project\\sotro_project\\components\\pages\\dangnhap.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|solutionrelative:sotro_project\\components\\pages\\dangnhap.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -63,10 +67,6 @@
       "RelativeMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|solutionrelative:sotro_project\\components\\pages\\suaphong.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|d:\\prn232\\sotro_project\\sotro_project\\components\\pages\\nhatro.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|solutionrelative:sotro_project\\components\\pages\\nhatro.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|d:\\prn232\\sotro_project\\sotro_project\\components\\pages\\xacminhemail.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{E9C8A0BE-585C-738A-CD47-2AD005A4D3F6}|SOTRO_Project\\SOTRO_Project.csproj|solutionrelative:sotro_project\\components\\pages\\xacminhemail.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -122,7 +122,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 226,
+          "SelectedChildIndex": 220,
           "Children": [
             {
               "$type": "Bookmark",
@@ -954,7 +954,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "CaiDat.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\CaiDat.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\CaiDat.razor",
@@ -962,12 +962,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\CaiDat.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T16:16:02.644Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T16:16:02.644Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "ThemNguoiThue.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\ThemNguoiThue.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\ThemNguoiThue.razor",
@@ -975,12 +974,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\ThemNguoiThue.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T15:54:56.009Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T15:54:56.009Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "HoaDon.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\HoaDon.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\HoaDon.razor",
@@ -988,12 +986,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\HoaDon.razor",
               "ViewState": "AgIAACAAAAAAAAAAAAAcwCUAAABKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T15:24:02.622Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T15:24:02.622Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "NguoiThue.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\NguoiThue.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\NguoiThue.razor",
@@ -1001,12 +998,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\NguoiThue.razor",
               "ViewState": "AgIAAFMBAAAAAAAAAAAAAF8BAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T15:23:42.693Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T15:23:42.693Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "ThanhVienPhong.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\ThanhVienPhong.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\ThanhVienPhong.razor",
@@ -1014,12 +1010,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\ThanhVienPhong.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T14:06:56.012Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T14:06:56.012Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "TaoPhong.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\TaoPhong.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\TaoPhong.razor",
@@ -1027,12 +1022,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\TaoPhong.razor",
               "ViewState": "AgIAABQAAAAAAAAAAAAIwBoAAABGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T10:28:36.569Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T10:28:36.569Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "SuaPhong.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\SuaPhong.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\SuaPhong.razor",
@@ -1040,12 +1034,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\SuaPhong.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T10:20:43.928Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T10:20:43.928Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "QuanLyPhong.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\QuanLyPhong.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\QuanLyPhong.razor",
@@ -1053,8 +1046,7 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\QuanLyPhong.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T06:39:58.883Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T06:39:58.883Z"
             },
             {
               "$type": "Document",
@@ -1066,12 +1058,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\XacMinhEmail.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T06:39:12.551Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T06:39:12.551Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "SideNavBar.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Layout\\SideNavBar.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Layout\\SideNavBar.razor",
@@ -1079,12 +1070,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Layout\\SideNavBar.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAACdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T06:38:20.685Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T06:38:20.685Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Routes.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Routes.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Routes.razor",
@@ -1092,8 +1082,7 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Routes.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T06:31:32.248Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T06:31:32.248Z"
             },
             {
               "$type": "Document",
@@ -1105,12 +1094,11 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\TaoNhaTro.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T05:24:04.503Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T05:24:04.503Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "HeaderDashboard.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Layout\\HeaderDashboard.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Layout\\HeaderDashboard.razor",
@@ -1118,25 +1106,24 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Layout\\HeaderDashboard.razor",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T04:33:31.598Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T04:33:31.598Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 0,
               "Title": "NhaTro.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\NhaTro.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\NhaTro.razor",
               "ToolTip": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\NhaTro.razor",
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\NhaTro.razor",
-              "ViewState": "AgIAAB4AAAAAAAAAAAAAABUAAAAsAAAAAAAAAA==",
+              "ViewState": "AgIAAGwAAAAAAAAAAAAAAHQAAABNAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-05-27T04:31:19.668Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "Dashboard.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\Dashboard.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\Dashboard.razor",
@@ -1144,8 +1131,7 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\Dashboard.razor",
               "ViewState": "AgIAABMAAAAAAAAAAAAIwB8AAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-27T04:30:22.441Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T04:30:22.441Z"
             },
             {
               "$type": "Document",
@@ -1161,7 +1147,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "App.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\App.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\App.razor",
@@ -1169,8 +1155,7 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\App.razor",
               "ViewState": "AgIAAG8AAAAAAAAAAAAAAIEAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-26T09:39:04.234Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-26T09:39:04.234Z"
             },
             {
               "$type": "Document",
@@ -1198,13 +1183,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "DangNhap.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\DangNhap.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\DangNhap.razor",
               "ToolTip": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\DangNhap.razor",
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\DangNhap.razor",
-              "ViewState": "AgIAAJUAAAAAAAAAAAAcwLAAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAJ4AAAAAAAAAAAAAAKQAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-05-25T17:28:57.298Z",
               "EditorCaption": ""
@@ -1223,7 +1208,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "TinhNang.razor",
               "DocumentMoniker": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\Components\\Pages\\TinhNang.razor",
               "RelativeDocumentMoniker": "SOTRO_Project\\Components\\Pages\\TinhNang.razor",
@@ -1231,8 +1216,7 @@
               "RelativeToolTip": "SOTRO_Project\\Components\\Pages\\TinhNang.razor",
               "ViewState": "AgIAABIAAAAAAAAAAAAAACIAAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-05-25T17:16:25.778Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-25T17:16:25.778Z"
             },
             {
               "$type": "Document",

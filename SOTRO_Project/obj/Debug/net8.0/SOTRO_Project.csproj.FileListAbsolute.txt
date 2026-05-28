@@ -1,13 +1,5 @@
 D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\appsettings.Development.json
 D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\appsettings.json
-D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\plugins\stitch-build\plugin.json
-D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\plugins\stitch-build\skills\react-components\package-lock.json
-D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\plugins\stitch-build\skills\react-components\package.json
-D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\plugins\stitch-build\skills\react-components\resources\style-guide.json
-D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\plugins\stitch-build\skills\remotion\examples\screens.json
-D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\plugins\stitch-design\plugin.json
-D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\plugins\stitch-design\skills\manage-design-system\examples\metadata.json
-D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\plugins\stitch-utilities\plugin.json
 D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\SOTRO_Project.staticwebassets.runtime.json
 D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\SOTRO_Project.staticwebassets.endpoints.json
 D:\PRN232\SOTRO_Project\SOTRO_Project\bin\Debug\net8.0\SOTRO_Project.exe
@@ -38,3 +30,4 @@ D:\PRN232\SOTRO_Project\SOTRO_Project\obj\Debug\net8.0\refint\SOTRO_Project.dll
 D:\PRN232\SOTRO_Project\SOTRO_Project\obj\Debug\net8.0\SOTRO_Project.pdb
 D:\PRN232\SOTRO_Project\SOTRO_Project\obj\Debug\net8.0\SOTRO_Project.genruntimeconfig.cache
 D:\PRN232\SOTRO_Project\SOTRO_Project\obj\Debug\net8.0\ref\SOTRO_Project.dll
+D:\PRN232\SOTRO_Project\SOTRO_Project\obj\Debug\net8.0\SOTRO_Project.sourcelink.json

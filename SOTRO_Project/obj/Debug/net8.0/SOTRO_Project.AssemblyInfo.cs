@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SOTRO_Project")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fc0837fe67b5e25b6da0a1696fcc638179d59ec9")]
 [assembly: System.Reflection.AssemblyProductAttribute("SOTRO_Project")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SOTRO_Project")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
