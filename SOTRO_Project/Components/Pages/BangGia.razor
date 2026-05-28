@@ -1,0 +1,181 @@
+﻿@page "/bang-gia"
+@layout EmptyLayout
+
+<PageTitle>Bảng giá dịch vụ - Sổ trọ</PageTitle>
+
+@if (!string.IsNullOrEmpty(CustomStyles))
+{
+    <style>
+        
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+      }
+      .pricing-card-shadow {
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+      }
+      .pricing-card-shadow-hover:hover {
+        box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.1);
+      }
+    
+
+    </style>
+}
+
+<HeaderLanding/>
+
+<main class="pt-16 min-h-screen">
+<!-- Hero Section -->
+<section class="py-20 px-margin-mobile md:px-margin-desktop text-center bg-surface-container-low">
+<div class="max-w-container-max-width mx-auto">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">Bảng giá dịch vụ</h1>
+<p class="font-body-lg text-body-lg text-secondary max-w-2xl mx-auto">Lựa chọn gói dịch vụ phù hợp với quy mô quản lý của bạn.</p>
+</div>
+</section>
+<!-- Pricing Cards Section -->
+<section class="py-16 px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max-width mx-auto grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Gói Basic -->
+<div class="bg-surface-container-lowest p-base md:p-8 rounded-xl pricing-card-shadow pricing-card-shadow-hover transition-all flex flex-col h-full border border-outline-variant">
+<div class="mb-8">
+<span class="text-primary font-label-md text-label-md uppercase tracking-wider">Tiết kiệm</span>
+<h3 class="font-headline-md text-headline-md mt-2">Gói Basic</h3>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="font-display-lg text-display-lg text-primary">0</span>
+<span class="text-secondary font-body-md text-body-md">VND /tháng</span>
+</div>
+<p class="mt-4 text-on-secondary-container font-body-md text-body-md">Lý tưởng cho người mới bắt đầu với quy mô nhỏ.</p>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Quản lý tối đa 10 phòng</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Tự động nhắc nợ cơ bản</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Báo cáo doanh thu tháng</span>
+</li>
+</ul>
+<button class="w-full border-2 border-primary text-primary py-3 rounded-lg font-label-md text-label-md hover:bg-secondary-container transition-colors">Bắt đầu ngay</button>
+</div>
+<!-- Gói Nâng cao -->
+<div class="bg-surface-container-lowest p-base md:p-8 rounded-xl pricing-card-shadow pricing-card-shadow-hover transition-all flex flex-col h-full border-2 border-primary relative overflow-hidden">
+<div class="absolute top-4 right-[-35px] bg-primary text-on-primary py-1 px-12 rotate-45 font-label-md text-[10px] uppercase font-bold">Phổ biến</div>
+<div class="mb-8">
+<span class="text-primary font-label-md text-label-md uppercase tracking-wider">Tối ưu</span>
+<h3 class="font-headline-md text-headline-md mt-2">Gói Nâng cao</h3>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="font-headline-sm text-headline-sm text-primary">Liên hệ để biết thêm</span>
+</div>
+<p class="mt-4 text-on-secondary-container font-body-md text-body-md">Dành cho chủ trọ có quy mô vừa và đang phát triển.</p>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Quản lý không giới hạn phòng</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Hệ thống nhắc nợ đa kênh</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Báo cáo tài chính chi tiết</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Quản lý hợp đồng điện tử</span>
+</li>
+</ul>
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-md text-label-md hover:bg-primary-container transition-all">Liên hệ tư vấn</button>
+</div>
+<!-- Gói Chuyên nghiệp -->
+<div class="bg-surface-container-lowest p-base md:p-8 rounded-xl pricing-card-shadow pricing-card-shadow-hover transition-all flex flex-col h-full border border-outline-variant">
+<div class="mb-8">
+<span class="text-primary font-label-md text-label-md uppercase tracking-wider">Toàn diện</span>
+<h3 class="font-headline-md text-headline-md mt-2">Gói Chuyên nghiệp</h3>
+<div class="mt-4 flex items-baseline gap-1">
+<span class="font-headline-sm text-headline-sm text-primary">Liên hệ để biết thêm</span>
+</div>
+<p class="mt-4 text-on-secondary-container font-body-md text-body-md">Giải pháp quản lý chuỗi căn hộ và vận hành chuyên nghiệp.</p>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Tất cả tính năng Gói Nâng cao</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Phân quyền nhân viên quản lý</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">API kết nối khóa thông minh</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+<span class="font-body-md text-body-md">Hỗ trợ riêng 24/7</span>
+</li>
+</ul>
+<button class="w-full border-2 border-primary text-primary py-3 rounded-lg font-label-md text-label-md hover:bg-secondary-container transition-colors">Liên hệ tư vấn</button>
+</div>
+</div>
+</section>
+<!-- Trust Section / Visual Break -->
+<section class="py-20 bg-surface-container">
+<div class="max-w-container-max-width mx-auto px-margin-mobile md:px-margin-desktop grid md:grid-cols-2 gap-gutter items-center">
+<div class="rounded-xl overflow-hidden pricing-card-shadow">
+<img class="w-full h-auto object-cover aspect-video" data-alt="A bright and airy modern apartment building interior featuring clean white walls, minimalist design elements, and soft natural sunlight filtering through large windows. The overall atmosphere conveys professional property management, institutional trust, and efficient living spaces using a color palette of subtle blues and crisp whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBakk0qgpccZq3QIT0l4a7v6Dl82T_2ZfgDJDPBVcmOvYCqF6NRcy8am4CfIPCNiFuRDn-Jp5uQKkeV6AeGq1PZb4adMM-fiKhKWWptCxbd2LWgGobE_sPmq8mSBL3px4W_hzR5jD36CqeMl7PDIqw2gF2_T-30lHKrwgAGOFMhnejK675FdAHk2cdvN-vLZdY_Ck0tkUYd_QX4pRMA1hc9nl9zZ106Hep0oymWCugj05rfdktiii8ESjCGajxfiqaMKlU_18TDfFUJ">
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary mb-6">Tại sao nên chọn Sổ trọ?</h2>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="bg-primary-fixed p-3 rounded-lg">
+<span class="material-symbols-outlined text-primary" data-icon="security">security</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Bảo mật tuyệt đối</h4>
+<p class="font-body-md text-body-md text-secondary">Dữ liệu của bạn được mã hóa và bảo mật theo tiêu chuẩn ngân hàng.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="bg-primary-fixed p-3 rounded-lg">
+<span class="material-symbols-outlined text-primary" data-icon="speed">speed</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md font-bold text-on-surface">Tốc độ xử lý nhanh</h4>
+<p class="font-body-md text-body-md text-secondary">Giao diện tối ưu giúp bạn hoàn thành công việc chỉ trong vài cú click.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<FooterLanding />
+
+<script>
+        // Simple scroll effect for header elevation
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+        });
+    </script>
+
+
+
+
+
+
+@code {
+    private const string CustomStyles = "BangGia";
+}

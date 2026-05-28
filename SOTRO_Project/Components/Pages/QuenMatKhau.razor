@@ -1,0 +1,98 @@
+﻿@page "/quen-mat-khau"
+@layout EmptyLayout
+
+<PageTitle>Quên mật khẩu - Sổ trọ</PageTitle>
+
+@if (!string.IsNullOrEmpty(CustomStyles))
+{
+    <style>
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    
+
+    </style>
+}
+
+<HeaderLanding />
+
+<main class="pt-32 pb-16 flex-grow flex items-center justify-center px-margin-mobile py-12">
+    <div class="w-full max-w-md bg-surface-container-lowest p-8 rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant">
+        <!-- Branding & Icon -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-fixed rounded-full mb-6">
+                <span class="material-symbols-outlined text-primary text-4xl" data-icon="lock_reset">lock_reset</span>
+            </div>
+            <h1 class="font-headline-md text-headline-md text-on-surface mb-2">Quên mật khẩu?</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                Đừng lo lắng, hãy nhập thông tin của bạn để khôi phục tài khoản.
+            </p>
+        </div>
+        <!-- Recovery Form -->
+        <form class="space-y-6" id="recovery-form">
+            <div class="space-y-2">
+                <label class="font-label-md text-label-md text-on-surface-variant" for="identity">Email hoặc Số điện thoại</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xl" data-icon="mail">mail</span>
+                    <input class="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-body-md text-body-md" id="identity" name="identity" placeholder="example@gmail.com hoặc 09xx" required="" type="text">
+                </div>
+            </div>
+            <button class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors shadow-sm active:scale-[0.98]" type="submit">
+                Gửi yêu cầu
+            </button>
+        </form>
+        <!-- Navigation Links -->
+        <div class="mt-8 text-center border-t border-outline-variant pt-6">
+            <a class="inline-flex items-center gap-2 font-label-md text-label-md text-primary hover:underline transition-all" href="/dang-nhap">
+                <span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
+                Quay lại Đăng nhập
+            </a>
+        </div>
+    </div>
+</main>
+<!-- Feedback Message (Hidden by default) -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-on-surface text-surface-bright px-6 py-3 rounded-full font-label-md text-label-md opacity-0 translate-y-4 transition-all pointer-events-none z-[100]" id="toast">
+        HÆ°á»›ng dáº«n Ä‘Ã£ Ä‘Æ°á»£c gá»­i thÃ nh cÃ´ng!
+    </div>
+
+<FooterLanding />
+
+<script>
+        document.getElementById('recovery-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const toast = document.getElementById('toast');
+            
+            // Show toast
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            
+            // Log interaction
+            console.log('Recovery request sent for:', document.getElementById('identity').value);
+            
+            // Hide toast after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000);
+        });
+
+        // Hover effect for the icon container
+        const iconContainer = document.querySelector('.bg-primary-fixed');
+        if(iconContainer) {
+            iconContainer.addEventListener('mouseenter', () => {
+                iconContainer.classList.add('scale-110');
+            });
+            iconContainer.addEventListener('mouseleave', () => {
+                iconContainer.classList.remove('scale-110');
+            });
+        }
+    </script>
+
+
+@code {
+    private const string CustomStyles = "QuenMatKhau";
+}

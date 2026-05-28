@@ -1,0 +1,201 @@
+﻿@page "/nha-tro"
+@inject NavigationManager Navigation
+
+<PageTitle>Sổ trọ</PageTitle>
+
+<main class="min-h-screen flex flex-col bg-gray-50">
+
+    <HeaderDashboard />
+
+    <div class="p-4 md:p-10 flex-1">
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                    Danh sách Nhà trọ của bạn
+                </h2>
+                <p class="text-gray-500">
+                    Quản lý và theo dõi hiệu suất các cơ sở kinh doanh của bạn
+                </p>
+            </div>
+
+            <button @onclick="GoToCreateHouse"
+                    class="flex items-center justify-center gap-3 bg-primary text-on-primary px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-primary/20 active:scale-95 transition-all group">
+                <span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">
+                    add_circle
+                </span>
+                <span>Tạo nhà trọ mới</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+
+            <div class="bg-white p-6 rounded-2xl border shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
+                    <span class="material-symbols-outlined">apartment</span>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider">Tổng số nhà</p>
+                    <p class="text-2xl font-bold">08</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+                    <span class="material-symbols-outlined">fact_check</span>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider">Tỷ lệ lấp đầy</p>
+                    <p class="text-2xl font-bold">92%</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700">
+                    <span class="material-symbols-outlined">pending_actions</span>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wider">Phòng trống</p>
+                    <p class="text-2xl font-bold">14</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            @foreach (var house in Houses)
+            {
+                <div class="group bg-white rounded-2xl border overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+
+                    <div class="relative h-48">
+                        <img alt="@house.Name"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                             src="@house.ImageUrl" />
+
+                        <div class="@house.StatusClass">
+                            @house.Status
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1 truncate">
+                            @house.Name
+                        </h3>
+
+                        <p class="flex items-center gap-1.5 text-gray-500 text-sm mb-6">
+                            <span class="material-symbols-outlined text-base">location_on</span>
+                            @house.Address
+                        </p>
+
+                        <div class="space-y-4 mb-6">
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">
+                                        Số lượng phòng
+                                    </p>
+                                    <p class="text-sm font-bold">
+                                        @house.TotalRooms phòng
+                                    </p>
+                                </div>
+
+                                <div class="text-right">
+                                    <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">
+                                        Tỷ lệ lấp đầy
+                                    </p>
+                                    <p class="text-sm font-bold text-blue-700">
+                                        @house.OccupiedRooms/@house.TotalRooms đang thuê
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                <div class="@house.ProgressClass" style="width:@house.ProgressPercent%"></div>
+                            </div>
+                        </div>
+
+                        <a class="block w-full text-center py-3 border-2 border-blue-700 text-blue-700 font-bold rounded-xl hover:bg-blue-700 hover:text-white transition-colors"
+                               href="/chi-tiet-nha-tro">
+                            Quản lý chi tiết
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <button @onclick="GoToCreateHouse"
+                    class="flex flex-col items-center justify-center h-[430px] border-2 border-dashed border-gray-300 rounded-2xl hover:bg-gray-100 hover:border-blue-700 transition-all group">
+                <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-blue-100 group-hover:scale-110 transition-all">
+                    <span class="material-symbols-outlined text-4xl text-gray-500 group-hover:text-blue-700">add_home</span>
+                </div>
+                <p class="font-bold text-gray-600 group-hover:text-blue-700">
+                    Thêm nhà trọ mới
+                </p>
+                <p class="text-xs text-gray-400 mt-2 px-10 text-center">
+                    Bắt đầu quản lý cơ sở kinh doanh mới ngay hôm nay
+                </p>
+            </button>
+
+        </div>
+    </div>
+
+</main>
+
+@code {
+    private void GoToCreateHouse()
+    {
+        Navigation.NavigateTo("/tao-nha-tro");
+    }
+
+    private List<HouseItem> Houses = new()
+    {
+        new()
+        {
+            Name = "SOTRO Apartment Quận 1",
+            Address = "128 Đề Thám, Phường Cầu Ông Lãnh, Quận 1",
+            TotalRooms = 12,
+            OccupiedRooms = 10,
+            ProgressPercent = 83,
+            Status = "Đang hoạt động",
+            StatusClass = "absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-blue-700 shadow-sm",
+            ProgressClass = "bg-blue-700 h-full rounded-full",
+            ImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCt81PLcXKlSBcICDhv7HNd0IjR9aXtVcH5A5-GEpbbhxWrXtnBgC2l55SrpJzvMzKw1CeykvpGs1YckW81s2O36FAsYpftI-6KXJgY8o78vSVA9f4Q86_b883j71BtvrJJTOrg0-kQOw15BZRmLkETf_uYe6Ofz7waoh6VG4Qv6-sParNZpyz6ElWHcvJ51OKrpi9iQQg3-5v_zg8X1V1plr6A0dEq0TPoepwLRXFkkJ-c4vSQHxNRds7R_HhsIzP9iFNXiLKNPLGC"
+        },
+        new()
+        {
+            Name = "SOTRO House Bình Thạnh",
+            Address = "45/12 Phan Xích Long, Bình Thạnh",
+            TotalRooms = 8,
+            OccupiedRooms = 8,
+            ProgressPercent = 100,
+            Status = "Đang hoạt động",
+            StatusClass = "absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-blue-700 shadow-sm",
+            ProgressClass = "bg-green-500 h-full rounded-full",
+            ImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDqXtP4MmtRJ62UcNo0cN4K1QPxqb_-vzQdhhTh31rEhN6iSXNnu4cLvWWCEp3mZ-60_8t_O_UnW7jOu4BfWTPTKfxLurSfraQibLc4HhUgFI8Ic9u5ayOhjWBAmlqdWLJH6E1j197UdubEiGPyngmVhkBGCG9cMClbKJ0-el4LQ-lVO2cvG-C85ksbkDM6CY86RmGXv3p0tsN53j6h1RNcwg1d-YPAFatYF4ZE_UiM_ypmdXosC3fFXW9hxs9fGEMODX-OWB8NkvoN"
+        },
+        new()
+        {
+            Name = "SOTRO Studio Quận 7",
+            Address = "Khu dân cư Kim Sơn, Quận 7",
+            TotalRooms = 20,
+            OccupiedRooms = 15,
+            ProgressPercent = 75,
+            Status = "Đang bảo trì",
+            StatusClass = "absolute top-4 right-4 bg-amber-100 px-3 py-1 rounded-full text-xs font-bold text-amber-700 shadow-sm border border-amber-200",
+            ProgressClass = "bg-blue-700 h-full rounded-full",
+            ImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDGbYMHOoczi_y9iC0BxdDn8DRWN0XxeY5tlUVMVLhMViUybTaIuq6sB4fVzaQy44hgn7wsWXH7-NVj-7tSTPiN9He2D6H_69ABOOz9OtPnmDk5f8mj_cMX0oRn16T7XVdFoTM9TEF-hVPf-f2Pkirs9ZKwHFztHDOgFxExmvvDjc4DtttNKapCBk6Fn0GN69zZD3U-5QTQsFdhEX0vzWtXP7MnQxWRNQ4Cq1vJFhPczGeCsLo_xOIjxJu0V4VOAh1YrdHj10_reivQ"
+        }
+    };
+
+    private class HouseItem
+    {
+        public string Name { get; set; } = "";
+        public string Address { get; set; } = "";
+        public int TotalRooms { get; set; }
+        public int OccupiedRooms { get; set; }
+        public int ProgressPercent { get; set; }
+        public string Status { get; set; } = "";
+        public string StatusClass { get; set; } = "";
+        public string ProgressClass { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
+    }
+}

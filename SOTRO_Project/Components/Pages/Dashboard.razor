@@ -1,0 +1,263 @@
+﻿@page "/dashboard"
+@layout EmptyLayout
+
+<PageTitle>SOTRO - Tá»•ng quan quáº£n lÃ½ trá»</PageTitle>
+
+@if (!string.IsNullOrEmpty(CustomStyles))
+{
+    <style>
+        
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+        .chart-bar {
+            transition: height 1s ease-out;
+        }
+    
+
+    </style>
+}
+
+<HeaderDashboard/>
+<SideNavBar/>
+
+<main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- TopAppBar Component -->
+    <div class="p-gutter max-w-container-max-width mx-auto w-full">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">Chào buổi sáng, Lê Minh Sáng!</h3>
+                <p class="text-body-md text-on-surface-variant">Hôm nay là Thứ Tư, ngày 24 tháng 5, 2024. Đây là những gì đang diễn ra.</p>
+            </div>
+            <button class="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-label-md flex items-center gap-2 hover:opacity-90 transition-opacity">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+                Tạo hóa đơn mới
+            </button>
+        </div>
+        <!-- Dashboard Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Stat Card 1: Revenue -->
+            <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="p-3 bg-primary-fixed text-on-primary-fixed-variant rounded-xl">
+                        <span class="material-symbols-outlined text-2xl">payments</span>
+                    </div>
+                    <div class="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-full text-caption font-bold">
+                        <span class="material-symbols-outlined text-sm">trending_up</span> +12%
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <p class="text-caption text-on-surface-variant uppercase tracking-wider font-bold">Doanh thu tháng này</p>
+                    <h4 class="text-2xl font-extrabold text-on-surface">452.8M <span class="text-label-md font-medium text-outline">VND</span></h4>
+                </div>
+            </div>
+
+            <!-- Stat Card 2: Occupancy -->
+            <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="p-3 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-xl">
+                        <span class="material-symbols-outlined text-2xl">home_work</span>
+                    </div>
+                    <div class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-caption font-bold">
+                        98/102 phòng
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <p class="text-caption text-on-surface-variant uppercase tracking-wider font-bold">Tỷ lệ lấp đầy</p>
+                    <h4 class="text-2xl font-extrabold text-on-surface">96.1%</h4>
+                </div>
+            </div>
+
+            <!-- Stat Card 3: Pending Invoices -->
+            <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="p-3 bg-error-container text-on-error-container rounded-xl">
+                        <span class="material-symbols-outlined text-2xl">pending_actions</span>
+                    </div>
+                    <div class="px-2 py-1 bg-red-50 text-error rounded-full text-caption font-bold">
+                        Cần thu ngay
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <p class="text-caption text-on-surface-variant uppercase tracking-wider font-bold">Hóa đơn chưa thu</p>
+                    <h4 class="text-2xl font-extrabold text-on-surface">12 <span class="text-label-md font-medium text-outline">Hóa đơn</span></h4>
+                </div>
+            </div>
+        </div>
+        <!-- Main Layout Grid -->
+        <div class="bento-grid">
+            <!-- Revenue Chart Container -->
+            <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+                <div class="flex justify-between items-center mb-8">
+                    <h5 class="font-headline-sm text-[20px] text-on-surface">Biểu đồ doanh thu 6 tháng</h5>
+                    <select class="bg-surface-container border-none text-label-md rounded-lg focus:ring-primary py-1 px-3">
+                        <option>2024</option>
+                        <option>2023</option>
+                    </select>
+                </div>
+                <div class="h-64 flex items-end justify-between gap-4 px-4 border-b border-outline-variant">
+                    <!-- Simulated Chart Bars -->
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div class="w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container" style="height: 65%;"></div>
+                        <span class="text-caption text-on-surface-variant mt-4">T.1</span>
+                    </div>
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div class="w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container" style="height: 80%;"></div>
+                        <span class="text-caption text-on-surface-variant mt-4">T.2</span>
+                    </div>
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div class="w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container" style="height: 55%;"></div>
+                        <span class="text-caption text-on-surface-variant mt-4">T.3</span>
+                    </div>
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div class="w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container" style="height: 90%;"></div>
+                        <span class="text-caption text-on-surface-variant mt-4">T.4</span>
+                    </div>
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div class="w-full bg-primary rounded-t-lg chart-bar hover:bg-primary-container" style="height: 100%;"></div>
+                        <span class="text-caption font-bold text-primary mt-4">T.5</span>
+                    </div>
+                    <div class="flex flex-col items-center flex-1 group">
+                        <div class="w-full bg-surface-container-high rounded-t-lg chart-bar" style="height: 0%;"></div>
+                        <span class="text-caption text-on-surface-variant mt-4">T.6</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Todo List Container -->
+            <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm flex flex-col">
+                <h5 class="font-headline-sm text-[20px] text-on-surface mb-6">Việc cần làm hôm nay</h5>
+                <div class="space-y-4 flex-1">
+                    <div class="flex items-start gap-4 p-3 rounded-lg border border-transparent hover:border-outline-variant hover:bg-surface transition-all cursor-pointer">
+                        <div class="mt-1">
+                            <input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox">
+                        </div>
+                        <div>
+                            <p class="text-body-md font-semibold text-on-surface">Kiểm tra vòi nước Phòng 204</p>
+                            <p class="text-caption text-on-surface-variant">Yêu cầu bảo trì từ chị Linh</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-3 rounded-lg border border-transparent hover:border-outline-variant hover:bg-surface transition-all cursor-pointer">
+                        <div class="mt-1">
+                            <input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox">
+                        </div>
+                        <div>
+                            <p class="text-body-md font-semibold text-on-surface">Xác nhận thanh toán P.305</p>
+                            <p class="text-caption text-on-surface-variant">Khách vừa chuyển khoản đặt cọc</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-3 rounded-lg border border-transparent hover:border-outline-variant hover:bg-surface transition-all cursor-pointer">
+                        <div class="mt-1">
+                            <input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox">
+                        </div>
+                        <div>
+                            <p class="text-body-md font-semibold text-on-surface">Gia hạn hợp đồng anh Nam</p>
+                            <p class="text-caption text-on-surface-variant">Hết hạn vào ngày mai (25/05)</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 p-3 rounded-lg border border-transparent hover:border-outline-variant hover:bg-surface transition-all cursor-pointer">
+                        <div class="mt-1">
+                            <input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox">
+                        </div>
+                        <div>
+                            <p class="text-body-md font-semibold text-on-surface">Đăng tin trống phòng 401</p>
+                            <p class="text-caption text-on-surface-variant">Facebook &amp; Chợ tốt</p>
+                        </div>
+                    </div>
+                </div>
+                <button class="mt-6 w-full text-center py-2 text-primary font-label-md border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
+                    Xem tất cả công việc
+                </button>
+            </div>
+        </div>
+        <!-- Recent Activity / High Priority -->
+        <div class="mt-8 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+            <div class="flex justify-between items-center mb-6 px-2">
+                <h5 class="font-headline-sm text-[20px] text-on-surface">Hoạt động gần đây</h5>
+                <button class="text-primary text-label-md hover:underline">Xuất báo cáo</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-caption text-on-surface-variant uppercase border-b border-outline-variant">
+                            <th class="pb-4 font-bold px-2">Thời gian</th>
+                            <th class="pb-4 font-bold px-2">Nội dung</th>
+                            <th class="pb-4 font-bold px-2">Phòng</th>
+                            <th class="pb-4 font-bold px-2">Trạng thái</th>
+                            <th class="pb-4 font-bold px-2 text-right">Giá trị</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant">
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="py-4 px-2 text-label-md text-on-surface-variant">09:45 AM</td>
+                            <td class="py-4 px-2 font-semibold text-on-surface">Hóa đơn điện nước tháng 5</td>
+                            <td class="py-4 px-2 text-label-md">P.102</td>
+                            <td class="py-4 px-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-700 text-caption font-bold rounded-md">Đã thu</span>
+                            </td>
+                            <td class="py-4 px-2 text-right font-bold text-on-surface">1.250.000đ</td>
+                        </tr>
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="py-4 px-2 text-label-md text-on-surface-variant">Hôm qua</td>
+                            <td class="py-4 px-2 font-semibold text-on-surface">Ký mới hợp đồng thuê</td>
+                            <td class="py-4 px-2 text-label-md">P.402</td>
+                            <td class="py-4 px-2">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-caption font-bold rounded-md">Hoàn tất</span>
+                            </td>
+                            <td class="py-4 px-2 text-right font-bold text-on-surface">-</td>
+                        </tr>
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="py-4 px-2 text-label-md text-on-surface-variant">22/05/2024</td>
+                            <td class="py-4 px-2 font-semibold text-on-surface">Thanh toán tiền nhà</td>
+                            <td class="py-4 px-2 text-label-md">P.201</td>
+                            <td class="py-4 px-2">
+                                <span class="px-2 py-1 bg-orange-100 text-orange-700 text-caption font-bold rounded-md">Chờ xác nhận</span>
+                            </td>
+                            <td class="py-4 px-2 text-right font-bold text-on-surface">5.500.000đ</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <!-- FAB for Mobile Quick Action -->
+    <button class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+    </button>
+</main>
+<script>
+        // Simple micro-interaction for chart bars on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const bars = document.querySelectorAll('.chart-bar');
+            bars.forEach(bar => {
+                const finalHeight = bar.style.height;
+                bar.style.height = '0px';
+                setTimeout(() => {
+                    bar.style.height = finalHeight;
+                }, 300);
+            });
+        });
+
+        // Toggle mobile menu logic could be added here
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+@code {
+    private const string CustomStyles = "Dashboard";
+}

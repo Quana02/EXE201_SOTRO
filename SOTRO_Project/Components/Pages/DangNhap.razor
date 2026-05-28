@@ -1,0 +1,177 @@
+﻿@page "/dang-nhap"
+@using SOTRO_Project.Components.Layout
+@inject NavigationManager Navigation
+
+<PageTitle>Đăng nhập - Sổ trọ</PageTitle>
+
+<HeaderLanding />
+
+@if (ShowError)
+{
+    <div class="fixed inset-0 z-[999] flex items-center justify-center bg-black/30">
+        <div class="bg-white rounded-xl shadow-2xl border border-red-200 p-8 w-[360px] text-center">
+            <div class="text-5xl mb-4">⚠️</div>
+
+            <h2 class="text-xl font-bold text-red-600 mb-2">
+                Đăng nhập thất bại
+            </h2>
+
+            <p class="text-gray-600 mb-6">
+                Sai email hoặc mật khẩu
+            </p>
+
+            <button @onclick="CloseError"
+                    class="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700">
+                Đóng
+            </button>
+        </div>
+    </div>
+}
+
+<main class="pt-24 flex-grow flex items-center justify-center py-12 px-4">
+
+    <div class="w-full max-w-md">
+
+        <div class="bg-white rounded-xl shadow border border-gray-200 p-8 md:p-10">
+
+            <div class="text-center mb-8">
+                <img alt="Sổ trọ Logo"
+                     class="h-16 w-16 mx-auto mb-4 object-contain"
+                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrTuGgO59RgNbmnmN-8Tx79guQ-CuJhGOK5McAwqa5cvSW0rg2oXxHxI6GyqUC1zzkch2qtcd8DooPxBJiKA0aKLeDp_CIv5n8eAAu3YI8qqZArbq9SPFwT8U57gtAWyKfHoqbes1P1c6qEq1O8d3MuMkrw9ef-ptJHzpBRMW2-29p6lC3odDRZeVNu_wkb1NuZQ5A8vCTFRQ8XD7FZ4TTB-uK9NcXz9tOZWSLzrWlIwp2OjhlpRi-W891mdf_CFemSXNjWjP9_c4r" />
+
+                <h1 class="text-3xl font-bold text-blue-700 mb-2">
+                    Chào mừng trở lại
+                </h1>
+
+                <p class="text-gray-600">
+                    Quản lý nhà trọ chuyên nghiệp & hiệu quả
+                </p>
+            </div>
+
+            <form class="space-y-6">
+
+                <div class="space-y-1.5">
+                    <label class="text-sm font-semibold text-gray-600 block">
+                        Email hoặc Số điện thoại
+                    </label>
+
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            person
+                        </span>
+
+                        <input @bind="Email"
+                               class="w-full pl-10 pr-4 py-3 bg-white rounded-lg border border-gray-300 focus:border-blue-700 focus:ring-1 focus:ring-blue-700 outline-none"
+                               placeholder="name@example.com"
+                               type="text" />
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-semibold text-gray-600 block">
+                            Mật khẩu
+                        </label>
+
+                        <a class="text-sm text-blue-700 hover:underline"
+                               href="/quen-mat-khau">
+                            Quên mật khẩu?
+                        </a>
+                    </div>
+
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            lock
+                        </span>
+
+                        <input @bind="Password"
+                               class="w-full pl-10 pr-4 py-3 bg-white rounded-lg border border-gray-300 focus:border-blue-700 focus:ring-1 focus:ring-blue-700 outline-none"
+                               placeholder="••••••••"
+                               type="password" />
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input class="w-4 h-4 rounded border-gray-300 text-blue-700"
+                           id="remember"
+                           type="checkbox" />
+
+                    <label class="text-gray-600 cursor-pointer select-none" for="remember">
+                        Ghi nhớ đăng nhập
+                    </label>
+                </div>
+
+                <button @onclick="Login"
+                        type="button"
+                        class="w-full py-4 bg-blue-700 text-white rounded-xl text-lg font-bold hover:bg-blue-800 shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                    Đăng nhập
+                    <span class="material-symbols-outlined">login</span>
+                </button>
+
+            </form>
+
+            <div class="relative my-8">
+                <div class="absolute inset-0 flex items-center">
+                    <span class="w-full border-t border-gray-200"></span>
+                </div>
+
+                <div class="relative flex justify-center text-xs bg-white px-4 uppercase tracking-widest text-gray-400">
+                    Hoặc đăng nhập bằng
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button class="flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-xl hover:bg-gray-50">
+                    Google
+                </button>
+
+                <button class="flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-xl hover:bg-gray-50">
+                    Facebook
+                </button>
+            </div>
+
+            <div class="mt-8 text-center">
+                <p class="text-gray-600">
+                    Chưa có tài khoản?
+                    <a class="text-blue-700 font-bold hover:underline"
+                           href="/dang-ky">
+                        Đăng ký ngay
+                    </a>
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+<FooterLanding />
+
+<div class="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none overflow-hidden opacity-30">
+    <div class="absolute -top-[10%] -right-[10%] w-[50%] h-[50%] bg-blue-100 blur-[120px] rounded-full"></div>
+    <div class="absolute -bottom-[10%] -left-[10%] w-[40%] h-[40%] bg-gray-200 blur-[100px] rounded-full"></div>
+</div>
+
+@code {
+    private string Email { get; set; } = "";
+    private string Password { get; set; } = "";
+    private bool ShowError { get; set; } = false;
+
+    private void Login()
+    {
+        if (Email == "tan2004@gmail.com" && Password == "12345")
+        {
+            Navigation.NavigateTo("/dashboard");
+        }
+        else
+        {
+            ShowError = true;
+        }
+    }
+
+    private void CloseError()
+    {
+        ShowError = false;
+    }
+}

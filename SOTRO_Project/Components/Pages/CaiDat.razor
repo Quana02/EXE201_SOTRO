@@ -1,0 +1,291 @@
+﻿@page "/cai-dat"
+@layout EmptyLayout
+
+<PageTitle>Cài đặt - SOTRO</PageTitle>
+
+@if (!string.IsNullOrEmpty(CustomStyles))
+{
+    <style>
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        /* Custom Toggle Switch Style */
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #0056b3;
+        }
+        .toggle-checkbox:checked + .toggle-label .toggle-dot {
+            transform: translateX(100%);
+        }
+    
+
+    </style>
+}
+<HeaderDashboard/>
+<SideNavBar />
+
+<main class="flex-1 md:ml-64 bg-surface min-h-screen pb-20">
+    <div class="max-w-container-max-width mx-auto px-6 py-8">
+        <div class="mb-10">
+            <p class="text-on-surface-variant font-body-md text-body-md">Quản lý các thiết lập vận hành, tự động hóa và thông tin cơ sở kinh doanh của bạn.</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column: Navigation Anchors -->
+            <div class="lg:col-span-3">
+                <div class="sticky top-24 space-y-2">
+                    <button class="w-full text-left px-4 py-2 rounded-lg font-label-md text-label-md flex items-center justify-between text-on-surface-variant">
+                        Thông tin chung
+                        <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+                    </button>
+                    <button class="w-full text-left px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md flex items-center justify-between">
+                        Cấu hình dịch vụ
+                        <span class="material-symbols-outlined text-sm" data-icon="settings_input_component">settings_input_component</span>
+                    </button>
+                    <button class="w-full text-left px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md flex items-center justify-between">
+                        Bảo mật &amp; Tài khoản
+                        <span class="material-symbols-outlined text-sm" data-icon="shield">shield</span>
+                    </button>
+                    <button class="w-full text-left px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md flex items-center justify-between">
+                        Bảo mật &amp; Tài khoản
+                        <span class="material-symbols-outlined text-sm">shield</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Right Column: Settings Forms -->
+            <div class="lg:col-span-9 space-y-8">
+                <!-- Section: Tự động hóa VIP (Priority focus) -->
+                <section class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden">
+                    <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                        <h3 class="font-headline-sm text-headline-sm text-primary">Tự động hóa VIP</h3>
+                    </div>
+                    <div class="p-6 space-y-8">
+                        <!-- Zalo/SMS Reminder -->
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <h4 class="font-label-md text-label-md font-bold text-on-surface">Tự động nhắc nợ qua Zalo</h4>
+                                <p class="text-sm text-on-surface-variant mt-1 leading-relaxed">Hệ thống sẽ tự động gửi tin nhắn thông báo tiền phòng định kỳ đến khách thuê qua tài khoản Zalo Official. Giảm thiểu việc chậm thanh toán.</p>
+                                <div class="mt-3 flex gap-4">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input checked="" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary-container" type="checkbox">
+                                        <span class="text-sm font-medium">Zalo Official Account</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                                <input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300" id="toggle-debt" name="toggle" type="checkbox">
+                                <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-300" for="toggle-debt"></label>
+                            </div>
+                        </div>
+                        <hr class="border-outline-variant">
+                        <!-- Auto Posting -->
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <h4 class="font-label-md text-label-md font-bold text-on-surface">Tự động nhắc nợ qua Zalo</h4>
+                                <p class="text-sm text-on-surface-variant mt-1 leading-relaxed">Hệ thống sẽ tự động gửi tin nhắn thông báo tiền phòng định kỳ đến khách thuê qua tài khoản Zalo Official. Giảm thiểu việc chậm thanh toán.</p>
+                            </div>
+                            <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                                <input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300" id="toggle-post" name="toggle" type="checkbox">
+                                <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-300" for="toggle-post"></label>
+                            </div>
+                        </div>
+                        <hr class="border-outline-variant">
+                        <!-- Meter Reading Cycle -->
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
+                                <h4 class="font-label-md text-label-md font-bold text-on-surface">Cấu hình ngày chốt điện nước định kỳ</h4>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngày chốt số hàng tháng</label>
+                                    <select class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                        <option>Ngày 25 hàng tháng</option>
+                                        <option selected="">Ngày 30 hàng tháng</option>
+                                        <option>Ngày 01 hàng tháng</option>
+                                        <option>Tùy chỉnh...</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Thông báo cho khách trước</label>
+                                    <select class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                        <option>Không thông báo</option>
+                                        <option selected="">1 ngày</option>
+                                        <option>2 ngày</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section><section class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden">
+                <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">settings_input_component</span>
+                    <h3 class="font-headline-sm text-headline-sm text-primary">Cấu hình dịch vụ</h3>
+                </div>
+                <div class="p-6 space-y-6">
+                    <p class="text-sm text-on-surface-variant leading-relaxed">Thiết lập đơn giá cho các dịch vụ cố định hàng tháng.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền rác (VNĐ/tháng)</label>
+                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền mạng / Internet (VNĐ/tháng)</label>
+                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền vệ sinh hành lang (VNĐ/tháng)</label>
+                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Phí quản lý / Chung (VNĐ/tháng)</label>
+                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Section: Thông tin nhà trọ -->
+            <section class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden">
+                <div class="px-6 py-4 border-b border-outline-variant">
+                    <h3 class="font-headline-sm text-headline-sm text-on-surface">Cài đặt chung thông tin</h3>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tên cơ sở kinh doanh</label>
+                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" value="SOTRO Apartment Quận 1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Hotline quản lý</label>
+                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="tel" value="0901 234 567">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Email nhận báo cáo</label>
+                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="email" value="contact@sotro-apts.vn">
+                        </div>
+                        <div class="col-span-1 md:col-span-2">
+                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Địa chỉ chính</label>
+                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" value="123 Đề Thám, Phường Cô Giang, Quận 1, TP. HCM">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg">
+                        <div class="w-24 h-24 rounded-lg bg-surface-variant flex-shrink-0 relative group cursor-pointer overflow-hidden">
+                            <img alt="Building Logo" class="w-full h-full object-cover" data-alt="A minimalist logo design for an apartment complex called SOTRO. The image shows a sleek, modern architectural silhouette in navy blue against a clean white background. The composition is professional and elegant, reflecting a high-end urban lifestyle. The lighting is bright and airy, typical of a modern SaaS management platform dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr-mgmVremVp6l7gcQUJ16QdMez83ZYP90A9oPnq3XvtcZZqBjHlQIIZyMjmiGFP33gBKsMqvhKVei68lQhUVwB9LBbYwFMjP0Fcw4EP3Pfcs6Njn-S8OZQgEpawRkCBN6-Q7bBzTGF-H3uYktSiXYGt0CG6DKniiNq-_RJpIdEDbYRYPIz9sHXclhpdj0qfbDqmfI8s015ptlIrKkKZk4ZLFgVNDiCY7t4sSLErVSD68L1I3flyk0fBvuNDRkIHBG4N6HhrWhfcN9">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white" data-icon="photo_camera">photo_camera</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h5 class="text-sm font-bold text-on-surface">Logo &amp; Hình ảnh thương hiệu</h5>
+                            <p class="text-xs text-on-surface-variant mt-1">Logo này sẽ được in trên các hóa đơn và tin nhắn gửi cho khách thuê. Kích thước khuyến nghị 512x512px.</p>
+                            <button class="mt-2 text-xs font-bold text-primary hover:underline">Thay đổi hình ảnh</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Footer Actions -->
+            <section class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden" id="security-settings">
+                <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">shield</span>
+                    <h3 class="font-headline-sm text-headline-sm text-primary">Bảo mật &amp; Tài khoản</h3>
+                </div>
+                <div class="p-6 space-y-8">
+                    <!-- Password Reset Section -->
+                    <div class="space-y-4">
+                        <h4 class="font-label-md text-label-md font-bold text-on-surface">Đặt lại mật khẩu</h4>
+                        <div class="grid grid-cols-1 gap-4 max-w-md">
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Mật khẩu hiện tại</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="••••••••" type="password">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Mật khẩu mới</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="••••••••" type="password">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Xác nhận mật khẩu mới</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="••••••••" type="password">
+                            </div>
+                            <button class="w-fit px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-container transition-colors">Cập nhật mật khẩu</button>
+                        </div>
+                    </div>
+                    <hr class="border-outline-variant">
+                    <!-- Linked Accounts Section -->
+                    <div class="space-y-4">
+                        <h4 class="font-label-md text-label-md font-bold text-on-surface">Liên kết tài khoản</h4>
+                        <div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <img alt="Google Logo" class="w-6 h-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN0XIl7E0xXC3JchogkZgfQhBM0qrBeO0BCgyu7-kjoTGN8SfzaM7UUB_gQ05OzSoUkgU_kwSDjEJQFNsXPrAOe2iAAhiyHRlGMuTNR1UJSRmwr5IzSojJZHlxoudAqCZWSaCKPCQtJszdBB1HbqCRuib5o_A9ELSlSx-cMAcnV7EZRLj0A_1XlaKWrB5Pdo8i_Tee0mPvvw7DgKeua2xpuhs9YMrNMuObj0Wl_tchx4tXw4mzFhIbsg5F5TvW7rJLd9VS1Md8DkYQ">
+                                <div>
+                                    <p class="text-sm font-bold">Tài khoản Google</p>
+                                    <p class="text-xs text-on-surface-variant">Đăng nhập nhanh chóng bằng Google</p>
+                                </div>
+                            </div>
+                            <button class="px-4 py-1.5 border border-outline text-xs font-bold rounded-lg hover:bg-surface-container transition-colors">Liên kết</button>
+                        </div>
+                    </div>
+                </div>
+            </section><div class="flex items-center justify-end gap-4 pb-12">
+            <button class="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">Hủy thay đổi</button>
+            <button class="px-8 py-2.5 rounded-lg bg-primary text-white font-label-md text-label-md hover:shadow-lg hover:bg-primary-container transition-all">Lưu cài đặt</button>
+        </div>
+    </div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar for Mobile (Logic: Hidden on md:flex) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant flex justify-around items-center h-16 z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="home_work">home_work</span>
+<span class="text-[10px] mt-1">PhÃ²ng</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="text-[10px] mt-1">HÃ³a Ä‘Æ¡n</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary" href="#">
+<span class="material-symbols-outlined active-icon" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="text-[10px] mt-1 font-bold">CÃ i Ä‘áº·t</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[10px] mt-1">TÃ´i</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for form inputs and toggles
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    console.log('Setting updated: Enabled');
+                } else {
+                    console.log('Setting updated: Disabled');
+                }
+            });
+        });
+
+        // Simple smooth scroll effect for side links
+        document.querySelectorAll('button[class*="text-left"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // In a real app, this would navigate or scroll to section
+                this.parentElement.querySelectorAll('button').forEach(b => {
+                    b.classList.remove('bg-primary-container/10', 'text-primary', 'font-bold');
+                    b.classList.add('text-on-surface-variant');
+                });
+                this.classList.remove('text-on-surface-variant');
+                this.classList.add('bg-primary-container/10', 'text-primary', 'font-bold');
+            });
+        });
+    </script>
+
+
+@code {
+    private const string CustomStyles = "CaiDat";
+}

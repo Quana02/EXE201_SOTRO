@@ -1,0 +1,200 @@
+﻿@page "/sua-phong"
+@layout EmptyLayout
+
+<PageTitle>Chỉnh sửa phòng - SOTRO Admin</PageTitle>
+
+@if (!string.IsNullOrEmpty(CustomStyles))
+{
+    <style>
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-active {
+            background-color: #dae4ee; /* secondary-container */
+            color: #131d24; /* on-secondary-fixed */
+            font-weight: 700;
+        }
+    
+
+    </style>
+}
+
+<!-- TopNavBar Shell -->
+<HeaderDashboard />
+<!-- SideNavBar Shell -->
+<SideNavBar />
+<!-- Main Content Canvas -->
+<!-- Main Content Area -->
+<main class="flex-grow flex flex-col min-h-screen ml-64">
+    <!-- Page Content -->
+    <div class="p-margin-mobile md:p-margin-desktop flex-grow max-w-[1000px] mx-auto w-full">
+        <!-- Breadcrumbs -->
+        <nav class="flex items-center gap-2 mb-6 text-on-surface-variant font-label-md">
+            <a class="hover:text-primary transition-colors" href="#">Quản lý phòng</a>
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+            <span class="text-on-surface font-semibold">Chỉnh sửa phòng 101</span>
+        </nav>
+        <div class="mb-8">
+            <h2 class="font-headline-md text-headline-md text-on-surface">Chỉnh sửa phòng 101</h2>
+            <p class="text-body-md text-on-surface-variant">Cập nhật thông tin chi tiết và trạng thái của căn hộ.</p>
+        </div>
+        <!-- Edit Form Card -->
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+            <div class="p-6 md:p-8">
+                <form class="space-y-8" onsubmit="return false;">
+                    <!-- Basic Info Section -->
+                    <section>
+                        <div class="flex items-center gap-2 mb-6 pb-2 border-b border-outline-variant">
+                            <span class="material-symbols-outlined text-primary">info</span>
+                            <h3 class="font-headline-sm text-headline-sm">Thông tin cơ bản</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <label class="font-label-md text-label-md text-on-surface-variant">Tên phòng</label>
+                                <input class="px-4 py-3 rounded-lg border border-outline focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-body-md" placeholder="VD: Phòng 101" type="text" value="Phòng 101" />
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="font-label-md text-label-md text-on-surface-variant">Trạng thái phòng</label>
+                                <div class="flex gap-4 p-1 bg-surface-container-low rounded-lg border border-outline-variant w-fit">
+                                    <button class="px-6 py-2 rounded-md font-label-md transition-all bg-white shadow-sm text-primary border border-outline-variant" type="button">
+                                        Đang trống
+                                    </button>
+                                    <button class="px-6 py-2 rounded-md font-label-md transition-all text-on-surface-variant hover:bg-surface-variant" type="button">
+                                        Đã thuê
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Pricing Section -->
+                    <section>
+                        <div class="flex items-center gap-2 mb-6 pb-2 border-b border-outline-variant">
+                            <span class="material-symbols-outlined text-primary">payments</span>
+                            <h3 class="font-headline-sm text-headline-sm">Biểu phí định kỳ</h3>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <label class="font-label-md text-label-md text-on-surface-variant">Tiền phòng (VNĐ/Tháng)</label>
+                                <div class="relative">
+                                    <input class="w-full px-4 py-3 rounded-lg border border-outline focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-body-md pr-12" type="text" value="3,500,000" />
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">VNĐ</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="font-label-md text-label-md text-on-surface-variant">Tiền điện (VNĐ/kWh)</label>
+                                <div class="relative">
+                                    <input class="w-full px-4 py-3 rounded-lg border border-outline focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-body-md pr-12" type="text" value="4,000" />
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">VNĐ</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="font-label-md text-label-md text-on-surface-variant">Tiền nước (VNĐ/m3)</label>
+                                <div class="relative">
+                                    <input class="w-full px-4 py-3 rounded-lg border border-outline focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-body-md pr-12" type="text" value="25,000" />
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-label-md">VNĐ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Additional Media (Bento Style Preview) -->
+                    <section>
+                        <div class="flex items-center gap-2 mb-6 pb-2 border-b border-outline-variant">
+                            <span class="material-symbols-outlined text-primary">image</span>
+                            <h3 class="font-headline-sm text-headline-sm">Hình ảnh phòng</h3>
+                        </div>
+                        <div class="grid grid-cols-4 grid-rows-2 gap-4 h-[300px]">
+                            <div class="col-span-2 row-span-2 rounded-xl overflow-hidden relative group">
+                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A bright, modern studio apartment interior with white walls, light wood flooring, and large windows. The space is minimally furnished with a gray sofa and a small coffee table. Soft daylight illuminates the room, creating a clean, institutional trust aesthetic typical of high-end real estate listings." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSxmyoaJvJE6J7rfpcx8e9pmG5Y0sDl7aQYZ1na0SZfoUPNpcVl9ibJPOZQxlkjesTQ86mUACqUxFb6ToLcyJjYkiokv5ButnXUfoEBXivNCcOq2fO38VI5zf0c338jB4DzKp67aPdfV7UdSgnV4fXCXXVbj7XRC4SUkxMw_D30PkRWYk57Pktnx-ZdI7o9AZukznUuwk5_KAEhkIj6UIFQq2PsaayVwyho7c8mHqDPV2zqAio0hELdltCSN0CTqzVldBhljX1irBI" />
+                                <button class="absolute top-2 right-2 bg-surface/80 p-1.5 rounded-full shadow hover:bg-white transition-colors">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
+                            </div>
+                            <div class="col-span-2 row-span-1 rounded-xl overflow-hidden relative group">
+                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A sleek, professional kitchen area within a rental unit featuring stainless steel appliances and white cabinetry. The lighting is crisp and modern, highlighting a clean and efficient workspace. The overall mood is one of controlled efficiency and reliability in a professional property management context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjtIX0PiZN-BIF7SJLNAjxpUcY51wjUxeClvJL_SG_-igobu0IyZRHfDRlIzKPVKa8cRUUZfb0uW-o6JOCAWRWXaYDzlfaqvhxc0w2Gwb5lQdgZKxWSMonM_WLsq7kpRFr7gPSyDU3e_sbubwZt3fSjKXMNps-gna9LQCCwkrYWbeb4iPdCXul2IrIe5WAkAlg8vjEXAo2nHQs_0qF7JflH4QLHeqBLU_ce3OCbYQHEAIpVeQRK6g8vp_Pf9UHn0kAYVPNtR-gxyQH" />
+                                <button class="absolute top-2 right-2 bg-surface/80 p-1.5 rounded-full shadow hover:bg-white transition-colors">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
+                            </div>
+                            <div class="col-span-1 row-span-1 rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-primary mb-1">add_a_photo</span>
+                                <span class="font-label-md text-on-surface-variant">Thêm ảnh</span>
+                            </div>
+                            <div class="col-span-1 row-span-1 rounded-xl overflow-hidden relative group">
+                                <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A bright and clean bathroom featuring modern tiling and premium fixtures. The lighting is high-key, reinforcing the feeling of safety and cleanliness. This image captures the essence of a well-maintained SaaS managed property, using a palette of blues and pristine whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYkONFTiNP8ww17XjImgpfTX4qIIe7czXqBHll7WvurZIiDbz9Ts9m5CTEzNSLeBLIoyZ_rLIeowpPDhacgw8OjiRR9ME7EeOhPoX932T7QjBq74-AKnjopzUXtB622BYbE6V93JTDl1TUhu5AKIS39_xvO5dihsX2-H8ZQodOSpiq7jpkhN0XMNGizj7llB1N5A2LknAZn653WsBRH7Msd0FzGi3y5ip9GcaN-Sj2KiR9fbaS_efsRU_VGfInbtkwOXZRu8-V7LDH" />
+                                <button class="absolute top-2 right-2 bg-surface/80 p-1.5 rounded-full shadow hover:bg-white transition-colors">
+                                    <span class="material-symbols-outlined text-sm">close</span>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Action Buttons -->
+                    <div class="pt-8 flex flex-col md:flex-row items-center justify-end gap-4 border-t border-outline-variant">
+                        <button class="w-full md:w-auto px-8 py-3 rounded-full font-label-md text-on-surface-variant hover:bg-surface-container-high transition-all" type="button">
+                            Hủy thay đổi
+                        </button>
+                        <button class="w-full md:w-auto px-10 py-3 rounded-full bg-primary text-on-primary font-bold shadow-lg hover:bg-primary-container active:scale-95 transition-all flex items-center justify-center gap-2" type="button">
+                            <span class="material-symbols-outlined">save</span>
+                            Cập nhật thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Micro-interaction Toast Placeholder (Hidden) -->
+        <div class="fixed bottom-8 right-8 bg-on-secondary-fixed text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 translate-y-24 opacity-0 transition-all duration-500 z-50" id="toast">
+            <span class="material-symbols-outlined text-green-400">check_circle</span>
+            <p class="font-label-md">Cập nhật thông tin phòng thành công!</p>
+        </div>
+    </div>
+    <footer class="mt-auto py-8 text-center text-on-surface-variant border-t border-outline-variant">
+        <p class="font-label-md">© 2024 SOTRO Management Platform. All rights reserved.</p>
+    </footer>
+</main>
+<script>
+        // Simple micro-interaction for the "Update" button
+        const updateBtn = document.querySelector('button.bg-primary');
+        const toast = document.getElementById('toast');
+
+        updateBtn.addEventListener('click', () => {
+            // Simulate loading
+            updateBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Äang lÆ°u...`;
+            updateBtn.disabled = true;
+
+            setTimeout(() => {
+                updateBtn.innerHTML = `<span class="material-symbols-outlined">save</span> Cáº­p nháº­t thay Ä‘á»•i`;
+                updateBtn.disabled = false;
+                
+                // Show toast
+                toast.classList.remove('translate-y-24', 'opacity-0');
+                
+                setTimeout(() => {
+                    toast.classList.add('translate-y-24', 'opacity-0');
+                }, 3000);
+            }, 1000);
+        });
+
+        // Toggle logic for the room status switch
+        const statusButtons = document.querySelectorAll('button.font-label-md');
+        statusButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                statusButtons.forEach(b => {
+                    b.classList.remove('bg-white', 'shadow-sm', 'text-primary', 'border');
+                    b.classList.add('text-on-surface-variant', 'hover:bg-surface-variant');
+                });
+                btn.classList.remove('text-on-surface-variant', 'hover:bg-surface-variant');
+                btn.classList.add('bg-white', 'shadow-sm', 'text-primary', 'border', 'border-outline-variant');
+            });
+        });
+    </script>
+
+
+@code {
+    private const string CustomStyles = "SuaPhong";
+}

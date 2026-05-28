@@ -1,0 +1,168 @@
+﻿@page "/lien-he"
+@layout EmptyLayout
+
+<PageTitle>Liên hệ - Sổ trọ</PageTitle>
+
+@if (!string.IsNullOrEmpty(CustomStyles))
+{
+    <style>
+        
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    
+
+    </style>
+}
+<HeaderLanding />
+<main class="pt-16 min-h-screen">
+<!-- Hero Section -->
+<section class="bg-surface-container-low py-16 md:py-24 text-center px-margin-mobile">
+<div class="max-w-3xl mx-auto">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">
+                    Liên hệ với chúng tôi
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    Chúng tôi luôn sẵn sàng hỗ trợ bạn quản lý nhà trọ hiệu quả hơn.
+                </p>
+</div>
+</section>
+<!-- Main Section: Two Column Layout -->
+<section class="max-w-container-max-width mx-auto px-margin-mobile md:px-margin-desktop py-12 md:py-20">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+<!-- Left Column: Contact Info -->
+<div class="space-y-10">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">Thông tin liên hệ</h2>
+<div class="space-y-6">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 bg-primary-container/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined">location_on</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Địa chỉ</p>
+<p class="font-body-lg text-body-lg">123 Đường ABC, Quận X, TP. Hồ Chí Minh</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 bg-primary-container/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined">call</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Điện thoại</p>
+<p class="font-body-lg text-body-lg">1900 xxxx</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 bg-primary-container/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Email</p>
+<p class="font-body-lg text-body-lg">ho-tro@sotro.vn</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 bg-primary-container/10 rounded-full flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Giờ làm việc</p>
+<p class="font-body-lg text-body-lg">Thứ 2 - Thứ 6: 08:00 - 17:30</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Decorative Image -->
+<div class="rounded-xl overflow-hidden shadow-lg aspect-video relative group">
+<img alt="Office space" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="A modern, high-end office reception area with clean white walls, minimalist blue furniture accents, and bright natural lighting. The scene conveys a sense of professional institutional trust and technological efficiency. High-quality materials like glass and polished surfaces create a SaaS professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWYSock-lTtTJUUjtPpfh6R68qw16FLlbfh0kpYQ2Yl8VrHWIusVChost0-A4KbnAtE7SxWVaNYfH_Rsv6tAxzRSS_j5KyKRBvaU1zO5KOIyi2bRmbNp1vm1muutletClwNZhpo8iJDS6socZgIRi6dJwtQ7N4GGJmhYXyW3yv4X_m61Xbs9sNXauUeFJZQ9XLHOxytKk8_npzxponnBW2Qkj8CpyTLPEyx1z7n9HLwCuH3fb5FybEX0yVqN_qWsKzNY7O_xEEIDef">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+<p class="text-white font-body-md">Văn phòng đại diện tại TP. Hồ Chí Minh</p>
+</div>
+</div>
+</div>
+<!-- Right Column: Contact Form -->
+<div class="bg-surface-container-lowest p-8 md:p-10 rounded-xl border border-outline-variant shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-8">Gửi tin nhắn cho chúng tôi</h3>
+<form class="space-y-6" onsubmit="return false">
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant block">Họ và tên</label>
+<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="Nguyễn Văn A" type="text">
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant block">Email</label>
+<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="example@gmail.com" type="email">
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant block">Số điện thoại</label>
+<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="090x xxx xxx" type="tel">
+</div>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-label-md text-on-surface-variant block">Tin nhắn</label>
+<textarea class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="Tôi cần tư vấn về gói dịch vụ..." rows="5"></textarea>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-lg font-headline-sm text-headline-sm hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span class="">Gửi yêu cầu</span>
+<span class="material-symbols-outlined">send</span>
+</button>
+</form>
+</div>
+</div>
+</section>
+<!-- Map Section -->
+<section class="max-w-container-max-width mx-auto px-margin-mobile md:px-margin-desktop pb-20">
+<div class="relative w-full h-[400px] bg-surface-container-high rounded-xl overflow-hidden flex items-center justify-center group cursor-pointer border border-outline-variant">
+<!-- Background visual simulating a map -->
+<div class="absolute inset-0 opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist city map view with soft colors, clear street layouts, and a central blue marker pin. The map design is institutional and modern, emphasizing clarity and navigation. Soft ambient lighting suggests a bright, daytime setting in a metropolitan area." data-location="Ho Chi Minh City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmlCvwfxen_edbBUi-E4NFpeCUvTg5QMgD5ffrTNet2oFBech609HkpBC22rDDMOZR7h9TnW5Hx1vX2MKYl7rKEzZPLXmpFgMR02n_rdt-lWNLD-rhRIk6rmAGWG1Oq-f_H1urYJH-ceFcy54M_tIztyELKKEl7YKC5bMdgIBod2wpzvSRPHNFyUwvUEEN5XBvgZ-y1xR7O1IRgoFZ1-S6bERkqiU-oyk9MFGSmKGInVOrkpNzTpyJNMzJPPIuFsQoNL2rBTQMIlnw">
+</div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-16 h-16 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-2xl mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: &quot;FILL&quot; 1;">location_on</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-primary bg-white/90 backdrop-blur px-6 py-2 rounded-full shadow-sm">Xem trên Google Maps</p>
+</div>
+</div>
+</section>
+</main>
+<FooterLanding />
+
+<script>
+        // Simple form interaction
+        document.querySelector('button').addEventListener('click', function(e) {
+            const btn = e.currentTarget;
+            if(btn.innerText.includes('Gá»­i yÃªu cáº§u')) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Äang gá»­i...';
+                btn.classList.add('opacity-80');
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<span class="material-symbols-outlined text-green-500">check_circle</span> ÄÃ£ gá»­i thÃ nh cÃ´ng!';
+                    btn.classList.replace('bg-primary', 'bg-surface-container-highest');
+                    btn.classList.replace('text-on-primary', 'text-primary');
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.replace('bg-surface-container-highest', 'bg-primary');
+                        btn.classList.replace('text-primary', 'text-on-primary');
+                        btn.classList.remove('opacity-80');
+                    }, 3000);
+                }, 1500);
+            }
+        });
+
+        // Atmospheric parallax on scroll
+        window.addEventListener('scroll', () => {
+            const scroll = window.pageYOffset;
+            const hero = document.querySelector('section:first-of-type');
+            hero.style.backgroundPositionY = `${scroll * 0.1}px`;
+        });
+    </script>
+
+
+
+
+@code {
+    private const string CustomStyles = "LienHe";
+}

@@ -1,0 +1,304 @@
+﻿@page "/hoa-don"
+@layout EmptyLayout
+
+<PageTitle>SOTRO - Quáº£n lÃ½ HÃ³a Ä‘Æ¡n</PageTitle>
+
+@if (!string.IsNullOrEmpty(CustomStyles))
+{
+    <style>
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c2c6d4;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #727784;
+        }
+    
+
+    </style>
+}
+
+<HeaderDashboard />
+<SideNavBar />
+<main class="flex-1 flex flex-col min-w-0 overflow-hidden relative ml-64">
+    <div class="flex-1 overflow-y-auto bg-background p-gutter">
+        <!-- Header Actions Section -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="font-headline-md text-headline-md text-on-surface mb-1">Quản lý Hóa đơn</h1>
+                <p class="text-body-md text-on-surface-variant">Quản lý thu chi và công nợ căn hộ tháng 10/2023</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button class="flex items-center gap-2 px-4 py-2.5 bg-tertiary-container text-on-tertiary-container rounded-xl font-label-md text-label-md hover:brightness-95 transition-all">
+                    <span class="material-symbols-outlined text-[20px]">bolt</span>
+                    <span class="">Gửi thông báo nợ (VIP)</span>
+                </button>
+                <button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary rounded-xl font-label-md text-label-md hover:shadow-lg transition-all">
+                    <span class="material-symbols-outlined text-[20px]">add_circle</span>
+                    <span class="">Tạo hóa đơn hàng loạt</span>
+                </button>
+            </div>
+        </div>
+        <!-- Bento Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-surface-container-lowest p-6 rounded-full border border-outline-variant shadow-sm flex flex-col">
+                <span class="text-caption text-on-surface-variant uppercase tracking-wider mb-2">Tổng hóa đơn</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-headline-sm text-headline-sm font-bold">124</span>
+                    <span class="text-caption text-primary">Tháng này</span>
+                </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-full border border-outline-variant shadow-sm flex flex-col">
+                <span class="text-caption text-on-surface-variant uppercase tracking-wider mb-2">Đã thanh toán</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-headline-sm text-headline-sm font-bold text-primary">89</span>
+                    <span class="text-caption text-primary">72%</span>
+                </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-full border border-outline-variant shadow-sm flex flex-col">
+                <span class="text-caption text-on-surface-variant uppercase tracking-wider mb-2">Chờ thanh toán</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-headline-sm text-headline-sm font-bold text-secondary">30</span>
+                    <span class="text-caption text-secondary">2.540M</span>
+                </div>
+            </div>
+            <div class="bg-error-container p-6 rounded-full border border-error/10 shadow-sm flex flex-col">
+                <span class="text-caption text-on-error-container uppercase tracking-wider mb-2">Quá hạn</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-headline-sm text-headline-sm font-bold text-error">5</span>
+                    <span class="text-caption text-error">Nghiêm trọng</span>
+                </div>
+            </div>
+        </div>
+        <!-- Filter Bar -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 bg-surface-container-low p-4 rounded-xl">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[140px]">
+                    <span class="material-symbols-outlined text-outline text-[20px]">calendar_today</span>
+                    <select class="bg-transparent border-none text-label-md focus:ring-0 w-full cursor-pointer">
+                        <option>Tháng 10, 2023</option>
+                        <option>Tháng 09, 2023</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[140px]">
+                    <span class="material-symbols-outlined text-outline text-[20px]">filter_list</span>
+                    <select class="bg-transparent border-none text-label-md focus:ring-0 w-full cursor-pointer">
+                        <option>Tất cả trạng thái</option>
+                        <option>Đã thanh toán</option>
+                        <option>Chờ thanh toán</option>
+                        <option>Quá hạn</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 w-full md:w-auto">
+                <button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">file_download</span>
+                    <span class="">Xuất Excel</span>
+                </button>
+            </div>
+        </div>
+        <!-- Table Container -->
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-surface-container-low border-b border-outline-variant">
+                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Mã hóa đơn</th>
+                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Phòng</th>
+                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Kỳ thanh toán</th>
+                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Tổng tiền</th>
+                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
+                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant">
+                    <!-- Row 1 -->
+                    <tr class="hover:bg-surface-bright transition-colors">
+                        <td class="px-6 py-4 font-bold text-primary">INV-2310-001</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-on-surface">P.402</span>
+                                <span class="text-caption text-on-surface-variant">Trần Minh Quân</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
+                        <td class="px-6 py-4 font-bold text-on-surface">4.520.000đ</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-caption font-bold">Đã thanh toán</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+                                <span class="material-symbols-outlined text-outline">visibility</span>
+                            </button>
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-primary">
+                                <span class="material-symbols-outlined">print</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- Row 2 -->
+                    <tr class="hover:bg-surface-bright transition-colors">
+                        <td class="px-6 py-4 font-bold text-primary">INV-2310-002</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-on-surface">P.205</span>
+                                <span class="text-caption text-on-surface-variant">Lê Thị Hoa</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
+                        <td class="px-6 py-4 font-bold text-on-surface">3.800.000đ</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-caption font-bold">Chờ thanh toán</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+                                <span class="material-symbols-outlined text-outline">visibility</span>
+                            </button>
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-tertiary">
+                                <span class="material-symbols-outlined">send</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- Row 3 -->
+                    <tr class="hover:bg-surface-bright transition-colors">
+                        <td class="px-6 py-4 font-bold text-primary">INV-2310-003</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-on-surface">P.501</span>
+                                <span class="text-caption text-on-surface-variant">Nguyễn Văn Ba</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
+                        <td class="px-6 py-4 font-bold text-error">5.150.000đ</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-error-container text-on-error-container rounded-full text-caption font-bold">Quá hạn 3 ngày</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+                                <span class="material-symbols-outlined text-outline">visibility</span>
+                            </button>
+                            <button class="p-2 hover:bg-error-container hover:text-error rounded-full transition-colors text-error">
+                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">priority_high</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- Row 4 -->
+                    <tr class="hover:bg-surface-bright transition-colors">
+                        <td class="px-6 py-4 font-bold text-primary">INV-2310-004</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-on-surface">P.101</span>
+                                <span class="text-caption text-on-surface-variant">Phạm Nhật Vượng</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
+                        <td class="px-6 py-4 font-bold text-on-surface">6.000.000đ</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-caption font-bold">Đã thanh toán</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+                                <span class="material-symbols-outlined text-outline">visibility</span>
+                            </button>
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-primary">
+                                <span class="material-symbols-outlined">print</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- Row 5 -->
+                    <tr class="hover:bg-surface-bright transition-colors">
+                        <td class="px-6 py-4 font-bold text-primary">INV-2310-005</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="font-medium text-on-surface">P.303</span>
+                                <span class="text-caption text-on-surface-variant">Lý Quốc Sư</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
+                        <td class="px-6 py-4 font-bold text-on-surface">2.200.000đ</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-caption font-bold">Chờ thanh toán</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+                                <span class="material-symbols-outlined text-outline">visibility</span>
+                            </button>
+                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-tertiary">
+                                <span class="material-symbols-outlined">send</span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- Pagination -->
+            <div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-low">
+                <span class="text-caption text-on-surface-variant">Hiển thị 1 - 5 trong tổng số 124 hóa đơn</span>
+                <div class="flex items-center gap-1">
+                    <button class="p-2 rounded-lg hover:bg-surface-container disabled:opacity-30" disabled="">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <button class="w-8 h-8 rounded-lg bg-primary text-on-primary text-label-md font-bold">1</button>
+                    <button class="w-8 h-8 rounded-lg hover:bg-surface-container text-label-md">2</button>
+                    <button class="w-8 h-8 rounded-lg hover:bg-surface-container text-label-md">3</button>
+                    <span class="px-2">...</span>
+                    <button class="w-8 h-8 rounded-lg hover:bg-surface-container text-label-md">25</button>
+                    <button class="p-2 rounded-lg hover:bg-surface-container">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Floating Action Button for Support/VIP -->
+    <button class="fixed bottom-8 right-8 w-14 h-14 bg-tertiary text-on-tertiary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-50 group">
+        <span class="material-symbols-outlined">support_agent</span>
+        <span class="absolute right-16 bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-lg text-caption whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Hỗ trợ kỹ thuật SOTRO
+        </span>
+    </button>
+</main>
+<script>
+        // Simple micro-interaction for the Send Debt Notification VIP feature
+        const vipButtons = document.querySelectorAll('button:contains("Gá»­i thÃ´ng bÃ¡o ná»£"), .text-tertiary .material-symbols-outlined[textContent="send"]');
+        
+        // Custom text search selector polyfill
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            if (btn.textContent.includes('Gá»­i thÃ´ng bÃ¡o ná»£')) {
+                btn.addEventListener('click', () => {
+                    const confirmAction = confirm('Báº¡n cÃ³ muá»‘n gá»­i thÃ´ng bÃ¡o nháº¯c ná»£ tá»± Ä‘á»™ng qua Zalo/SMS cho táº¥t cáº£ hÃ³a Ä‘Æ¡n quÃ¡ háº¡n? (TÃ­nh nÄƒng VIP)');
+                    if(confirmAction) {
+                        alert('Äang xá»­ lÃ½ gá»­i thÃ´ng bÃ¡o hÃ ng loáº¡t...');
+                    }
+                });
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+@code {
+    private const string CustomStyles = "HoaDon";
+}
