@@ -33,6 +33,13 @@ namespace SoTro_BE.Models
         [StringLength(30)]
         public string? Status { get; set; } // Active, Inactive, Locked
 
+        public bool EmailConfirmed { get; set; }
+
+        [StringLength(255)]
+        public string? ResetPasswordToken { get; set; }
+
+        public DateTime? ResetPasswordTokenExpiry { get; set; }
+
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

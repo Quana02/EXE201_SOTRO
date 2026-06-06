@@ -1,10 +1,17 @@
 using SOTRO_Project.Components;
+using SOTRO_Project.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient<IAuthApiService, AuthApiService>(client =>
+{
+    var baseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5254/";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 var app = builder.Build();
 

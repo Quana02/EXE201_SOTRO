@@ -1,108 +1,163 @@
-﻿@page "/dat-lai-mat-khau"
+@page "/dat-lai-mat-khau"
 @using SOTRO_Project.Components.Layout
+@inject NavigationManager Navigation
+@inject IAuthApiService AuthApi
 
 <PageTitle>Đặt lại mật khẩu - Sổ trọ</PageTitle>
 
 <HeaderLanding />
 
 <main class="pt-28 pb-16 min-h-screen flex items-center justify-center px-4 bg-gray-50 relative overflow-hidden">
-
     <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div class="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-blue-700 rounded-full blur-[120px]"></div>
         <div class="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-900 rounded-full blur-[120px]"></div>
     </div>
 
     <div class="w-full max-w-[480px] z-10">
-
         <div class="bg-white p-8 md:p-10 rounded-xl shadow border border-gray-200">
-
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-blue-700 mb-2">
-                    Đặt lại mật khẩu
-                </h1>
-
-                <p class="text-gray-600">
-                    Nhập mật khẩu mới của bạn để tiếp tục sử dụng ứng dụng Sổ trọ.
-                </p>
+                <h1 class="text-3xl font-bold text-blue-700 mb-2">Đặt lại mật khẩu</h1>
+                <p class="text-gray-600">Nhập mật khẩu mới của bạn để tiếp tục sử dụng ứng dụng Sổ trọ.</p>
             </div>
 
-            <form class="space-y-6">
+            @if (!HasResetInfo)
+            {
+                <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                    Thiếu thông tin xác thực đặt lại mật khẩu.
+                </div>
+            }
 
+            @if (!string.IsNullOrWhiteSpace(Message))
+            {
+                <div class="mb-6 rounded-lg border px-4 py-3 @(IsSuccess ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700")">
+                    @Message
+                </div>
+            }
+
+            <form class="space-y-6" @onsubmit="ResetPassword" @onsubmit:preventDefault>
                 <div class="space-y-2">
-                    <label class="text-sm font-semibold text-gray-600 block">
-                        Mật khẩu mới
-                    </label>
-
-                    <input class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 outline-none"
+                    <label class="text-sm font-semibold text-gray-600 block">Mật khẩu mới</label>
+                    <input @bind="Request.NewPassword"
+                           class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 outline-none"
                            placeholder="••••••••"
                            type="password" />
                 </div>
 
                 <div class="space-y-3">
-
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500 uppercase tracking-wider">
-                            Độ mạnh mật khẩu
-                        </span>
-
-                        <span class="text-xs text-gray-500">
-                            Yếu
-                        </span>
+                        <span class="text-xs text-gray-500 uppercase tracking-wider">Độ mạnh mật khẩu</span>
+                        <span class="text-xs text-gray-500">@PasswordStrengthLabel</span>
                     </div>
-
                     <div class="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                        <div class="h-full w-[25%] bg-red-500"></div>
+                        <div class="h-full @PasswordStrengthWidth @PasswordStrengthColor"></div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4 text-gray-600 text-sm">
                         <div>○ Tối thiểu 8 ký tự</div>
                         <div>○ Chữ hoa A-Z</div>
                         <div>○ Chữ số 0-9</div>
                         <div>○ Ký tự đặc biệt</div>
                     </div>
-
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-semibold text-gray-600 block">
-                        Xác nhận mật khẩu mới
-                    </label>
-
-                    <input class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 outline-none"
+                    <label class="text-sm font-semibold text-gray-600 block">Xác nhận mật khẩu mới</label>
+                    <input @bind="Request.ConfirmPassword"
+                           class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-700 focus:border-blue-700 outline-none"
                            placeholder="••••••••"
                            type="password" />
-
-                    <p class="text-red-600 text-xs hidden mt-1">
-                        Mật khẩu xác nhận không khớp.
-                    </p>
                 </div>
 
-                <button class="w-full bg-blue-700 text-white py-3.5 rounded-lg text-base font-bold hover:bg-blue-800 shadow-md transition-all"
-                        type="button">
-                    Cập nhật mật khẩu
+                <button disabled="@(!HasResetInfo || IsLoading)"
+                        class="w-full bg-blue-700 text-white py-3.5 rounded-lg text-base font-bold hover:bg-blue-800 shadow-md transition-all disabled:opacity-60"
+                        type="submit">
+                    @(IsLoading ? "Đang cập nhật..." : "Cập nhật mật khẩu")
                 </button>
-
             </form>
 
             <div class="mt-8 text-center">
-                <a class="text-blue-700 text-sm font-semibold hover:underline inline-flex items-center gap-1"
-                       href="/dang-nhap">
+                <a class="text-blue-700 text-sm font-semibold hover:underline inline-flex items-center gap-1" href="/dang-nhap">
                     ← Quay lại trang Đăng nhập
                 </a>
             </div>
-
         </div>
-
-        <div class="mt-8 flex justify-center">
-            <div class="h-16 w-16 bg-white rounded-xl shadow-sm border border-gray-200 flex items-center justify-center p-3">
-                <img alt="Logo Sổ trọ"
-                     class="object-contain grayscale opacity-50"
-                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrTuGgO59RgNbmnmN-8Tx79guQ-CuJhGOK5McAwqa5cvSW0rg2oXxHxI6GyqUC1zzkch2qtcd8DooPxBJiKA0aKLeDp_CIv5n8eAAu3YI8qqZArbq9SPFwT8U57gtAWyKfHoqbes1P1c6qEq1O8d3MuMkrw9ef-ptJHzpBRMW2-29p6lC3odDRZeVNu_wkb1NuZQ5A8vCTFRQ8XD7FZ4TTB-uK9NcXz9tOZWSLzrWlIwp2OjhlpRi-W891mdf_CFemSXNjWjP9_c4r" />
-            </div>
-        </div>
-
     </div>
-
 </main>
 
 <FooterLanding />
+
+@code {
+    [SupplyParameterFromQuery(Name = "email")]
+    public string? Email { get; set; }
+
+    [SupplyParameterFromQuery(Name = "resetPasswordToken")]
+    public string? ResetPasswordToken { get; set; }
+
+    private ResetPasswordRequest Request { get; set; } = new();
+    private bool IsLoading { get; set; }
+    private bool IsSuccess { get; set; }
+    private string? Message { get; set; }
+    private bool HasResetInfo => !string.IsNullOrWhiteSpace(Request.Email) && !string.IsNullOrWhiteSpace(Request.ResetPasswordToken);
+
+    private string PasswordStrengthLabel => PasswordScore switch
+    {
+        >= 4 => "Mạnh",
+        3 => "Khá",
+        2 => "Trung bình",
+        _ => "Yếu"
+    };
+
+    private string PasswordStrengthWidth => PasswordScore switch
+    {
+        >= 4 => "w-full",
+        3 => "w-3/4",
+        2 => "w-1/2",
+        _ => "w-1/4"
+    };
+
+    private string PasswordStrengthColor => PasswordScore switch
+    {
+        >= 4 => "bg-green-500",
+        3 => "bg-blue-500",
+        2 => "bg-yellow-500",
+        _ => "bg-red-500"
+    };
+
+    private int PasswordScore
+    {
+        get
+        {
+            var password = Request.NewPassword ?? string.Empty;
+            var score = 0;
+            if (password.Length >= 8) score++;
+            if (password.Any(char.IsUpper)) score++;
+            if (password.Any(char.IsDigit)) score++;
+            if (password.Any(ch => !char.IsLetterOrDigit(ch))) score++;
+            return score;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        Request.Email = Email ?? string.Empty;
+        Request.ResetPasswordToken = ResetPasswordToken ?? string.Empty;
+    }
+
+    private async Task ResetPassword()
+    {
+        IsLoading = true;
+        Message = null;
+
+        var response = await AuthApi.ResetPasswordAsync(Request);
+        IsSuccess = response.Success;
+        Message = response.Message;
+
+        if (response.Success)
+        {
+            Message = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
+            await Task.Delay(1500);
+            Navigation.NavigateTo("/dang-nhap");
+        }
+
+        IsLoading = false;
+    }
+}
