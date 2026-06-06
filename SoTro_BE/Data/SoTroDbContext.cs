@@ -11,6 +11,8 @@ namespace SoTro_BE.Data
 
         public DbSet<Role> Roles { get; set; } = null!;
         public DbSet<User> Users { get; set; } = null!;
+        public DbSet<OtpVerification> OtpVerifications { get; set; } = null!;
+        public DbSet<PendingRegistration> PendingRegistrations { get; set; } = null!;
         public DbSet<Landlord> Landlords { get; set; } = null!;
         public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; } = null!;
         public DbSet<LandlordSubscription> LandlordSubscriptions { get; set; } = null!;
@@ -65,6 +67,19 @@ namespace SoTro_BE.Data
                     .WithMany(p => p.Users)
                     .HasForeignKey(d => d.RoleId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // OTP Verifications
+            modelBuilder.Entity<OtpVerification>(entity =>
+            {
+                entity.HasIndex(e => new { e.Email, e.Purpose, e.IsUsed });
+                entity.HasIndex(e => e.ResetPasswordToken);
+            });
+
+            // Pending Registrations
+            modelBuilder.Entity<PendingRegistration>(entity =>
+            {
+                entity.HasIndex(e => e.Email).IsUnique();
             });
 
             // Landlords

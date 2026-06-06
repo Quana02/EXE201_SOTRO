@@ -1,0 +1,15 @@
+using SoTro_BE.DTOs.Auth;
+
+namespace SoTro_BE.Services
+{
+    public interface IAuthService
+    {
+        Task<ApiResponse<string>> SendRegisterOtpAsync(RegisterSendOtpRequest request);
+        Task<ApiResponse<string>> ResendRegisterOtpAsync(RegisterResendOtpRequest request);
+        Task<ApiResponse<string>> VerifyRegisterOtpAsync(RegisterVerifyOtpRequest request);
+        Task<ApiResponse<AuthResponse>> LoginAsync(LoginRequest request);
+        Task<ApiResponse<string>> SendForgotPasswordOtpAsync(ForgotPasswordSendOtpRequest request);
+        Task<ApiResponse<string>> VerifyForgotPasswordOtpAsync(ForgotPasswordVerifyOtpRequest request);
+        Task<ApiResponse<string>> ResetPasswordAsync(ResetPasswordRequest request);
+    }
+}

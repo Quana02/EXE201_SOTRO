@@ -1,0 +1,162 @@
+@page "/xac-thuc-otp"
+@layout EmptyLayout
+@inject IAuthApiService AuthApi
+@inject NavigationManager Navigation
+
+<PageTitle>Xác thực OTP - Sổ trọ</PageTitle>
+
+<HeaderLanding />
+
+<main class="pt-32 pb-16 flex-grow flex items-center justify-center px-margin-mobile py-12">
+    <div class="w-full max-w-md bg-surface-container-lowest p-8 rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-fixed rounded-full mb-6">
+                <span class="material-symbols-outlined text-primary text-4xl">pin</span>
+            </div>
+            <h1 class="font-headline-md text-headline-md text-on-surface mb-2">Xác thực OTP</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                Mã OTP đã được gửi tới <span class="font-semibold text-primary">@Email</span>.
+            </p>
+        </div>
+
+        @if (!HasOtpContext)
+        {
+            <div class="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                Thiếu email hoặc loại OTP.
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Message))
+        {
+            <div class="mb-5 rounded-lg border px-4 py-3 @(IsSuccess ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700")">
+                @Message
+            </div>
+        }
+
+        <form class="space-y-6" @onsubmit="VerifyOtp" @onsubmit:preventDefault>
+            <div class="space-y-2">
+                <label class="font-label-md text-label-md text-on-surface-variant" for="otp">Mã OTP</label>
+                <input @bind="Otp"
+                       class="w-full px-4 py-3 text-center text-2xl tracking-[0.35em] bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                       id="otp"
+                       maxlength="6"
+                       inputmode="numeric"
+                       placeholder="000000"
+                       type="text" />
+            </div>
+
+            <button disabled="@(!HasOtpContext || IsLoading)"
+                    class="w-full py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors shadow-sm active:scale-[0.98] disabled:opacity-60"
+                    type="submit">
+                @(IsLoading ? "Đang xác nhận..." : "Xác nhận OTP")
+            </button>
+
+            <button disabled="@(!HasOtpContext || IsResending)"
+                    class="w-full py-3 border border-outline-variant text-primary rounded-lg font-label-md text-label-md hover:bg-primary-fixed transition-colors disabled:opacity-60"
+                    type="button"
+                    @onclick="ResendOtp">
+                @(IsResending ? "Đang gửi lại..." : "Gửi lại OTP")
+            </button>
+        </form>
+
+        <div class="mt-8 text-center border-t border-outline-variant pt-6">
+            <a class="inline-flex items-center gap-2 font-label-md text-label-md text-primary hover:underline transition-all" href="/dang-nhap">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                Quay lại Đăng nhập
+            </a>
+        </div>
+    </div>
+</main>
+
+<FooterLanding />
+
+@code {
+    [SupplyParameterFromQuery(Name = "email")]
+    public string? Email { get; set; }
+
+    [SupplyParameterFromQuery(Name = "purpose")]
+    public string? Purpose { get; set; }
+
+    private string Otp { get; set; } = string.Empty;
+    private bool IsLoading { get; set; }
+    private bool IsResending { get; set; }
+    private bool IsSuccess { get; set; }
+    private string? Message { get; set; }
+    private bool HasOtpContext => !string.IsNullOrWhiteSpace(Email) && IsKnownPurpose;
+    private bool IsKnownPurpose => Purpose == "Register" || Purpose == "ForgotPassword";
+
+    private async Task VerifyOtp()
+    {
+        IsLoading = true;
+        Message = null;
+
+        if (Purpose == "Register")
+        {
+            var response = await AuthApi.VerifyRegisterOtpAsync(new RegisterVerifyOtpRequest
+            {
+                Email = Email ?? string.Empty,
+                Otp = Otp.Trim()
+            });
+
+            IsSuccess = response.Success;
+            Message = response.Message;
+
+            if (response.Success)
+            {
+                Message = "Đăng ký tài khoản thành công. Vui lòng đăng nhập để tiếp tục.";
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/dang-nhap");
+            }
+        }
+        else if (Purpose == "ForgotPassword")
+        {
+            var response = await AuthApi.VerifyForgotPasswordOtpAsync(new ForgotPasswordVerifyOtpRequest
+            {
+                Email = Email ?? string.Empty,
+                Otp = Otp.Trim()
+            });
+
+            IsSuccess = response.Success;
+            Message = response.Message;
+
+            if (response.Success && !string.IsNullOrWhiteSpace(response.Data))
+            {
+                var email = Uri.EscapeDataString(Email ?? string.Empty);
+                var token = Uri.EscapeDataString(response.Data);
+                Navigation.NavigateTo($"/dat-lai-mat-khau?email={email}&resetPasswordToken={token}");
+            }
+        }
+
+        IsLoading = false;
+    }
+
+    private async Task ResendOtp()
+    {
+        IsResending = true;
+        Message = null;
+
+        ApiResponse<string> response;
+        if (Purpose == "Register")
+        {
+            response = await AuthApi.ResendRegisterOtpAsync(new RegisterResendOtpRequest
+            {
+                Email = Email ?? string.Empty
+            });
+        }
+        else
+        {
+            response = await AuthApi.SendForgotPasswordOtpAsync(new ForgotPasswordSendOtpRequest
+            {
+                Email = Email ?? string.Empty
+            });
+        }
+
+        IsSuccess = response.Success;
+        Message = response.Message;
+        if (response.Success)
+        {
+            Message = "Mã OTP đã được gửi đến email của bạn.";
+        }
+        IsResending = false;
+    }
+}
