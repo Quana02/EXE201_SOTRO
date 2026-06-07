@@ -129,6 +129,60 @@
 <body class="bg-surface font-body-md text-on-surface">
     <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        window.initAddressAutocomplete = (inputElementId, dotNetHelper, callbackMethodName) => {
+            const input = document.getElementById(inputElementId);
+            if (!input) return;
+
+            let timeout = null;
+            let listContainer = document.createElement('div');
+            listContainer.className = 'absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto hidden';
+            input.parentNode.style.position = 'relative'; // Ensure relative positioning for absolute dropdown
+            input.parentNode.appendChild(listContainer);
+
+            input.addEventListener('input', () => {
+                clearTimeout(timeout);
+                const query = input.value.trim();
+                if (query.length < 3) {
+                    listContainer.classList.add('hidden');
+                    return;
+                }
+
+                 timeout = setTimeout(async () => {
+                    try {
+                        const suggestions = await dotNetHelper.invokeMethodAsync('GetSuggestions', query);
+                        
+                        listContainer.innerHTML = '';
+                        if (!suggestions || suggestions.length === 0) {
+                            listContainer.classList.add('hidden');
+                            return;
+                        }
+
+                        suggestions.forEach(item => {
+                            const itemEl = document.createElement('div');
+                            itemEl.className = 'px-4 py-2 hover:bg-gray-100 hover:text-blue-700 cursor-pointer text-sm border-b border-gray-100 last:border-0 text-left text-gray-800';
+                            itemEl.textContent = item;
+                            itemEl.addEventListener('click', () => {
+                                input.value = item;
+                                listContainer.classList.add('hidden');
+                                dotNetHelper.invokeMethodAsync(callbackMethodName, item);
+                            });
+                            listContainer.appendChild(itemEl);
+                        });
+                        listContainer.classList.remove('hidden');
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }, 500);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target !== input && !listContainer.contains(e.target)) {
+                    listContainer.classList.add('hidden');
+                }
+            });
+        };
+    </script>
 </body>
 
 </html>
