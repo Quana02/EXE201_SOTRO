@@ -30,6 +30,16 @@ namespace SoTro_BE.Models
         [StringLength(500)]
         public string? AvatarUrl { get; set; }
 
+        [StringLength(100)]
+        public string? GoogleId { get; set; }
+
+        [StringLength(50)]
+        public string? Provider { get; set; }
+
+        public bool IsExternalLogin { get; set; }
+
+        public bool IsProfileCompleted { get; set; }
+
         [StringLength(30)]
         public string? Status { get; set; } // Active, Inactive, Locked
 

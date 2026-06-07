@@ -129,6 +129,42 @@
 <body class="bg-surface font-body-md text-on-surface">
     <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        window.sotroGoogleAuth = {
+            dotNetRef: null,
+            init: function (clientId, dotNetRef) {
+                this.dotNetRef = dotNetRef;
+
+                if (!clientId || clientId === "YOUR_GOOGLE_CLIENT_ID") {
+                    return false;
+                }
+
+                if (!window.google || !google.accounts || !google.accounts.id) {
+                    return false;
+                }
+
+                google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: (response) => {
+                        if (this.dotNetRef && response && response.credential) {
+                            this.dotNetRef.invokeMethodAsync("HandleGoogleCredential", response.credential);
+                        }
+                    }
+                });
+
+                return true;
+            },
+            prompt: function () {
+                if (!window.google || !google.accounts || !google.accounts.id) {
+                    return false;
+                }
+
+                google.accounts.id.prompt();
+                return true;
+            }
+        };
+    </script>
 </body>
 
 </html>
