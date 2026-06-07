@@ -1,4 +1,6 @@
-﻿<aside class="fixed left-0 top-0 h-full w-64 flex flex-col p-base z-40 bg-surface-container-low border-r border-outline-variant pt-20">
+@inject IJSRuntime JS
+
+<aside class="fixed left-0 top-0 h-full w-64 flex flex-col p-base z-40 bg-surface-container-low border-r border-outline-variant pt-20">
     <div class="mb-8 px-4">
         <div class="flex flex-col gap-2">
             <div class="relative group w-fit cursor-pointer">
@@ -8,8 +10,8 @@
                 </div>
             </div>
             <div class="flex flex-col">
-                <span class="text-label-md font-bold text-on-surface">SOTRO Apartment</span>
-                <span class="text-[10px] text-outline uppercase font-bold">Quận 1</span>
+                <span class="text-label-md font-bold text-on-surface">@buildingName</span>
+                <span class="text-[10px] text-outline uppercase font-bold">Quản lý</span>
             </div>
         </div>
     </div>
@@ -33,10 +35,6 @@
         <div class="pt-4 pb-2 px-3">
             <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Tiện ích</p>
         </div>
-        @* <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
-            <span class="material-symbols-outlined" data-icon="campaign">campaign</span>
-            <span class="text-label-md font-label-md">Marketing</span>
-        </a> *@
         <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/cai-dat">
             <span class="material-symbols-outlined" data-icon="settings">settings</span>
             <div class="flex flex-col">
@@ -44,9 +42,29 @@
                 <span class="text-[10px] text-outline font-medium">Cài đặt tự động VIP</span>
             </div>
         </a>
-    @*     <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="#">
-        <span class="material-symbols-outlined" data-icon="workspace_premium">workspace_premium</span>
-        <span class="text-label-md font-label-md"><span class="" style="font-size: medium; letter-spacing: normal;">Nâng cấp dịch vụ</span></span>
-    </a> *@
-</nav>
+    </nav>
 </aside>
+
+@code {
+    private string buildingName = "SOTRO Apartment";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var name = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_name");
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    buildingName = name;
+                    StateHasChanged();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading building name: {ex.Message}");
+            }
+        }
+    }
+}

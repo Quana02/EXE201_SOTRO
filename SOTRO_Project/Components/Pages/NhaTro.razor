@@ -22,7 +22,7 @@
             </div>
 
             <button @onclick="GoToCreateHouse"
-                    class="flex items-center justify-center gap-3 bg-primary text-on-primary bg-blue-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-primary/20 active:scale-95 transition-all group">
+                    class="flex items-center justify-center gap-3 bg-primary text-on-primary bg-blue-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-primary/20 active:scale-95 transition-all group cursor-pointer">
                 <span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">
                     add_circle
                 </span>
@@ -79,7 +79,7 @@
                     <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">apartment</span>
                     <h3 class="text-xl font-bold text-gray-700 mb-2">Bạn chưa có nhà trọ nào</h3>
                     <p class="text-gray-500 mb-6 max-w-md">Bắt đầu bằng việc tạo nhà trọ đầu tiên để quản lý phòng, dịch vụ, hóa đơn và khách thuê của bạn.</p>
-                    <button @onclick="GoToCreateHouse" class="bg-primary text-white bg-blue-700 px-6 py-3 rounded-xl font-bold hover:bg-blue-800 transition-all flex items-center gap-2">
+                    <button @onclick="GoToCreateHouse" class="bg-primary text-white bg-blue-700 px-6 py-3 rounded-xl font-bold hover:bg-blue-800 transition-all flex items-center gap-2 cursor-pointer">
                         <span class="material-symbols-outlined">add_circle</span>
                         Tạo nhà trọ mới
                     </button>
@@ -163,11 +163,11 @@
                             </div>
 
                             <div class="flex gap-2">
-                                <a class="flex-1 text-center py-2.5 border-2 border-blue-700 text-blue-700 font-bold rounded-xl hover:bg-blue-700 hover:text-white transition-all text-sm"
-                                   href="/Dashboard">
+                                <button type="button" class="flex-grow flex-1 text-center py-2.5 border-2 border-blue-700 text-blue-700 font-bold rounded-xl hover:bg-blue-700 hover:text-white transition-all text-sm bg-transparent cursor-pointer"
+                                        @onclick="() => GoToDetail(house)">
                                     Quản lý chi tiết
-                                </a>
-                                <button @onclick="() => ConfirmDelete(house)" class="px-3 border border-red-200 hover:border-red-600 rounded-xl text-red-500 hover:bg-red-50 transition-all flex items-center justify-center">
+                                </button>
+                                <button type="button" @onclick="() => ConfirmDelete(house)" class="px-3 border border-red-200 hover:border-red-600 rounded-xl text-red-500 hover:bg-red-50 transition-all flex items-center justify-center cursor-pointer">
                                     <span class="material-symbols-outlined text-lg">delete</span>
                                 </button>
                             </div>
@@ -176,7 +176,7 @@
                 }
 
                 <button @onclick="GoToCreateHouse"
-                        class="flex flex-col items-center justify-center h-[430px] border-2 border-dashed border-gray-300 rounded-2xl hover:bg-gray-100 hover:border-blue-700 transition-all group bg-white">
+                        class="flex flex-col items-center justify-center h-[430px] border-2 border-dashed border-gray-300 rounded-2xl hover:bg-gray-100 hover:border-blue-700 transition-all group bg-white cursor-pointer">
                     <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-blue-100 group-hover:scale-110 transition-all">
                         <span class="material-symbols-outlined text-4xl text-gray-500 group-hover:text-blue-700">add_home</span>
                     </div>
@@ -232,6 +232,20 @@
     private void GoToCreateHouse()
     {
         Navigation.NavigateTo("/tao-nha-tro");
+    }
+
+    private async Task GoToDetail(BuildingResponse house)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "active_building_id", house.BuildingId.ToString());
+            await JS.InvokeVoidAsync("localStorage.setItem", "active_building_name", house.BuildingName);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving building context: {ex.Message}");
+        }
+        Navigation.NavigateTo("/dashboard");
     }
 
     private async Task ConfirmDelete(BuildingResponse house)
