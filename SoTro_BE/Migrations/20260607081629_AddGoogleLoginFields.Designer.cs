@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SoTro_BE.Data;
@@ -11,9 +12,11 @@ using SoTro_BE.Data;
 namespace SoTro_BE.Migrations
 {
     [DbContext(typeof(SoTroDbContext))]
-    partial class SoTroDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607081629_AddGoogleLoginFields")]
+    partial class AddGoogleLoginFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -54,6 +54,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDYWlEYXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/CompleteProfile.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDb21wbGV0ZVByb2ZpbGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/DangKy.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYW5nS3kucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 

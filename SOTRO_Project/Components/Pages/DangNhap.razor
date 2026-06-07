@@ -3,6 +3,8 @@
 @inject NavigationManager Navigation
 @inject IAuthApiService AuthApi
 @inject IJSRuntime JS
+@inject IConfiguration Configuration
+@implements IDisposable
 
 <PageTitle>Đăng nhập - Sổ trọ</PageTitle>
 
@@ -45,6 +47,7 @@
                                placeholder="name@example.com"
                                type="email" />
                     </div>
+                    @ShowFieldError(nameof(LoginModel.Email))
                 </div>
 
                 <div class="space-y-1.5">
@@ -59,6 +62,7 @@
                                placeholder="••••••••"
                                type="password" />
                     </div>
+                    @ShowFieldError(nameof(LoginModel.Password))
                 </div>
 
                 <button disabled="@IsLoading"
@@ -78,10 +82,13 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <button class="flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-xl hover:bg-gray-50">Google</button>
-                <button class="flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-xl hover:bg-gray-50">Facebook</button>
-            </div>
+            <button @onclick="LoginWithGoogle"
+                    disabled="@IsGoogleLoading"
+                    type="button"
+                    class="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 disabled:opacity-60">
+                <span class="font-bold text-red-500">G</span>
+                @(IsGoogleLoading ? "Đang đăng nhập Google..." : "Google")
+            </button>
 
             <div class="mt-8 text-center">
                 <p class="text-gray-600">
@@ -104,19 +111,45 @@
     private LoginRequest LoginModel { get; set; } = new();
     private bool ShowError { get; set; }
     private bool IsLoading { get; set; }
+    private bool IsGoogleLoading { get; set; }
     private string ErrorMessage { get; set; } = "Sai email hoặc mật khẩu";
+    private Dictionary<string, string> Errors { get; set; } = new();
+    private DotNetObjectReference<DangNhap>? GoogleCallbackRef { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        GoogleCallbackRef = DotNetObjectReference.Create(this);
+        await InitializeGoogleAsync();
+    }
 
     private async Task Login()
     {
+        if (!ValidateLogin())
+        {
+            ShowError = false;
+            return;
+        }
+
         IsLoading = true;
         ShowError = false;
+        LoginModel.Email = LoginModel.Email.Trim();
 
         var response = await AuthApi.LoginAsync(LoginModel);
         if (response.Success && response.Data != null)
         {
-            await JS.InvokeVoidAsync("localStorage.setItem", "sotro_token", response.Data.Token);
-            await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", response.Data.Email);
-            await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_name", response.Data.FullName ?? "");
+            await SaveAuthData(response.Data);
+
+            if (response.Data.RequiresProfileCompletion)
+            {
+                Navigation.NavigateTo($"/complete-profile?email={Uri.EscapeDataString(response.Data.Email)}");
+                return;
+            }
+
             Navigation.NavigateTo("/nha-tro");
         }
         else
@@ -128,8 +161,186 @@
         IsLoading = false;
     }
 
+    private async Task LoginWithGoogle()
+    {
+        var clientId = Configuration["Authentication:Google:ClientId"];
+        if (string.IsNullOrWhiteSpace(clientId) || clientId == "YOUR_GOOGLE_CLIENT_ID")
+        {
+            ErrorMessage = "Chưa cấu hình Google ClientId trong appsettings.json.";
+            ShowError = true;
+            return;
+        }
+
+        var initialized = await InitializeGoogleAsync();
+        if (!initialized)
+        {
+            ErrorMessage = "Không thể khởi tạo Google Login. Vui lòng tải lại trang và thử lại.";
+            ShowError = true;
+            return;
+        }
+
+        var prompted = await JS.InvokeAsync<bool>("sotroGoogleAuth.prompt");
+        if (!prompted)
+        {
+            ErrorMessage = "Không thể mở đăng nhập Google. Vui lòng tải lại trang và thử lại.";
+            ShowError = true;
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleGoogleCredential(string credential)
+    {
+        try
+        {
+            IsGoogleLoading = true;
+            ShowError = false;
+
+            var profile = DecodeGoogleCredential(credential);
+            if (profile == null)
+            {
+                ErrorMessage = "Không đọc được thông tin tài khoản Google.";
+                ShowError = true;
+                return;
+            }
+
+            var response = await AuthApi.GoogleLoginAsync(new GoogleLoginRequest
+            {
+                Email = profile.Email,
+                FullName = profile.FullName,
+                GoogleId = profile.GoogleId,
+                AvatarUrl = profile.AvatarUrl
+            });
+
+            if (response.Success && response.Data != null)
+            {
+                await SaveAuthData(response.Data);
+
+                if (response.Data.RequiresProfileCompletion)
+                {
+                    Navigation.NavigateTo($"/complete-profile?email={Uri.EscapeDataString(response.Data.Email)}");
+                    return;
+                }
+
+                Navigation.NavigateTo("/nha-tro");
+            }
+            else
+            {
+                ErrorMessage = string.IsNullOrWhiteSpace(response.Message) ? "Đăng nhập Google thất bại." : response.Message;
+                ShowError = true;
+            }
+        }
+        finally
+        {
+            IsGoogleLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task<bool> InitializeGoogleAsync()
+    {
+        if (GoogleCallbackRef == null)
+        {
+            return false;
+        }
+
+        var clientId = Configuration["Authentication:Google:ClientId"] ?? string.Empty;
+        return await JS.InvokeAsync<bool>("sotroGoogleAuth.init", clientId, GoogleCallbackRef);
+    }
+
+    private async Task SaveAuthData(AuthResponse authResponse)
+    {
+        var email = authResponse.User?.Email ?? authResponse.Email;
+        var fullName = authResponse.User?.FullName ?? authResponse.FullName ?? string.Empty;
+        var phoneNumber = authResponse.User?.PhoneNumber ?? authResponse.PhoneNumber ?? string.Empty;
+
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_token", authResponse.Token);
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", email);
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_name", fullName);
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_phone_number", phoneNumber);
+    }
+
+    private bool ValidateLogin()
+    {
+        Errors = new Dictionary<string, string>();
+
+        if (string.IsNullOrWhiteSpace(LoginModel.Email))
+        {
+            Errors[nameof(LoginModel.Email)] = "Email không được để trống.";
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(LoginModel.Email.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+        {
+            Errors[nameof(LoginModel.Email)] = "Email không đúng định dạng.";
+        }
+
+        if (string.IsNullOrWhiteSpace(LoginModel.Password))
+        {
+            Errors[nameof(LoginModel.Password)] = "Mật khẩu không được để trống.";
+        }
+
+        return Errors.Count == 0;
+    }
+
     private void CloseError()
     {
         ShowError = false;
+    }
+
+    private static GoogleProfile? DecodeGoogleCredential(string credential)
+    {
+        var parts = credential.Split('.');
+        if (parts.Length < 2)
+        {
+            return null;
+        }
+
+        var payload = parts[1].Replace('-', '+').Replace('_', '/');
+        payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+        var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(payload));
+        using var document = System.Text.Json.JsonDocument.Parse(json);
+        var root = document.RootElement;
+
+        var email = root.TryGetProperty("email", out var emailElement) ? emailElement.GetString() : null;
+        var name = root.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null;
+        var sub = root.TryGetProperty("sub", out var subElement) ? subElement.GetString() : null;
+        var picture = root.TryGetProperty("picture", out var pictureElement) ? pictureElement.GetString() : null;
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(sub))
+        {
+            return null;
+        }
+
+        return new GoogleProfile
+        {
+            Email = email,
+            FullName = string.IsNullOrWhiteSpace(name) ? email : name,
+            GoogleId = sub,
+            AvatarUrl = picture
+        };
+    }
+
+    private RenderFragment ShowFieldError(string fieldName) => builder =>
+    {
+        if (!Errors.TryGetValue(fieldName, out var error))
+        {
+            return;
+        }
+
+        builder.OpenElement(0, "p");
+        builder.AddAttribute(1, "class", "mt-1 text-sm text-red-600");
+        builder.AddContent(2, error);
+        builder.CloseElement();
+    };
+
+    public void Dispose()
+    {
+        GoogleCallbackRef?.Dispose();
+    }
+
+    private class GoogleProfile
+    {
+        public string Email { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string GoogleId { get; set; } = string.Empty;
+        public string? AvatarUrl { get; set; }
     }
 }

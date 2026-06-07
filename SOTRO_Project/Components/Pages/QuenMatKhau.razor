@@ -15,7 +15,7 @@
             </div>
             <h1 class="font-headline-md text-headline-md text-on-surface mb-2">Quên mật khẩu?</h1>
             <p class="font-body-md text-body-md text-on-surface-variant">
-                Nhập email tài khoản để nhận link đặt lại mật khẩu.
+                Nhập email tài khoản để nhận mã OTP đặt lại mật khẩu.
             </p>
         </div>
 
@@ -38,6 +38,10 @@
                            required
                            type="email" />
                 </div>
+                @if (!string.IsNullOrWhiteSpace(EmailError))
+                {
+                    <p class="text-sm text-red-600">@EmailError</p>
+                }
             </div>
 
             <button disabled="@IsLoading"
@@ -63,11 +67,19 @@
     private bool IsLoading { get; set; }
     private bool IsSuccess { get; set; }
     private string? Message { get; set; }
+    private string? EmailError { get; set; }
 
     private async Task SubmitForgotPassword()
     {
+        if (!ValidateEmail())
+        {
+            Message = null;
+            return;
+        }
+
         IsLoading = true;
         Message = null;
+        Request.Email = Request.Email.Trim();
 
         var response = await AuthApi.SendForgotPasswordOtpAsync(Request);
         IsSuccess = response.Success;
@@ -81,5 +93,21 @@
         }
 
         IsLoading = false;
+    }
+
+    private bool ValidateEmail()
+    {
+        EmailError = null;
+
+        if (string.IsNullOrWhiteSpace(Request.Email))
+        {
+            EmailError = "Email không được để trống.";
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(Request.Email.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+        {
+            EmailError = "Email không đúng định dạng.";
+        }
+
+        return string.IsNullOrWhiteSpace(EmailError);
     }
 }
