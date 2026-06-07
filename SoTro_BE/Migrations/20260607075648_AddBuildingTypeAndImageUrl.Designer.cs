@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SoTro_BE.Data;
@@ -11,9 +12,11 @@ using SoTro_BE.Data;
 namespace SoTro_BE.Migrations
 {
     [DbContext(typeof(SoTroDbContext))]
-    partial class SoTroDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607075648_AddBuildingTypeAndImageUrl")]
+    partial class AddBuildingTypeAndImageUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1778,16 +1781,6 @@ namespace SoTro_BE.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("GoogleId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsExternalLogin")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsProfileCompleted")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -1796,10 +1789,6 @@ namespace SoTro_BE.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
-
-                    b.Property<string>("Provider")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("ResetPasswordToken")
                         .HasMaxLength(255)
@@ -1822,8 +1811,6 @@ namespace SoTro_BE.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique();
-
-                    b.HasIndex("GoogleId");
 
                     b.HasIndex("RoleId");
 

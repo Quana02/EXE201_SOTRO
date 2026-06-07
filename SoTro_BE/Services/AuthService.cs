@@ -497,6 +497,11 @@ namespace SoTro_BE.Services
                 claims.Add(new Claim(ClaimTypes.Role, user.Role.RoleName));
             }
 
+            if (user.Landlord != null)
+            {
+                claims.Add(new Claim("LandlordId", user.Landlord.LandlordId.ToString()));
+            }
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

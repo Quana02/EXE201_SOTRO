@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using SoTro_BE.Data;
 using SoTro_BE.Models;
@@ -17,9 +18,28 @@ namespace SoTro_BE.Repositories
         {
             var normalizedEmail = email.Trim().ToLower();
 
-            return await _context.Users
+            var user = await _context.Users
                 .Include(user => user.Role)
+                .Include(user => user.Landlord)
                 .FirstOrDefaultAsync(user => user.Email.ToLower() == normalizedEmail);
+
+            if (user != null && user.Landlord == null)
+            {
+                var landlord = new Landlord
+                {
+                    UserId = user.UserId,
+                    DisplayName = user.FullName,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.Landlords.Add(landlord);
+                await _context.SaveChangesAsync();
+                
+                // Assign to user object to populate relationship immediately
+                user.Landlord = landlord;
+            }
+
+            return user;
         }
 
         public async Task<User> CreateUserAsync(User user)

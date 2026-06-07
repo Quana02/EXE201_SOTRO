@@ -1,147 +1,431 @@
-﻿@page "/tao-nha-tro"
+@page "/tao-nha-tro"
 @layout EmptyLayout
+@implements IDisposable
+@inject IBuildingApiService BuildingApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
 
-<PageTitle>Tạo nhà trọ - Sổ trọ</PageTitle>
+<PageTitle>Tạo nhà trọ mới - Sổ trọ</PageTitle>
 
 @if (!string.IsNullOrEmpty(CustomStyles))
 {
     <style>
-        
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
         .form-focus-glow:focus-within {
             box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
         }
-    
-
     </style>
 }
 
-
 <!-- TopNavBar -->
 <HeaderDashboard/>
+
 <!-- Main Content Canvas -->
-<main class="min-h-[calc(100vh-128px)] py-12 px-margin-mobile md:px-margin-desktop">
+<main class="min-h-[calc(100vh-128px)] py-12 px-margin-mobile md:px-margin-desktop bg-gray-50">
     <div class="max-w-[800px] mx-auto">
         <!-- Breadcrumbs & Header -->
         <div class="mb-8">
             <nav class="flex items-center gap-2 text-caption text-secondary mb-4">
-                <a class="hover:text-primary" href="#">Danh sách nhà trọ</a>
-                <span class="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+                <a class="hover:text-primary" href="/nha-tro">Danh sách nhà trọ</a>
+                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
                 <span class="text-primary font-medium">Tạo nhà trọ mới</span>
             </nav>
             <h1 class="font-headline-md text-headline-md text-on-surface">Tạo nhà trọ mới</h1>
             <p class="text-body-md text-on-surface-variant mt-2">Điền thông tin chi tiết để bắt đầu quản lý cơ sở kinh doanh mới của bạn.</p>
         </div>
+
         <!-- Form Card -->
-        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-8">
-            <form class="space-y-8" id="createPropertyForm">
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-8 bg-white">
+            <EditForm Model="@model" OnValidSubmit="HandleSubmit" FormName="createBuildingForm" class="space-y-8">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-sm">
+                        <span class="font-bold">Lỗi:</span> @errorMessage
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="p-4 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined">check_circle</span>
+                        <span>@successMessage</span>
+                    </div>
+                }
+
                 <!-- Section 1: Basic Info -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Tên nhà trọ -->
                     <div class="col-span-2 flex flex-col gap-2">
-                        <label class="font-label-md text-on-surface-variant" for="propertyName">Tên nhà trọ <span class="text-error">*</span></label>
-                        <input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none" id="propertyName" placeholder="Nhập tên nhà trọ (ví dụ: Sổ Trọ Central)" type="text">
+                        <label class="font-label-md text-on-surface-variant font-medium text-gray-700" for="propertyName">
+                            Tên nhà trọ <span class="text-error text-red-500">*</span>
+                        </label>
+                        <InputText @bind-Value="model.BuildingName" class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none" id="propertyName" placeholder="Nhập tên nhà trọ (ví dụ: Sổ Trọ Central)" />
+                        <ValidationMessage For="@(() => model.BuildingName)" class="text-red-500 text-xs" />
                     </div>
+
+                    <!-- Loại nhà trọ -->
                     <div class="flex flex-col gap-2">
-                        <label class="font-label-md text-on-surface-variant" for="propertyType">Loại nhà trọ <span class="text-error">*</span></label>
+                        <label class="font-label-md text-on-surface-variant font-medium text-gray-700" for="propertyType">
+                            Loại nhà trọ <span class="text-error text-red-500">*</span>
+                        </label>
                         <div class="relative">
-                            <select class="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md outline-none" id="propertyType">
-                                <option disabled="" selected="" value="">Chọn loại hình</option>
-                                <option value="traditional">Nhà trọ truyền thống</option>
-                                <option value="mini_apartment">Chung cư mini</option>
-                                <option value="serviced">Căn hộ dịch vụ</option>
-                                <option value="dorm">Ký túc xá</option>
-                            </select>
-                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary" data-icon="expand_more">expand_more</span>
+                            <InputSelect @bind-Value="model.BuildingTypeId" class="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md outline-none pr-10" id="propertyType">
+                                <option value="0">Chọn loại hình</option>
+                                @foreach (var type in buildingTypes)
+                                {
+                                    <option value="@type.BuildingTypeId">@type.TypeName</option>
+                                }
+                            </InputSelect>
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
                         </div>
+                        <ValidationMessage For="@(() => model.BuildingTypeId)" class="text-red-500 text-xs" />
                     </div>
+
+                    <!-- Số tầng -->
                     <div class="flex flex-col gap-2">
-                        <label class="font-label-md text-on-surface-variant" for="floors">Số tầng <span class="text-error">*</span></label>
-                        <input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none" id="floors" min="1" placeholder="Ví dụ: 5" type="number">
+                        <label class="font-label-md text-on-surface-variant font-medium text-gray-700" for="floors">
+                            Số tầng <span class="text-error text-red-500">*</span>
+                        </label>
+                        <InputNumber @bind-Value="model.TotalFloors" class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none" id="floors" min="1" placeholder="Ví dụ: 5" />
+                        <ValidationMessage For="@(() => model.TotalFloors)" class="text-red-500 text-xs" />
                     </div>
+
+                    <!-- Ngày lập hóa đơn và Ngày hạn thanh toán -->
+                    <div class="flex flex-col gap-2">
+                        <label class="font-label-md text-on-surface-variant font-medium text-gray-700" for="billingDay">
+                            Ngày lập hóa đơn hàng tháng (1-31)
+                        </label>
+                        <InputNumber @bind-Value="model.BillingDay" class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none" id="billingDay" min="1" max="31" placeholder="Ví dụ: 30" />
+                        <ValidationMessage For="@(() => model.BillingDay)" class="text-red-500 text-xs" />
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label class="font-label-md text-on-surface-variant font-medium text-gray-700" for="dueDay">
+                            Hạn đóng tiền hàng tháng (1-31)
+                        </label>
+                        <InputNumber @bind-Value="model.DueDay" class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none" id="dueDay" min="1" max="31" placeholder="Ví dụ: 5" />
+                        <ValidationMessage For="@(() => model.DueDay)" class="text-red-500 text-xs" />
+                    </div>
+
+                    <!-- Địa chỉ autocomplete -->
                     <div class="col-span-2 flex flex-col gap-2">
-                        <label class="font-label-md text-on-surface-variant" for="address">Địa chỉ <span class="text-error">*</span></label>
+                        <label class="font-label-md text-on-surface-variant font-medium text-gray-700" for="address-input">
+                            Địa chỉ <span class="text-error text-red-500">*</span>
+                        </label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary" data-icon="location_on">location_on</span>
-                            <input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none" id="address" placeholder="Số nhà, tên đường, phường, quận, thành phố" type="text">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary">location_on</span>
+                            <input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg pl-10 pr-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none" 
+                                   id="address-input" 
+                                   value="@model.Address" 
+                                   @oninput="(e) => { model.Address = e.Value?.ToString() ?? string.Empty; }" 
+                                   placeholder="Số nhà, tên đường, phường, quận, thành phố (Gợi ý địa chỉ thật)" 
+                                   type="text" />
                         </div>
+                        <ValidationMessage For="@(() => model.Address)" class="text-red-500 text-xs" />
+                    </div>
+
+                    <!-- Mô tả nhà trọ -->
+                    <div class="col-span-2 flex flex-col gap-2">
+                        <label class="font-label-md text-on-surface-variant font-medium text-gray-700" for="description">
+                            Mô tả nhà trọ
+                        </label>
+                        <InputTextArea @bind-Value="model.Description" class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all text-body-md placeholder:text-outline outline-none h-28 resize-none" id="description" placeholder="Nhập thêm mô tả về nhà trọ, quy định chung..." />
+                        <ValidationMessage For="@(() => model.Description)" class="text-red-500 text-xs" />
                     </div>
                 </div>
+
                 <!-- Decorative Separator -->
-                <div class="h-px bg-outline-variant"></div>
-                <!-- Additional Details / Visual Element -->
+                <div class="h-px bg-outline-variant bg-gray-200"></div>
+
+                <!-- Section 2: Ảnh nhà trọ (Multi-upload) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-1">
-                        <h3 class="font-label-md font-bold text-on-surface uppercase tracking-wider mb-2">Ảnh đại diện</h3>
-                        <p class="text-caption text-on-surface-variant">Sử dụng ảnh chất lượng cao để tăng khả năng thu hút khách thuê.</p>
+                        <h3 class="font-label-md font-bold text-on-surface uppercase tracking-wider mb-2 text-gray-700">Ảnh nhà trọ</h3>
+                        <p class="text-caption text-on-surface-variant text-gray-500">Tải lên nhiều ảnh chất lượng cao. Ảnh đầu tiên sẽ được dùng làm ảnh đại diện.</p>
+                        @if (selectedImages.Count > 0)
+                        {
+                            <p class="text-caption text-blue-600 mt-2 font-medium">
+                                <span class="material-symbols-outlined text-[16px] align-middle">photo_library</span>
+                                @selectedImages.Count ảnh đã chọn
+                            </p>
+                        }
                     </div>
                     <div class="md:col-span-2">
-                        <div class="border-2 border-dashed border-outline-variant rounded-xl p-8 flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
-                            <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors text-4xl mb-2" data-icon="add_a_photo">add_a_photo</span>
-                            <p class="text-body-md font-medium text-secondary">Tải ảnh lên hoặc kéo thả</p>
-                            <p class="text-caption text-outline mt-1">PNG, JPG tối đa 5MB</p>
+                        <!-- Image Previews Grid -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+                            @for (int i = 0; i < selectedImages.Count; i++)
+                            {
+                                var index = i;
+                                var img = selectedImages[index];
+                                <div class="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm aspect-square bg-gray-100">
+                                    @if (!string.IsNullOrEmpty(img.PreviewUrl))
+                                    {
+                                        <img src="@img.PreviewUrl" alt="Preview @(index + 1)" class="w-full h-full object-cover" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <span class="material-symbols-outlined text-gray-400 text-3xl animate-spin">progress_activity</span>
+                                        </div>
+                                    }
+                                    <!-- Badge ảnh đại diện -->
+                                    @if (index == 0)
+                                    {
+                                        <div class="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                                            Ảnh đại diện
+                                        </div>
+                                    }
+                                    <!-- Delete button -->
+                                    <button type="button"
+                                            class="absolute top-1.5 right-1.5 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                            @onclick="() => RemoveImage(index)"
+                                            title="Xóa ảnh này">
+                                        <span class="material-symbols-outlined text-[16px]">close</span>
+                                    </button>
+                                    <!-- File info overlay -->
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <p class="text-white text-[10px] truncate">@img.FileName</p>
+                                        <p class="text-white/70 text-[9px]">@(img.FileSize / 1024) KB</p>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Add More Button (always visible) -->
+                            <div>
+                                <InputFile OnChange="HandleFilesSelected" id="image-upload" class="hidden" accept=".jpg,.jpeg,.png,.webp,.gif" multiple />
+                                <label for="image-upload" class="border-2 border-dashed border-gray-300 rounded-lg aspect-square flex flex-col items-center justify-center bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer group">
+                                    <span class="material-symbols-outlined text-gray-400 group-hover:text-blue-600 text-3xl transition-colors">add_photo_alternate</span>
+                                    <p class="text-[11px] text-gray-500 group-hover:text-blue-600 mt-1 font-medium transition-colors">Thêm ảnh</p>
+                                    <p class="text-[9px] text-gray-400 mt-0.5">Max 5MB/ảnh</p>
+                                </label>
+                            </div>
                         </div>
+
+                        @if (selectedImages.Count == 0)
+                        {
+                            <p class="text-xs text-gray-400 text-center">Hỗ trợ: JPG, PNG, WebP, GIF — tối đa 5MB mỗi ảnh</p>
+                        }
                     </div>
                 </div>
+
                 <!-- Actions -->
                 <div class="flex flex-col sm:flex-row items-center justify-end gap-4 pt-6">
-                    <button class="w-full sm:w-auto px-8 py-3 rounded-full font-label-md text-primary hover:bg-surface-container-low transition-all cursor-pointer" type="button">
+                    <a href="/nha-tro" class="w-full sm:w-auto text-center px-8 py-3 rounded-full font-label-md text-primary hover:bg-gray-100 transition-all cursor-pointer text-blue-700 font-bold">
                         Hủy
-                    </button>
-                    <button class="w-full sm:w-auto px-8 py-3 rounded-full font-label-md bg-primary text-on-primary hover:bg-primary-container shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer" type="submit">
-                        Tạo nhà trọ
+                    </a>
+                    <button class="w-full sm:w-auto px-8 py-3 rounded-full font-label-md bg-primary text-on-primary bg-blue-700 text-white font-bold hover:bg-blue-800 shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2" 
+                            type="submit" 
+                            disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="material-symbols-outlined animate-spin">progress_activity</span>
+                            <span>Đang tạo...</span>
+                        }
+                        else
+                        {
+                            <span>Tạo nhà trọ</span>
+                        }
                     </button>
                 </div>
-            </form>
+            </EditForm>
         </div>
+
         <!-- Contextual Tip -->
-        <div class="mt-8 flex gap-4 p-4 bg-tertiary-container/10 rounded-lg border border-tertiary-container/20">
-            <span class="material-symbols-outlined text-tertiary" data-icon="lightbulb">lightbulb</span>
+        <div class="mt-8 flex gap-4 p-4 bg-tertiary-container/10 rounded-lg border border-tertiary-container/20 bg-blue-50 border-blue-200">
+            <span class="material-symbols-outlined text-tertiary text-blue-700">lightbulb</span>
             <div>
-                <h4 class="font-label-md font-bold text-tertiary">Mẹo chuyên nghiệp</h4>
-                <p class="text-caption text-on-tertiary-fixed-variant mt-1">Sau khi tạo nhà trọ, bạn có thể thiết lập các phòng riêng lẻ và cấu hình bảng giá điện nước ngay tại Dashboard của nhà trọ đó.</p>
+                <h4 class="font-label-md font-bold text-tertiary text-blue-700">Mẹo chuyên nghiệp</h4>
+                <p class="text-caption text-on-tertiary-fixed-variant mt-1 text-blue-900">Sau khi tạo nhà trọ, bạn có thể thiết lập các phòng riêng lẻ và cấu hình bảng giá điện nước ngay tại Dashboard của nhà trọ đó.</p>
             </div>
         </div>
     </div>
 </main>
-<!-- Footer -->
-<script>
-        // Form submission animation effect
-        document.getElementById('createPropertyForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const originalContent = btn.innerHTML;
-            
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-symbols-outlined animate-spin" data-icon="progress_activity">progress_activity</span> Äang táº¡o...';
-            
-            // Simulating a success interaction
-            setTimeout(() => {
-                btn.classList.replace('bg-primary', 'bg-success-container');
-                btn.classList.add('bg-green-600'); // Fallback color
-                btn.innerHTML = '<span class="material-symbols-outlined" data-icon="check">check</span> ÄÃ£ táº¡o thÃ nh cÃ´ng';
-                
-                setTimeout(() => {
-                    alert('NhÃ  trá» má»›i Ä‘Ã£ Ä‘Æ°á»£c táº¡o thÃ nh cÃ´ng!');
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                    btn.classList.remove('bg-green-600');
-                }, 1000);
-            }, 1500);
-        });
-
-        // Dropdown interaction effect
-        const selectElement = document.getElementById('propertyType');
-        selectElement.addEventListener('change', function() {
-            this.classList.add('text-on-surface');
-            this.classList.remove('text-outline');
-        });
-    </script>
-
-
-
 
 @code {
     private const string CustomStyles = "TaoNhaTro";
+
+    private List<BuildingTypeResponse> buildingTypes = new();
+    private CreateBuildingRequest model = new() { BuildingTypeId = 0 };
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isSubmitting;
+
+    // Multi-image upload state
+    private List<ImagePreview> selectedImages = new();
+
+    private DotNetObjectReference<TaoNhaTro>? dotNetHelper;
+
+    // Helper class: stores file data in memory to avoid Blazor InputFile ID invalidation
+    private class ImagePreview
+    {
+        public byte[] FileData { get; set; } = Array.Empty<byte>();
+        public string FileName { get; set; } = string.Empty;
+        public string ContentType { get; set; } = string.Empty;
+        public long FileSize { get; set; }
+        public string? PreviewUrl { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await BuildingApiService.GetBuildingTypesAsync();
+        if (response.Success && response.Data != null)
+        {
+            buildingTypes = response.Data;
+        }
+        else
+        {
+            errorMessage = "Không thể tải danh sách loại nhà trọ.";
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetHelper = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("window.initAddressAutocomplete", "address-input", dotNetHelper, nameof(OnAddressSelected));
+        }
+    }
+
+    [JSInvokable]
+    public void OnAddressSelected(string address)
+    {
+        model.Address = address;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task<List<string>> GetSuggestions(string query)
+    {
+        try
+        {
+            var response = await BuildingApiService.SuggestAddressAsync(query);
+            if (response.Success && response.Data != null)
+            {
+                return response.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching suggestions: {ex.Message}");
+        }
+        return new List<string>();
+    }
+
+    private async Task HandleFilesSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        var maxAllowedFiles = 10;
+        var files = e.GetMultipleFiles(maxAllowedFiles);
+
+        foreach (var file in files)
+        {
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                errorMessage = $"Ảnh '{file.Name}' vượt quá 5MB, đã bỏ qua.";
+                continue;
+            }
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+            {
+                errorMessage = $"File '{file.Name}' không phải ảnh hợp lệ, đã bỏ qua.";
+                continue;
+            }
+
+            // Read file data into memory immediately to avoid Blazor file ID invalidation
+            try
+            {
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream(5 * 1024 * 1024).ReadExactlyAsync(buffer);
+
+                var preview = new ImagePreview
+                {
+                    FileData = buffer,
+                    FileName = file.Name,
+                    ContentType = file.ContentType,
+                    FileSize = file.Size,
+                    PreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}"
+                };
+                selectedImages.Add(preview);
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Lỗi đọc file '{file.Name}': {ex.Message}";
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private void RemoveImage(int index)
+    {
+        if (index >= 0 && index < selectedImages.Count)
+        {
+            selectedImages.RemoveAt(index);
+            errorMessage = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (model.BuildingTypeId == 0)
+        {
+            errorMessage = "Vui lòng chọn loại hình nhà trọ.";
+            return;
+        }
+
+        if (selectedImages.Count == 0)
+        {
+            errorMessage = "Vui lòng tải lên ít nhất 1 ảnh cho nhà trọ.";
+            return;
+        }
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            // Create MemoryStreams from buffered data (safe, no IBrowserFile reference needed)
+            var imageFiles = new List<(Stream Stream, string FileName)>();
+            foreach (var img in selectedImages)
+            {
+                imageFiles.Add((new MemoryStream(img.FileData), img.FileName));
+            }
+
+            var response = await BuildingApiService.CreateBuildingAsync(model, imageFiles);
+            if (response.Success)
+            {
+                successMessage = "Tạo nhà trọ thành công!";
+                StateHasChanged();
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/nha-tro");
+            }
+            else
+            {
+                errorMessage = response.Message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi kết nối máy chủ: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        dotNetHelper?.Dispose();
+    }
 }

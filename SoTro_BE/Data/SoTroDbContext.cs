@@ -18,6 +18,7 @@ namespace SoTro_BE.Data
         public DbSet<LandlordSubscription> LandlordSubscriptions { get; set; } = null!;
         public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; } = null!;
         public DbSet<Building> Buildings { get; set; } = null!;
+        public DbSet<BuildingType> BuildingTypes { get; set; } = null!;
         public DbSet<RoomType> RoomTypes { get; set; } = null!;
         public DbSet<Room> Rooms { get; set; } = null!;
         public DbSet<RoomImage> RoomImages { get; set; } = null!;
@@ -117,12 +118,30 @@ namespace SoTro_BE.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // BuildingTypes - Seed data
+            modelBuilder.Entity<BuildingType>(entity =>
+            {
+                entity.HasIndex(e => e.TypeName).IsUnique();
+
+                entity.HasData(
+                    new BuildingType { BuildingTypeId = 1, TypeName = "Nhà trọ truyền thống", Description = "Nhà trọ phòng riêng, thường có chung khu vệ sinh hoặc riêng", IsDeleted = false, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                    new BuildingType { BuildingTypeId = 2, TypeName = "Chung cư mini", Description = "Chung cư quy mô nhỏ, mỗi phòng có khu vệ sinh riêng", IsDeleted = false, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                    new BuildingType { BuildingTypeId = 3, TypeName = "Căn hộ dịch vụ", Description = "Căn hộ đầy đủ tiện nghi, có dịch vụ dọn dẹp và bảo trì", IsDeleted = false, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                    new BuildingType { BuildingTypeId = 4, TypeName = "Ký túc xá", Description = "Phòng ở dạng giường tầng, nhiều người ở chung một phòng", IsDeleted = false, CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+                );
+            });
+
             // Buildings
             modelBuilder.Entity<Building>(entity =>
             {
                 entity.HasOne(d => d.Landlord)
                     .WithMany(p => p.Buildings)
                     .HasForeignKey(d => d.LandlordId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(d => d.BuildingType)
+                    .WithMany(p => p.Buildings)
+                    .HasForeignKey(d => d.BuildingTypeId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
