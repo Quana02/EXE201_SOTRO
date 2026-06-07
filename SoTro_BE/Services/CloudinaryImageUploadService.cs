@@ -41,7 +41,7 @@ namespace SoTro_BE.Services
 
             if (uploadResult.Error != null)
             {
-                throw new Exception($"Upload failed: {uploadResult.Error.Message}");
+                throw new Exception($"Tải lên ảnh thất bại: {uploadResult.Error.Message}");
             }
 
             return uploadResult.SecureUrl.ToString();

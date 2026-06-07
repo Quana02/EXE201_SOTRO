@@ -19,6 +19,7 @@ namespace SoTro_BE.Data
         public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; } = null!;
         public DbSet<Building> Buildings { get; set; } = null!;
         public DbSet<BuildingType> BuildingTypes { get; set; } = null!;
+        public DbSet<BuildingImage> BuildingImages { get; set; } = null!;
         public DbSet<RoomType> RoomTypes { get; set; } = null!;
         public DbSet<Room> Rooms { get; set; } = null!;
         public DbSet<RoomImage> RoomImages { get; set; } = null!;
@@ -142,6 +143,15 @@ namespace SoTro_BE.Data
                 entity.HasOne(d => d.BuildingType)
                     .WithMany(p => p.Buildings)
                     .HasForeignKey(d => d.BuildingTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // BuildingImages
+            modelBuilder.Entity<BuildingImage>(entity =>
+            {
+                entity.HasOne(d => d.Building)
+                    .WithMany(p => p.BuildingImages)
+                    .HasForeignKey(d => d.BuildingId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 

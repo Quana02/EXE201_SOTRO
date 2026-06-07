@@ -75,7 +75,7 @@ namespace SoTro_BE.Services
 
                 if (await _authRepository.EmailExistsAsync(email))
                 {
-                    return ApiResponse<string>.Fail("Email already exists.");
+                    return ApiResponse<string>.Fail("Email đã tồn tại.");
                 }
 
                 var now = DateTime.UtcNow;
@@ -101,16 +101,25 @@ namespace SoTro_BE.Services
                 await _otpRepository.RemoveOldOtpsAsync(email, RegisterPurpose);
                 await _otpRepository.SaveOtpAsync(CreateOtp(email, otpCode, RegisterPurpose));
 
-                await _emailService.SendEmailAsync(
-                    email,
-                    "Xac thuc dang ky tai khoan So Tro",
-                    BuildOtpEmailBody("Xac thuc dang ky tai khoan So Tro", otpCode));
+                Console.WriteLine($"[DEVELOPMENT OTP] Email: {email}, OTP Code: {otpCode}");
 
-                return ApiResponse<string>.Ok("OTP register has been sent to your email.");
+                try
+                {
+                    await _emailService.SendEmailAsync(
+                        email,
+                        "Xac thuc dang ky tai khoan So Tro",
+                        BuildOtpEmailBody("Xac thuc dang ky tai khoan So Tro", otpCode));
+                }
+                catch (Exception emailEx)
+                {
+                    Console.WriteLine($"[WARNING] Failed to send registration email to {email}: {emailEx.Message}");
+                }
+
+                return ApiResponse<string>.Ok("Mã OTP đăng ký đã được gửi đến email của bạn.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<string>.Fail($"Send register OTP failed: {ex.Message}");
+                return ApiResponse<string>.Fail($"Gửi mã OTP đăng ký thất bại: {ex.Message}");
             }
         }
 
@@ -122,19 +131,19 @@ namespace SoTro_BE.Services
 
                 if (await _authRepository.EmailExistsAsync(email))
                 {
-                    return ApiResponse<string>.Fail("Email already exists.");
+                    return ApiResponse<string>.Fail("Email đã tồn tại.");
                 }
 
                 var otp = await _otpRepository.GetValidOtpAsync(email, request.Otp, RegisterPurpose);
                 if (otp == null)
                 {
-                    return ApiResponse<string>.Fail("OTP is invalid or expired.");
+                    return ApiResponse<string>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.");
                 }
 
                 var pendingRegistration = await _otpRepository.GetPendingRegistrationByEmailAsync(email);
                 if (pendingRegistration == null)
                 {
-                    return ApiResponse<string>.Fail("Pending registration was not found.");
+                    return ApiResponse<string>.Fail("Không tìm thấy thông tin đăng ký chờ xác thực.");
                 }
 
                 var now = DateTime.UtcNow;
@@ -160,11 +169,11 @@ namespace SoTro_BE.Services
                 await _otpRepository.UpdatePendingRegistrationAsync(pendingRegistration);
                 await _otpRepository.MarkOtpAsUsedAsync(otp);
 
-                return ApiResponse<string>.Ok("Register OTP verified successfully.");
+                return ApiResponse<string>.Ok("Xác thực OTP đăng ký thành công.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<string>.Fail($"Verify register OTP failed: {ex.Message}");
+                return ApiResponse<string>.Fail($"Xác thực OTP đăng ký thất bại: {ex.Message}");
             }
         }
 
@@ -176,29 +185,38 @@ namespace SoTro_BE.Services
 
                 if (await _authRepository.EmailExistsAsync(email))
                 {
-                    return ApiResponse<string>.Fail("Email already exists.");
+                    return ApiResponse<string>.Fail("Email đã tồn tại.");
                 }
 
                 var pendingRegistration = await _otpRepository.GetPendingRegistrationByEmailAsync(email);
                 if (pendingRegistration == null || pendingRegistration.IsVerified)
                 {
-                    return ApiResponse<string>.Fail("Pending registration was not found.");
+                    return ApiResponse<string>.Fail("Không tìm thấy thông tin đăng ký chờ xác thực.");
                 }
 
                 var otpCode = GenerateOtpCode();
                 await _otpRepository.RemoveOldOtpsAsync(email, RegisterPurpose);
                 await _otpRepository.SaveOtpAsync(CreateOtp(email, otpCode, RegisterPurpose));
 
-                await _emailService.SendEmailAsync(
-                    email,
-                    "Xac thuc dang ky tai khoan So Tro",
-                    BuildOtpEmailBody("Xac thuc dang ky tai khoan So Tro", otpCode));
+                Console.WriteLine($"[DEVELOPMENT OTP RESEND] Email: {email}, OTP Code: {otpCode}");
 
-                return ApiResponse<string>.Ok("OTP register has been resent to your email.");
+                try
+                {
+                    await _emailService.SendEmailAsync(
+                        email,
+                        "Xac thuc dang ky tai khoan So Tro",
+                        BuildOtpEmailBody("Xac thuc dang ky tai khoan So Tro", otpCode));
+                }
+                catch (Exception emailEx)
+                {
+                    Console.WriteLine($"[WARNING] Failed to resend registration email to {email}: {emailEx.Message}");
+                }
+
+                return ApiResponse<string>.Ok("Mã OTP đăng ký đã được gửi lại đến email của bạn.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<string>.Fail($"Resend register OTP failed: {ex.Message}");
+                return ApiResponse<string>.Fail($"Gửi lại mã OTP đăng ký thất bại: {ex.Message}");
             }
         }
 
@@ -209,25 +227,25 @@ namespace SoTro_BE.Services
                 var user = await _authRepository.GetUserByEmailAsync(request.Email);
                 if (user == null)
                 {
-                    return ApiResponse<AuthResponse>.Fail("Email or password is incorrect.");
+                    return ApiResponse<AuthResponse>.Fail("Email hoặc mật khẩu không chính xác.");
                 }
 
                 if (string.Equals(user.Status, "Locked", StringComparison.OrdinalIgnoreCase))
                 {
-                    return ApiResponse<AuthResponse>.Fail("Account is locked.");
+                    return ApiResponse<AuthResponse>.Fail("Tài khoản đã bị khóa.");
                 }
 
                 var passwordResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
                 if (passwordResult == PasswordVerificationResult.Failed)
                 {
-                    return ApiResponse<AuthResponse>.Fail("Email or password is incorrect.");
+                    return ApiResponse<AuthResponse>.Fail("Email hoặc mật khẩu không chính xác.");
                 }
 
-                return ApiResponse<AuthResponse>.Ok("Login successfully.", CreateAuthResponse(user));
+                return ApiResponse<AuthResponse>.Ok("Đăng nhập thành công.", CreateAuthResponse(user));
             }
             catch (Exception ex)
             {
-                return ApiResponse<AuthResponse>.Fail($"Login failed: {ex.Message}");
+                return ApiResponse<AuthResponse>.Fail($"Đăng nhập thất bại: {ex.Message}");
             }
         }
 
@@ -240,23 +258,32 @@ namespace SoTro_BE.Services
 
                 if (user == null)
                 {
-                    return ApiResponse<string>.Ok("If the email exists, an OTP has been sent.");
+                    return ApiResponse<string>.Ok("Nếu email tồn tại trên hệ thống, một mã OTP đã được gửi.");
                 }
 
                 var otpCode = GenerateOtpCode();
                 await _otpRepository.RemoveOldOtpsAsync(email, ForgotPasswordPurpose);
                 await _otpRepository.SaveOtpAsync(CreateOtp(email, otpCode, ForgotPasswordPurpose));
 
-                await _emailService.SendEmailAsync(
-                    email,
-                    "Xac thuc quen mat khau So Tro",
-                    BuildOtpEmailBody("Xac thuc quen mat khau So Tro", otpCode));
+                Console.WriteLine($"[DEVELOPMENT OTP FORGOT PASSWORD] Email: {email}, OTP Code: {otpCode}");
 
-                return ApiResponse<string>.Ok("If the email exists, an OTP has been sent.");
+                try
+                {
+                    await _emailService.SendEmailAsync(
+                        email,
+                        "Xac thuc quen mat khau So Tro",
+                        BuildOtpEmailBody("Xac thuc quen mat khau So Tro", otpCode));
+                }
+                catch (Exception emailEx)
+                {
+                    Console.WriteLine($"[WARNING] Failed to send forgot password email to {email}: {emailEx.Message}");
+                }
+
+                return ApiResponse<string>.Ok("Nếu email tồn tại trên hệ thống, một mã OTP đã được gửi.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<string>.Fail($"Send forgot password OTP failed: {ex.Message}");
+                return ApiResponse<string>.Fail($"Gửi mã OTP quên mật khẩu thất bại: {ex.Message}");
             }
         }
 
@@ -269,18 +296,18 @@ namespace SoTro_BE.Services
 
                 if (otp == null)
                 {
-                    return ApiResponse<string>.Fail("OTP is invalid or expired.");
+                    return ApiResponse<string>.Fail("Mã OTP không hợp lệ hoặc đã hết hạn.");
                 }
 
                 otp.ResetPasswordToken = GenerateSecureToken();
                 otp.ResetPasswordTokenExpiry = DateTime.UtcNow.AddMinutes(_configuration.GetValue("Otp:ResetTokenExpiryMinutes", 10));
                 await _otpRepository.UpdateOtpAsync(otp);
 
-                return ApiResponse<string>.Ok("Forgot password OTP verified successfully.", otp.ResetPasswordToken);
+                return ApiResponse<string>.Ok("Xác thực OTP quên mật khẩu thành công.", otp.ResetPasswordToken);
             }
             catch (Exception ex)
             {
-                return ApiResponse<string>.Fail($"Verify forgot password OTP failed: {ex.Message}");
+                return ApiResponse<string>.Fail($"Xác thực OTP quên mật khẩu thất bại: {ex.Message}");
             }
         }
 
@@ -301,13 +328,13 @@ namespace SoTro_BE.Services
                 var user = await _authRepository.GetUserByEmailAsync(request.Email);
                 if (user == null)
                 {
-                    return ApiResponse<string>.Fail("Invalid reset password request.");
+                    return ApiResponse<string>.Fail("Yêu cầu đặt lại mật khẩu không hợp lệ.");
                 }
 
                 var otp = await _otpRepository.GetValidResetTokenAsync(request.Email, request.ResetPasswordToken);
                 if (otp == null)
                 {
-                    return ApiResponse<string>.Fail("Reset password token is invalid or expired.");
+                    return ApiResponse<string>.Fail("Mã khôi phục mật khẩu không hợp lệ hoặc đã hết hạn.");
                 }
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
@@ -316,11 +343,11 @@ namespace SoTro_BE.Services
                 await _authRepository.UpdateUserAsync(user);
                 await _otpRepository.MarkOtpAsUsedAsync(otp);
 
-                return ApiResponse<string>.Ok("Password has been reset successfully.");
+                return ApiResponse<string>.Ok("Đặt lại mật khẩu thành công.");
             }
             catch (Exception ex)
             {
-                return ApiResponse<string>.Fail($"Reset password failed: {ex.Message}");
+                return ApiResponse<string>.Fail($"Đặt lại mật khẩu thất bại: {ex.Message}");
             }
         }
 
@@ -374,7 +401,7 @@ namespace SoTro_BE.Services
             }
             catch (Exception ex)
             {
-                return ApiResponse<AuthResponse>.Fail($"Google login failed: {ex.Message}");
+                return ApiResponse<AuthResponse>.Fail($"Đăng nhập Google thất bại: {ex.Message}");
             }
         }
 
@@ -385,7 +412,7 @@ namespace SoTro_BE.Services
                 var user = await _authRepository.GetUserByEmailAsync(request.Email);
                 if (user == null)
                 {
-                    return ApiResponse<AuthResponse>.Fail("User was not found.");
+                    return ApiResponse<AuthResponse>.Fail("Không tìm thấy người dùng.");
                 }
 
                 if (string.IsNullOrWhiteSpace(request.PhoneNumber) ||
@@ -404,7 +431,7 @@ namespace SoTro_BE.Services
             }
             catch (Exception ex)
             {
-                return ApiResponse<AuthResponse>.Fail($"Complete profile failed: {ex.Message}");
+                return ApiResponse<AuthResponse>.Fail($"Cập nhật thông tin thất bại: {ex.Message}");
             }
         }
 

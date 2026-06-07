@@ -72,7 +72,7 @@ namespace SOTRO_Project.Services
                 return new ApiResponse<T>
                 {
                     Success = false,
-                    Message = "Khong doc duoc phan hoi tu API."
+                    Message = "Không đọc được phản hồi từ API."
                 };
             }
             catch (HttpRequestException ex)
@@ -80,7 +80,7 @@ namespace SOTRO_Project.Services
                 return new ApiResponse<T>
                 {
                     Success = false,
-                    Message = $"Khong ket noi duoc SoTro_BE: {ex.Message}"
+                    Message = $"Không kết nối được với SoTro_BE: {ex.Message}"
                 };
             }
             catch (Exception ex)
@@ -88,7 +88,7 @@ namespace SOTRO_Project.Services
                 return new ApiResponse<T>
                 {
                     Success = false,
-                    Message = $"Loi xu ly yeu cau: {ex.Message}"
+                    Message = $"Lỗi xử lý yêu cầu: {ex.Message}"
                 };
             }
         }

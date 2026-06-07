@@ -96,6 +96,7 @@ namespace SOTRO_Project.Services
                 foreach (var (stream, fileName) in imageFiles)
                 {
                     var streamContent = new StreamContent(stream);
+                    streamContent.Headers.ContentType = new MediaTypeHeaderValue(GetMimeType(fileName));
                     content.Add(streamContent, "images", fileName);
                 }
 
@@ -137,6 +138,7 @@ namespace SOTRO_Project.Services
                     foreach (var (stream, fileName) in imageFiles)
                     {
                         var streamContent = new StreamContent(stream);
+                        streamContent.Headers.ContentType = new MediaTypeHeaderValue(GetMimeType(fileName));
                         content.Add(streamContent, "images", fileName);
                     }
                 }
@@ -190,6 +192,18 @@ namespace SOTRO_Project.Services
             {
                 return new ApiResponse<List<string>> { Success = false, Message = $"Lỗi kết nối: {ex.Message}" };
             }
+        }
+        private static string GetMimeType(string fileName)
+        {
+            var ext = Path.GetExtension(fileName).ToLowerInvariant();
+            return ext switch
+            {
+                ".png" => "image/png",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "application/octet-stream"
+            };
         }
     }
 }

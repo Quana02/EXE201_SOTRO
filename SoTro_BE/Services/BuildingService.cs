@@ -86,10 +86,11 @@ namespace SoTro_BE.Services
             }
             catch (Exception ex)
             {
+                var details = ex.InnerException != null ? $"{ex.Message} (Inner: {ex.InnerException.Message})" : ex.Message;
                 return new ApiResponse<BuildingResponse>
                 {
                     Success = false,
-                    Message = $"Lỗi khi tạo nhà trọ: {ex.Message}"
+                    Message = $"Lỗi khi tạo nhà trọ: {details}"
                 };
             }
         }

@@ -1,7 +1,5 @@
 is_global = true
 build_property.TargetFramework = net8.0
-build_property.TargetFrameworkIdentifier = .NETCoreApp
-build_property.TargetFrameworkVersion = v8.0
 build_property.TargetPlatformMinVersion = 
 build_property.UsingMicrosoftNETSdkWeb = true
 build_property.ProjectTypeGuids = 
@@ -11,141 +9,141 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = SOTRO_Project
 build_property.RootNamespace = SOTRO_Project
-build_property.ProjectDir = D:\PRN232\SOTRO_Project\SOTRO_Project\
+build_property.ProjectDir = E:\K8\EXE201\SoTro\SOTRO_Project\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = D:\PRN232\SOTRO_Project\SOTRO_Project
+build_property.MSBuildProjectDirectory = E:\K8\EXE201\SoTro\SOTRO_Project
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 8.0
 build_property.EnableCodeStyleSeverity = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/App.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/App.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xBcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Layout/EmptyLayout.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Layout/EmptyLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcRW1wdHlMYXlvdXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Layout/FooterLanding.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Layout/FooterLanding.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcRm9vdGVyTGFuZGluZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Layout/HeaderDashboard.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Layout/HeaderDashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcSGVhZGVyRGFzaGJvYXJkLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Layout/HeaderLanding.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Layout/HeaderLanding.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcSGVhZGVyTGFuZGluZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Layout/SideNavBar.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Layout/SideNavBar.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcU2lkZU5hdkJhci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/BangGia.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/BangGia.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xCYW5nR2lhLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/CaiDat.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/CaiDat.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDYWlEYXQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/CompleteProfile.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/CompleteProfile.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xDb21wbGV0ZVByb2ZpbGUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/DangKy.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/DangKy.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYW5nS3kucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/DangNhap.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/DangNhap.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYW5nTmhhcC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/Dashboard.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/Dashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXNoYm9hcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/DatLaiMatKhau.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/DatLaiMatKhau.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xEYXRMYWlNYXRLaGF1LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/Error.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xFcnJvci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/HoaDon.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/HoaDon.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb2FEb24ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/Home.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/Home.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/LienHe.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/LienHe.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xMaWVuSGUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/NguoiThue.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/NguoiThue.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xOZ3VvaVRodWUucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/NhaTro.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/NhaTro.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xOaGFUcm8ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/QuanLyPhong.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/QuanLyPhong.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xRdWFuTHlQaG9uZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/QuenMatKhau.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/QuenMatKhau.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xRdWVuTWF0S2hhdS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/SuaPhong.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/SuaPhong.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xTdWFQaG9uZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/TaoNhaTro.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/TaoNhaTro.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xUYW9OaGFUcm8ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/TaoPhong.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/TaoPhong.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xUYW9QaG9uZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/ThanhVienPhong.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/ThanhVienPhong.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xUaGFuaFZpZW5QaG9uZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/ThemNguoiThue.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/ThemNguoiThue.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xUaGVtTmd1b2lUaHVlLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/TinhNang.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/TinhNang.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xUaW5oTmFuZy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/XacMinhEmail.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/XacMinhEmail.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xYYWNNaW5oRW1haWwucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Pages/XacThucOtp.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Pages/XacThucOtp.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xYYWNUaHVjT3RwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Routes.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Routes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSb3V0ZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/_Imports.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xfSW1wb3J0cy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/PRN232/SOTRO_Project/SOTRO_Project/Components/Layout/MainLayout.razor]
+[E:/K8/EXE201/SoTro/SOTRO_Project/Components/Layout/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXlvdXRcTWFpbkxheW91dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = b-vkrzuzpjdi

@@ -89,14 +89,15 @@ namespace SoTro_BE.Controllers
                 return BadRequest(new { Success = false, Message = "Vui lòng tải lên ít nhất 1 ảnh." });
             }
 
-            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
             var imageFiles = new List<(Stream Stream, string FileName)>();
 
             foreach (var image in images)
             {
                 if (image.Length == 0) continue;
 
-                if (!allowedTypes.Contains(image.ContentType.ToLower()))
+                var ext = System.IO.Path.GetExtension(image.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(ext))
                 {
                     return BadRequest(new { Success = false, Message = $"File '{image.FileName}' không hợp lệ. Chỉ chấp nhận JPG, PNG, WebP, GIF." });
                 }
@@ -138,7 +139,7 @@ namespace SoTro_BE.Controllers
             if (landlordId == null)
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
-            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
             List<(Stream Stream, string FileName)>? imageFiles = null;
 
             if (images != null && images.Count > 0)
@@ -148,7 +149,8 @@ namespace SoTro_BE.Controllers
                 {
                     if (image.Length == 0) continue;
 
-                    if (!allowedTypes.Contains(image.ContentType.ToLower()))
+                    var ext = System.IO.Path.GetExtension(image.FileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(ext))
                     {
                         return BadRequest(new { Success = false, Message = $"File '{image.FileName}' không hợp lệ. Chỉ chấp nhận JPG, PNG, WebP, GIF." });
                     }

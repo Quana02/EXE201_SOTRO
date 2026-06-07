@@ -23,7 +23,7 @@ namespace SoTro_BE.Services
 
             if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(fromEmail))
             {
-                throw new InvalidOperationException("EmailSettings configuration is missing SmtpServer or SenderEmail.");
+                throw new InvalidOperationException("Cấu hình EmailSettings bị thiếu SmtpServer hoặc SenderEmail.");
             }
 
             var port = smtpSection.GetValue("SmtpPort", 587);
