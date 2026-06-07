@@ -64,5 +64,18 @@ namespace SoTro_BE.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin(GoogleLoginRequest request)
+        {
+            var response = await _authService.GoogleLoginAsync(request);
+            return response.Success ? Ok(response) : BadRequest(response);
+        }
+
+        [HttpPost("complete-profile")]
+        public async Task<IActionResult> CompleteProfile(CompleteProfileRequest request)
+        {
+            var response = await _authService.CompleteProfileAsync(request);
+            return response.Success ? Ok(response) : BadRequest(response);
+        }
     }
 }

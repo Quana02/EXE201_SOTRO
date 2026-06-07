@@ -11,5 +11,7 @@ namespace SoTro_BE.Services
         Task<ApiResponse<string>> SendForgotPasswordOtpAsync(ForgotPasswordSendOtpRequest request);
         Task<ApiResponse<string>> VerifyForgotPasswordOtpAsync(ForgotPasswordVerifyOtpRequest request);
         Task<ApiResponse<string>> ResetPasswordAsync(ResetPasswordRequest request);
+        Task<ApiResponse<AuthResponse>> GoogleLoginAsync(GoogleLoginRequest request);
+        Task<ApiResponse<AuthResponse>> CompleteProfileAsync(CompleteProfileRequest request);
     }
 }

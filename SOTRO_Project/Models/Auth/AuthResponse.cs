@@ -9,5 +9,8 @@ namespace SOTRO_Project.Models.Auth
         public string? Role { get; set; }
         public string Token { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }
+        public bool RequiresProfileCompletion { get; set; }
+        public bool IsProfileCompleted { get; set; }
+        public UserResponse? User { get; set; }
     }
 }

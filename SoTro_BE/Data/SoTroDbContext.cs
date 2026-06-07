@@ -63,6 +63,7 @@ namespace SoTro_BE.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.GoogleId);
                 
                 entity.HasOne(d => d.Role)
                     .WithMany(p => p.Users)

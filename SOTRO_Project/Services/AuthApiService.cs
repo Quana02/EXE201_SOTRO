@@ -47,6 +47,16 @@ namespace SOTRO_Project.Services
             return PostAsync<string>("api/auth/forgot-password/reset-password", request);
         }
 
+        public Task<ApiResponse<AuthResponse>> GoogleLoginAsync(GoogleLoginRequest request)
+        {
+            return PostAsync<AuthResponse>("api/auth/google-login", request);
+        }
+
+        public Task<ApiResponse<AuthResponse>> CompleteProfileAsync(CompleteProfileRequest request)
+        {
+            return PostAsync<AuthResponse>("api/auth/complete-profile", request);
+        }
+
         private async Task<ApiResponse<T>> PostAsync<T>(string url, object request)
         {
             try

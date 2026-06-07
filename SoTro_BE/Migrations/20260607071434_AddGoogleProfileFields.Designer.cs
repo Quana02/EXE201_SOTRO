@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SoTro_BE.Data;
@@ -11,9 +12,11 @@ using SoTro_BE.Data;
 namespace SoTro_BE.Migrations
 {
     [DbContext(typeof(SoTroDbContext))]
-    partial class SoTroDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607071434_AddGoogleProfileFields")]
+    partial class AddGoogleProfileFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,9 +218,6 @@ namespace SoTro_BE.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
-                    b.Property<int?>("BuildingTypeId")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -229,10 +229,6 @@ namespace SoTro_BE.Migrations
 
                     b.Property<int?>("DueDay")
                         .HasColumnType("integer");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.Property<bool?>("IsDeleted")
                         .HasColumnType("boolean");
@@ -255,78 +251,9 @@ namespace SoTro_BE.Migrations
 
                     b.HasKey("BuildingId");
 
-                    b.HasIndex("BuildingTypeId");
-
                     b.HasIndex("LandlordId");
 
                     b.ToTable("Buildings");
-                });
-
-            modelBuilder.Entity("SoTro_BE.Models.BuildingType", b =>
-                {
-                    b.Property<int>("BuildingTypeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BuildingTypeId"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("TypeName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("BuildingTypeId");
-
-                    b.HasIndex("TypeName")
-                        .IsUnique();
-
-                    b.ToTable("BuildingTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            BuildingTypeId = 1,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Nhà trọ phòng riêng, thường có chung khu vệ sinh hoặc riêng",
-                            IsDeleted = false,
-                            TypeName = "Nhà trọ truyền thống"
-                        },
-                        new
-                        {
-                            BuildingTypeId = 2,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Chung cư quy mô nhỏ, mỗi phòng có khu vệ sinh riêng",
-                            IsDeleted = false,
-                            TypeName = "Chung cư mini"
-                        },
-                        new
-                        {
-                            BuildingTypeId = 3,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Căn hộ đầy đủ tiện nghi, có dịch vụ dọn dẹp và bảo trì",
-                            IsDeleted = false,
-                            TypeName = "Căn hộ dịch vụ"
-                        },
-                        new
-                        {
-                            BuildingTypeId = 4,
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Phòng ở dạng giường tầng, nhiều người ở chung một phòng",
-                            IsDeleted = false,
-                            TypeName = "Ký túc xá"
-                        });
                 });
 
             modelBuilder.Entity("SoTro_BE.Models.DepositTransaction", b =>
@@ -1921,17 +1848,10 @@ namespace SoTro_BE.Migrations
 
             modelBuilder.Entity("SoTro_BE.Models.Building", b =>
                 {
-                    b.HasOne("SoTro_BE.Models.BuildingType", "BuildingType")
-                        .WithMany("Buildings")
-                        .HasForeignKey("BuildingTypeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("SoTro_BE.Models.Landlord", "Landlord")
                         .WithMany("Buildings")
                         .HasForeignKey("LandlordId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("BuildingType");
 
                     b.Navigation("Landlord");
                 });
@@ -2315,11 +2235,6 @@ namespace SoTro_BE.Migrations
                     b.Navigation("BillingSchedules");
 
                     b.Navigation("Rooms");
-                });
-
-            modelBuilder.Entity("SoTro_BE.Models.BuildingType", b =>
-                {
-                    b.Navigation("Buildings");
                 });
 
             modelBuilder.Entity("SoTro_BE.Models.Invoice", b =>

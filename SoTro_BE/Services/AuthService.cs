@@ -41,14 +41,36 @@ namespace SoTro_BE.Services
             {
                 var email = NormalizeEmail(request.Email);
 
+                var fullName = request.FullName?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(fullName))
+                {
+                    return ApiResponse<string>.Fail("Họ tên không được để trống và chỉ được chứa chữ cái, khoảng trắng.");
+                }
+
+                if (fullName.Length < 2)
+                {
+                    return ApiResponse<string>.Fail("Họ tên phải có ít nhất 2 ký tự.");
+                }
+
+                if (!Regex.IsMatch(fullName, @"^[a-zA-ZÀ-ỹ\s]{2,100}$"))
+                {
+                    return ApiResponse<string>.Fail("Họ tên không được để trống và chỉ được chứa chữ cái, khoảng trắng.");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.PhoneNumber) ||
+                    !Regex.IsMatch(request.PhoneNumber.Trim(), @"^0\d{9}$"))
+                {
+                    return ApiResponse<string>.Fail("Số điện thoại không hợp lệ. Số điện thoại phải bắt đầu bằng 0 và gồm 10 chữ số.");
+                }
+
                 if (!IsStrongPassword(request.Password))
                 {
-                    return ApiResponse<string>.Fail("Password must be at least 8 characters and include uppercase, lowercase, and number.");
+                    return ApiResponse<string>.Fail("Mật khẩu phải có ít nhất 8 ký tự, gồm 1 chữ in hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt.");
                 }
 
                 if (request.Password != request.ConfirmPassword)
                 {
-                    return ApiResponse<string>.Fail("Password confirmation does not match.");
+                    return ApiResponse<string>.Fail("Mật khẩu xác nhận không khớp.");
                 }
 
                 if (await _authRepository.EmailExistsAsync(email))
@@ -122,6 +144,9 @@ namespace SoTro_BE.Services
                     FullName = pendingRegistration.FullName,
                     PhoneNumber = pendingRegistration.PhoneNumber,
                     PasswordHash = pendingRegistration.PasswordHash,
+                    Provider = "Local",
+                    IsExternalLogin = false,
+                    IsProfileCompleted = !string.IsNullOrWhiteSpace(pendingRegistration.PhoneNumber),
                     Status = "Active",
                     EmailConfirmed = true,
                     CreatedAt = now,
@@ -265,12 +290,12 @@ namespace SoTro_BE.Services
             {
                 if (!IsStrongPassword(request.NewPassword))
                 {
-                    return ApiResponse<string>.Fail("New password must be at least 8 characters and include uppercase, lowercase, and number.");
+                    return ApiResponse<string>.Fail("Mật khẩu phải có ít nhất 8 ký tự, gồm 1 chữ in hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt.");
                 }
 
                 if (request.NewPassword != request.ConfirmPassword)
                 {
-                    return ApiResponse<string>.Fail("Password confirmation does not match.");
+                    return ApiResponse<string>.Fail("Mật khẩu xác nhận không khớp.");
                 }
 
                 var user = await _authRepository.GetUserByEmailAsync(request.Email);
@@ -296,6 +321,90 @@ namespace SoTro_BE.Services
             catch (Exception ex)
             {
                 return ApiResponse<string>.Fail($"Reset password failed: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<AuthResponse>> GoogleLoginAsync(GoogleLoginRequest request)
+        {
+            try
+            {
+                var email = NormalizeEmail(request.Email);
+                var now = DateTime.UtcNow;
+                var user = await _authRepository.GetUserByEmailAsync(email);
+
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        Email = email,
+                        FullName = request.FullName.Trim(),
+                        GoogleId = request.GoogleId,
+                        AvatarUrl = request.AvatarUrl,
+                        Provider = "Google",
+                        IsExternalLogin = true,
+                        EmailConfirmed = true,
+                        PasswordHash = string.Empty,
+                        PhoneNumber = null,
+                        IsProfileCompleted = false,
+                        Status = "Active",
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    };
+
+                    await _authRepository.CreateUserAsync(user);
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(user.GoogleId))
+                    {
+                        user.GoogleId = request.GoogleId;
+                    }
+
+                    user.Provider = string.IsNullOrWhiteSpace(user.Provider) ? "Google" : user.Provider;
+                    user.IsExternalLogin = true;
+                    user.EmailConfirmed = true;
+                    user.AvatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl) ? request.AvatarUrl : user.AvatarUrl;
+                    user.IsProfileCompleted = !string.IsNullOrWhiteSpace(user.PhoneNumber);
+                    user.UpdatedAt = now;
+
+                    await _authRepository.UpdateUserAsync(user);
+                }
+
+                return ApiResponse<AuthResponse>.Ok("Đăng nhập Google thành công.", CreateAuthResponse(user));
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<AuthResponse>.Fail($"Google login failed: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<AuthResponse>> CompleteProfileAsync(CompleteProfileRequest request)
+        {
+            try
+            {
+                var user = await _authRepository.GetUserByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    return ApiResponse<AuthResponse>.Fail("User was not found.");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.PhoneNumber) ||
+                    !Regex.IsMatch(request.PhoneNumber.Trim(), @"^0\d{9}$"))
+                {
+                    return ApiResponse<AuthResponse>.Fail("Số điện thoại không hợp lệ. Số điện thoại phải bắt đầu bằng 0 và gồm 10 chữ số.");
+                }
+
+                user.PhoneNumber = request.PhoneNumber.Trim();
+                user.IsProfileCompleted = true;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _authRepository.UpdateUserAsync(user);
+
+                return ApiResponse<AuthResponse>.Ok("Cập nhật thông tin thành công.", CreateAuthResponse(user));
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<AuthResponse>.Fail($"Complete profile failed: {ex.Message}");
             }
         }
 
@@ -341,6 +450,7 @@ namespace SoTro_BE.Services
         private AuthResponse CreateAuthResponse(User user)
         {
             var expiresAt = DateTime.UtcNow.AddMinutes(_configuration.GetValue("Jwt:ExpiresInMinutes", 60));
+            var isProfileCompleted = user.IsProfileCompleted || !string.IsNullOrWhiteSpace(user.PhoneNumber);
 
             return new AuthResponse
             {
@@ -350,7 +460,19 @@ namespace SoTro_BE.Services
                 PhoneNumber = user.PhoneNumber,
                 Role = user.Role?.RoleName,
                 Token = GenerateJwtToken(user, expiresAt),
-                ExpiresAt = expiresAt
+                ExpiresAt = expiresAt,
+                IsProfileCompleted = isProfileCompleted,
+                RequiresProfileCompletion = !isProfileCompleted,
+                User = new UserResponse
+                {
+                    Id = user.UserId,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    IsProfileCompleted = isProfileCompleted,
+                    AvatarUrl = user.AvatarUrl,
+                    Provider = user.Provider
+                }
             };
         }
 
@@ -413,10 +535,7 @@ namespace SoTro_BE.Services
 
         private static bool IsStrongPassword(string password)
         {
-            return password.Length >= 8 &&
-                   Regex.IsMatch(password, "[A-Z]") &&
-                   Regex.IsMatch(password, "[a-z]") &&
-                   Regex.IsMatch(password, "[0-9]");
+            return Regex.IsMatch(password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$");
         }
 
         private static string NormalizeEmail(string email)
