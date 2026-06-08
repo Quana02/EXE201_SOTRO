@@ -1,0 +1,642 @@
+@page "/ho-so-ca-nhan"
+@layout EmptyLayout
+@inject IAuthApiService AuthApi
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using System.IO
+@using SOTRO_Project.Models.Auth
+
+<PageTitle>Hồ sơ cá nhân - SỔ TRỌ</PageTitle>
+
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+    }
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+</style>
+
+<main class="min-h-screen flex flex-col bg-surface">
+    <HeaderDashboard />
+    <div class="flex-grow py-8 px-4 md:px-10">
+        <div class="max-w-4xl mx-auto">
+        
+        <!-- Page Title -->
+        <div class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="font-headline-sm text-headline-sm text-on-surface mb-2 font-bold">Hồ sơ cá nhân</h1>
+                <p class="text-on-surface-variant font-body-md text-body-md">Xem, chỉnh sửa thông tin tài khoản và cập nhật bảo mật mật khẩu của bạn.</p>
+            </div>
+            <a href="/nha-tro" class="flex items-center gap-1 text-primary text-sm font-semibold hover:underline">
+                <span class="material-symbols-outlined text-sm">arrow_back</span> Quay lại
+            </a>
+        </div>
+
+        @if (!_isInitialized)
+        {
+            <!-- Skeleton Loading for Premium Feel -->
+            <div class="bg-white rounded-2xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant p-8 animate-pulse space-y-6">
+                <div class="flex items-center gap-6 pb-6 border-b border-gray-100">
+                    <div class="w-24 h-24 bg-gray-200 rounded-full"></div>
+                    <div class="space-y-3 flex-1">
+                        <div class="h-6 bg-gray-200 rounded w-1/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                        <div class="h-10 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                        <div class="h-10 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Message Banners -->
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 text-sm flex items-center gap-2.5 animate-slide-in">
+                    <span class="material-symbols-outlined text-red-600">error</span>
+                    <span>@_errorMessage</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(_successMessage))
+            {
+                <div class="mb-6 p-4 bg-green-50 text-green-700 rounded-xl border border-green-200 text-sm flex items-center gap-2.5 animate-slide-in">
+                    <span class="material-symbols-outlined text-green-600">check_circle</span>
+                    <span>@_successMessage</span>
+                </div>
+            }
+
+            <!-- Hero Avatar Banner -->
+            <div class="relative rounded-2xl overflow-hidden mb-8 border border-outline-variant bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-800 p-8 shadow-md">
+                <!-- Abstract light blobs for extra premium feel -->
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                <div class="absolute left-1/3 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
+                
+                <div class="flex flex-col md:flex-row items-center gap-6 relative z-10">
+                    <!-- Avatar section with hover edit overlay -->
+                    <div class="relative group">
+                        <InputFile OnChange="OnAvatarSelected" id="avatar-file-upload" class="hidden" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                        <label for="avatar-file-upload" class="w-28 h-28 rounded-full border-4 border-white/20 bg-surface-container-high relative cursor-pointer overflow-hidden block shadow-lg group">
+                            @if (!string.IsNullOrWhiteSpace(_avatarPreviewUrl))
+                            {
+                                <img alt="Avatar Preview" class="w-full h-full object-cover" src="@_avatarPreviewUrl" />
+                            }
+                            else
+                            {
+                                <div class="w-full h-full flex items-center justify-center bg-indigo-100">
+                                    <span class="material-symbols-outlined text-indigo-500 text-5xl" style="font-variation-settings: 'FILL' 1;">person</span>
+                                </div>
+                            }
+                            <div class="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center text-white gap-1">
+                                <span class="material-symbols-outlined text-xl">photo_camera</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider">Thay đổi</span>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="text-center md:text-left text-white">
+                        <h2 class="text-headline-md font-headline-md font-bold leading-tight">@(_fullName ?? "Chủ trọ")</h2>
+                        <p class="text-white/80 text-body-md font-body-md mt-1 flex items-center justify-center md:justify-start gap-1.5">
+                            <span class="material-symbols-outlined text-lg">mail</span> @_email
+                        </p>
+                        <span class="inline-flex items-center gap-1 mt-3 px-3 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-wider">
+                            <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+                            Chủ trọ / Quản lý
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Switching Layout with Sliding Content -->
+            <div class="bg-white rounded-2xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden">
+                <!-- Tab Headers -->
+                <div class="flex border-b border-outline-variant bg-surface-container-low/30">
+                    <button @onclick='() => SetActiveTab("profile")'
+                            class="px-6 py-4 font-label-md text-label-md transition-all border-b-2 flex items-center gap-2 relative @(_activeTab == "profile" ? "text-primary border-primary font-bold bg-white" : "text-on-surface-variant border-transparent hover:text-on-surface hover:bg-surface-container-low/10")">
+                        <span class="material-symbols-outlined text-lg" style="@(_activeTab == "profile" ? "font-variation-settings: 'FILL' 1;" : "")">person</span>
+                        <span>Thông tin tài khoản</span>
+                    </button>
+                    <button @onclick='() => SetActiveTab("password")'
+                            class="px-6 py-4 font-label-md text-label-md transition-all border-b-2 flex items-center gap-2 relative @(_activeTab == "password" ? "text-primary border-primary font-bold bg-white" : "text-on-surface-variant border-transparent hover:text-on-surface hover:bg-surface-container-low/10")">
+                        <span class="material-symbols-outlined text-lg" style="@(_activeTab == "password" ? "font-variation-settings: 'FILL' 1;" : "")">lock</span>
+                        <span>Bảo mật &amp; Đổi mật khẩu</span>
+                    </button>
+                </div>
+
+                <!-- Sliding Tab Body Container -->
+                <div class="relative overflow-hidden w-full p-8">
+                    <div class="transition-all duration-300 flex w-[200%] @(_activeTab == "profile" ? "translate-x-0" : "-translate-x-1/2")">
+                        
+                        <!-- TAB 1: Profile Details Form -->
+                        <div class="w-1/2 pr-6 transition-opacity duration-300 @(_activeTab == "profile" ? "opacity-100" : "opacity-0 pointer-events-none")">
+                            <form class="space-y-6" @onsubmit:preventDefault>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Full Name -->
+                                    <div class="space-y-1.5">
+                                        <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider">Họ và tên</label>
+                                        <div class="relative">
+                                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">person</span>
+                                            <input @bind="_fullName" 
+                                                   class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
+                                                   placeholder="Nhập họ và tên của bạn" 
+                                                   type="text" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Phone Number -->
+                                    <div class="space-y-1.5">
+                                        <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider">Số điện thoại</label>
+                                        <div class="relative">
+                                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">call</span>
+                                            <input @bind="_phoneNumber" 
+                                                   class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
+                                                   placeholder="09xxxxxxxx" 
+                                                   type="tel" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Email Address (Disabled) -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider">Địa chỉ Email</label>
+                                    <div class="flex items-center gap-3 bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface-variant select-none">
+                                        <span class="material-symbols-outlined text-lg">lock</span>
+                                        <span class="text-body-md font-body-md">@_email</span>
+                                    </div>
+                                    <span class="text-[11px] text-outline">Địa chỉ Email này liên kết với tài khoản của bạn và không thể thay đổi.</span>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center gap-4 pt-6 border-t border-outline-variant">
+                                    <button @onclick="ResetProfileFields" type="button" class="px-5 py-2.5 rounded-xl border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">
+                                        Hủy bỏ
+                                    </button>
+                                    <button @onclick="SaveProfile" disabled="@_isSavingProfile" type="button" class="px-8 py-2.5 rounded-xl bg-primary text-white font-label-md text-label-md hover:shadow-lg hover:bg-primary-container transition-all flex items-center gap-2">
+                                        @if (_isSavingProfile)
+                                        {
+                                            <span class="material-symbols-outlined text-sm animate-spin">sync</span>
+                                            <span>Đang lưu...</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="material-symbols-outlined text-sm font-bold">save</span>
+                                            <span>Cập nhật hồ sơ</span>
+                                        }
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- TAB 2: Change Password Form -->
+                        <div class="w-1/2 pl-6 transition-opacity duration-300 @(_activeTab == "password" ? "opacity-100" : "opacity-0 pointer-events-none")">
+                            <form class="space-y-6" @onsubmit:preventDefault>
+                                
+                                <!-- Current Password -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mật khẩu hiện tại</label>
+                                    <div class="relative">
+                                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">lock_open</span>
+                                        <input @bind="_currentPassword" 
+                                               class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
+                                               placeholder="Nhập mật khẩu hiện tại" 
+                                               type="password" />
+                                    </div>
+                                </div>
+
+                                <!-- New Password -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mật khẩu mới</label>
+                                    <div class="relative">
+                                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
+                                        <input @oninput="OnNewPasswordInput"
+                                               value="@_newPassword"
+                                               class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
+                                               placeholder="Tạo mật khẩu mới" 
+                                               type="password" />
+                                    </div>
+                                    <!-- Interactive Strength Meter -->
+                                    <div class="pt-2">
+                                        <div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden relative">
+                                            <div class="h-full transition-all duration-300 @(_passwordStrengthColorClass)"></div>
+                                        </div>
+                                        <div class="flex justify-between items-center mt-1.5">
+                                            <span class="text-[11px] font-semibold @(_passwordStrengthTextClass)">@_passwordStrengthText</span>
+                                            <span class="text-[10px] text-outline">Tối thiểu 8 ký tự, gồm in hoa, thường, số, ký tự đặc biệt.</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Confirm Password -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider">Xác nhận mật khẩu mới</label>
+                                    <div class="relative">
+                                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">lock_reset</span>
+                                        <input @bind="_confirmPassword" 
+                                               class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
+                                               placeholder="Xác nhận mật khẩu mới" 
+                                               type="password" />
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center gap-4 pt-6 border-t border-outline-variant">
+                                    <button @onclick="ClearPasswordFields" type="button" class="px-5 py-2.5 rounded-xl border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">
+                                        Hủy bỏ
+                                    </button>
+                                    <button @onclick="ChangePassword" disabled="@_isSavingPassword" type="button" class="px-8 py-2.5 rounded-xl bg-primary text-white font-label-md text-label-md hover:shadow-lg hover:bg-primary-container transition-all flex items-center gap-2">
+                                        @if (_isSavingPassword)
+                                        {
+                                            <span class="material-symbols-outlined text-sm animate-spin">sync</span>
+                                            <span>Đang lưu...</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="material-symbols-outlined text-sm font-bold">vpn_key</span>
+                                            <span>Đổi mật khẩu</span>
+                                        }
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+
+        </div>
+    </div>
+</main>
+
+<script>
+    // JS layout synchronizer to refresh the header layout dynamically without page refreshes
+    window.sotroSyncHeaderUser = (name, avatarUrl) => {
+        const nameEl = document.getElementById("header-user-display-name");
+        if (nameEl) {
+            nameEl.innerText = name || "Chủ trọ";
+        }
+        
+        const dropdownNameEl = document.getElementById("header-dropdown-user-name");
+        if (dropdownNameEl) {
+            dropdownNameEl.innerText = name || "Chủ trọ";
+        }
+
+        const avatarContainer = document.getElementById("header-user-avatar-container");
+        if (avatarContainer) {
+            if (avatarUrl) {
+                avatarContainer.innerHTML = `<img alt="Ảnh đại diện" class="w-9 h-9 rounded-full object-cover border-2 border-primary/20 transition-transform duration-200 hover:scale-105" src="${avatarUrl}" loading="lazy" />`;
+            } else {
+                avatarContainer.innerHTML = `<div class="w-9 h-9 rounded-full bg-surface-container-high border-2 border-outline-variant flex items-center justify-center transition-transform duration-200 hover:scale-105"><span class="material-symbols-outlined text-on-surface-variant text-xl" style="font-variation-settings: 'FILL' 1;">person</span></div>`;
+            }
+        }
+    };
+</script>
+
+@code {
+    private bool _isInitialized;
+    private string _activeTab = "profile";
+
+    // User Profile Backing Variables
+    private string _email = string.Empty;
+    private string _fullName = string.Empty;
+    private string _phoneNumber = string.Empty;
+    private string _avatarPreviewUrl = string.Empty;
+
+    // Reset variables
+    private string _originalFullName = string.Empty;
+    private string _originalPhoneNumber = string.Empty;
+    private string _originalAvatarUrl = string.Empty;
+
+    // Avatar Upload variables
+    private byte[]? _avatarBytes;
+    private string _avatarFileName = string.Empty;
+
+    // Password Backing Variables
+    private string _currentPassword = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _confirmPassword = string.Empty;
+
+    // Password strength visual states
+    private int _passwordStrength = 0;
+    private string _passwordStrengthText = "Không có";
+    private string _passwordStrengthColorClass = "bg-gray-200 w-0";
+    private string _passwordStrengthTextClass = "text-gray-400";
+
+    // Operations states
+    private bool _isSavingProfile;
+    private bool _isSavingPassword;
+    private string? _errorMessage;
+    private string? _successMessage;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var nameTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_name");
+                var emailTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_email");
+                var phoneTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_phone_number");
+                var avatarTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_avatar_url");
+
+                await Task.WhenAll(nameTask.AsTask(), emailTask.AsTask(), phoneTask.AsTask(), avatarTask.AsTask());
+
+                _fullName = nameTask.Result ?? string.Empty;
+                _email = emailTask.Result ?? string.Empty;
+                _phoneNumber = phoneTask.Result ?? string.Empty;
+                _avatarPreviewUrl = avatarTask.Result ?? string.Empty;
+
+                _originalFullName = _fullName;
+                _originalPhoneNumber = _phoneNumber;
+                _originalAvatarUrl = _avatarPreviewUrl;
+
+                _isInitialized = true;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"Lỗi khi tải thông tin hồ sơ: {ex.Message}";
+                _isInitialized = true;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void SetActiveTab(string tab)
+    {
+        _activeTab = tab;
+        _errorMessage = null;
+        _successMessage = null;
+    }
+
+    private async Task OnAvatarSelected(InputFileChangeEventArgs e)
+    {
+        _errorMessage = null;
+        _successMessage = null;
+        var file = e.File;
+        if (file != null)
+        {
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                _errorMessage = "Kích thước ảnh đại diện không được vượt quá 5MB.";
+                return;
+            }
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+            {
+                _errorMessage = "Chỉ chấp nhận file ảnh hợp lệ (jpg, png, webp, gif).";
+                return;
+            }
+
+            try
+            {
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream(5 * 1024 * 1024).ReadExactlyAsync(buffer);
+                _avatarBytes = buffer;
+                _avatarFileName = file.Name;
+                _avatarPreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"Lỗi đọc file ảnh: {ex.Message}";
+            }
+        }
+    }
+
+    private void ResetProfileFields()
+    {
+        _fullName = _originalFullName;
+        _phoneNumber = _originalPhoneNumber;
+        _avatarPreviewUrl = _originalAvatarUrl;
+        _avatarBytes = null;
+        _avatarFileName = string.Empty;
+        _errorMessage = null;
+        _successMessage = null;
+    }
+
+    private async Task SaveProfile()
+    {
+        _errorMessage = null;
+        _successMessage = null;
+
+        var name = _fullName?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            _errorMessage = "Họ và tên không được để trống.";
+            return;
+        }
+        if (name.Length < 2)
+        {
+            _errorMessage = "Họ và tên phải có ít nhất 2 ký tự.";
+            return;
+        }
+
+        var phone = _phoneNumber?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(phone) || !System.Text.RegularExpressions.Regex.IsMatch(phone, @"^0\d{9}$"))
+        {
+            _errorMessage = "Số điện thoại không hợp lệ. Số điện thoại phải bắt đầu bằng 0 và gồm 10 chữ số.";
+            return;
+        }
+
+        _isSavingProfile = true;
+        StateHasChanged();
+
+        try
+        {
+            var req = new UpdateProfileRequest
+            {
+                Email = _email,
+                FullName = name,
+                PhoneNumber = phone
+            };
+
+            MemoryStream? ms = null;
+            if (_avatarBytes != null)
+            {
+                ms = new MemoryStream(_avatarBytes);
+            }
+
+            var response = await AuthApi.UpdateProfileAsync(req, ms, _avatarFileName);
+            if (response.Success && response.Data != null)
+            {
+                _successMessage = response.Message ?? "Cập nhật hồ sơ cá nhân thành công!";
+                
+                // Save updated values back to original tracking states
+                _originalFullName = response.Data.FullName ?? name;
+                _originalPhoneNumber = response.Data.PhoneNumber ?? phone;
+                _fullName = _originalFullName;
+                _phoneNumber = _originalPhoneNumber;
+
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_name", _originalFullName);
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_phone_number", _originalPhoneNumber);
+
+                if (response.Data.User != null && !string.IsNullOrWhiteSpace(response.Data.User.AvatarUrl))
+                {
+                    _originalAvatarUrl = response.Data.User.AvatarUrl;
+                    _avatarPreviewUrl = _originalAvatarUrl;
+                    await JS.InvokeVoidAsync("localStorage.setItem", "sotro_avatar_url", _originalAvatarUrl);
+                }
+
+                _avatarBytes = null;
+                _avatarFileName = string.Empty;
+
+                // Sync the header layout in real-time
+                await JS.InvokeVoidAsync("sotroSyncHeaderUser", _originalFullName, _originalAvatarUrl);
+            }
+            else
+            {
+                _errorMessage = response.Message ?? "Không thể cập nhật hồ sơ cá nhân.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Lỗi lưu hồ sơ: {ex.Message}";
+        }
+        finally
+        {
+            _isSavingProfile = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OnNewPasswordInput(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString() ?? "";
+        _newPassword = val;
+        CalculatePasswordStrength(val);
+    }
+
+    private void CalculatePasswordStrength(string pwd)
+    {
+        if (string.IsNullOrEmpty(pwd))
+        {
+            _passwordStrength = 0;
+            _passwordStrengthText = "Không có";
+            _passwordStrengthColorClass = "bg-gray-200 w-0";
+            _passwordStrengthTextClass = "text-gray-400";
+            return;
+        }
+
+        int score = 0;
+        if (pwd.Length >= 8) score++;
+        if (System.Text.RegularExpressions.Regex.IsMatch(pwd, @"[a-z]")) score++;
+        if (System.Text.RegularExpressions.Regex.IsMatch(pwd, @"[A-Z]")) score++;
+        if (System.Text.RegularExpressions.Regex.IsMatch(pwd, @"\d")) score++;
+        if (System.Text.RegularExpressions.Regex.IsMatch(pwd, @"[^A-Za-z\d]")) score++;
+
+        _passwordStrength = score;
+        if (score <= 2)
+        {
+            _passwordStrengthText = "Mật khẩu yếu";
+            _passwordStrengthColorClass = "bg-red-500 w-1/3";
+            _passwordStrengthTextClass = "text-red-500";
+        }
+        else if (score <= 4)
+        {
+            _passwordStrengthText = "Mật khẩu trung bình";
+            _passwordStrengthColorClass = "bg-amber-500 w-2/3";
+            _passwordStrengthTextClass = "text-amber-500";
+        }
+        else
+        {
+            _passwordStrengthText = "Mật khẩu mạnh";
+            _passwordStrengthColorClass = "bg-green-500 w-full";
+            _passwordStrengthTextClass = "text-green-500";
+        }
+    }
+
+    private void ClearPasswordFields()
+    {
+        _currentPassword = string.Empty;
+        _newPassword = string.Empty;
+        _confirmPassword = string.Empty;
+        _passwordStrength = 0;
+        _passwordStrengthText = "Không có";
+        _passwordStrengthColorClass = "bg-gray-200 w-0";
+        _passwordStrengthTextClass = "text-gray-400";
+        _errorMessage = null;
+        _successMessage = null;
+    }
+
+    private async Task ChangePassword()
+    {
+        _errorMessage = null;
+        _successMessage = null;
+
+        if (string.IsNullOrEmpty(_currentPassword))
+        {
+            _errorMessage = "Vui lòng nhập mật khẩu hiện tại.";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_newPassword))
+        {
+            _errorMessage = "Vui lòng nhập mật khẩu mới.";
+            return;
+        }
+
+        if (_newPassword.Length < 8)
+        {
+            _errorMessage = "Mật khẩu mới phải có tối thiểu 8 ký tự.";
+            return;
+        }
+
+        if (!System.Text.RegularExpressions.Regex.IsMatch(_newPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$"))
+        {
+            _errorMessage = "Mật khẩu phải có ít nhất 8 ký tự, gồm 1 chữ in hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt.";
+            return;
+        }
+
+        if (_newPassword != _confirmPassword)
+        {
+            _errorMessage = "Xác nhận mật khẩu mới không trùng khớp.";
+            return;
+        }
+
+        _isSavingPassword = true;
+        StateHasChanged();
+
+        try
+        {
+            var req = new ChangePasswordRequest
+            {
+                Email = _email,
+                CurrentPassword = _currentPassword,
+                NewPassword = _newPassword,
+                ConfirmPassword = _confirmPassword
+            };
+
+            var response = await AuthApi.ChangePasswordAsync(req);
+            if (response.Success)
+            {
+                _successMessage = response.Message ?? "Đổi mật khẩu thành công!";
+                ClearPasswordFields();
+            }
+            else
+            {
+                _errorMessage = response.Message ?? "Không thể đổi mật khẩu.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Lỗi đổi mật khẩu: {ex.Message}";
+        }
+        finally
+        {
+            _isSavingPassword = false;
+            StateHasChanged();
+        }
+    }
+}

@@ -1,5 +1,6 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
+@inject IBuildingApiService BuildingApiService
 @implements IDisposable
 
 <header class="flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop w-full sticky top-0 z-50 bg-surface border-b border-outline-variant shadow-sm">
@@ -51,27 +52,29 @@
 
                 @* Tên + vai trò (ẩn trên mobile) *@
                 <div class="text-right hidden sm:block select-none">
-                    <p class="font-label-md text-xs font-bold text-on-surface leading-tight truncate max-w-[140px]">
+                    <p id="header-user-display-name" class="font-label-md text-xs font-bold text-on-surface leading-tight truncate max-w-[140px]">
                         @(string.IsNullOrWhiteSpace(_userName) ? "Chủ trọ" : _userName)
                     </p>
                     <p class="font-caption text-[10px] text-on-surface-variant">Quản lý</p>
                 </div>
 
                 @* Avatar hoặc icon mặc định kiểu Facebook *@
-                @if (!string.IsNullOrWhiteSpace(_avatarUrl))
-                {
-                    <img alt="Ảnh đại diện"
-                         class="w-9 h-9 rounded-full object-cover border-2 border-primary/20 transition-transform duration-200 hover:scale-105"
-                         src="@_avatarUrl"
-                         loading="lazy"
-                         @onerror="HandleAvatarError" />
-                }
-                else
-                {
-                    <div class="w-9 h-9 rounded-full bg-surface-container-high border-2 border-outline-variant flex items-center justify-center transition-transform duration-200 hover:scale-105">
-                        <span class="material-symbols-outlined text-on-surface-variant text-xl" style="font-variation-settings: 'FILL' 1;">person</span>
-                    </div>
-                }
+                <div id="header-user-avatar-container" class="flex-shrink-0">
+                    @if (!string.IsNullOrWhiteSpace(_avatarUrl))
+                    {
+                        <img alt="Ảnh đại diện"
+                             class="w-9 h-9 rounded-full object-cover border-2 border-primary/20 transition-transform duration-200 hover:scale-105"
+                             src="@_avatarUrl"
+                             loading="lazy"
+                             @onerror="HandleAvatarError" />
+                    }
+                    else
+                    {
+                        <div class="w-9 h-9 rounded-full bg-surface-container-high border-2 border-outline-variant flex items-center justify-center transition-transform duration-200 hover:scale-105">
+                            <span class="material-symbols-outlined text-on-surface-variant text-xl" style="font-variation-settings: 'FILL' 1;">person</span>
+                        </div>
+                    }
+                </div>
             </button>
 
             @* Overlay vô hình để bắt click bên ngoài — nhẹ hơn JS event listener *@
@@ -89,10 +92,10 @@
 
                     @* Thông tin user ở đầu dropdown *@
                     <div class="px-4 py-3 border-b border-outline-variant bg-surface-container-low/50">
-                        <p class="text-sm font-bold text-on-surface truncate">
+                        <p id="header-dropdown-user-name" class="text-sm font-bold text-on-surface truncate">
                             @(string.IsNullOrWhiteSpace(_userName) ? "Chủ trọ" : _userName)
                         </p>
-                        <p class="text-xs text-on-surface-variant truncate">@_userEmail</p>
+                        <p id="header-dropdown-user-email" class="text-xs text-on-surface-variant truncate">@_userEmail</p>
                     </div>
 
                     <div class="py-1">
@@ -128,6 +131,43 @@
     </div>
 </header>
 
+@if (_showPopup)
+{
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 transition-all duration-300">
+        <div class="bg-white rounded-2xl border border-outline-variant p-8 max-w-sm w-full shadow-2xl relative overflow-hidden transform scale-95 opacity-0 animate-popup-in text-center flex flex-col items-center">
+            
+            <!-- Close Button -->
+            <button @onclick="ClosePopup" type="button" class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface p-1 hover:bg-surface-container rounded-full transition-all" aria-label="Đóng thông báo">
+                <span class="material-symbols-outlined text-xl">close</span>
+            </button>
+
+            <!-- Pulse Warn Icon -->
+            <div class="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-5 animate-pulse">
+                <span class="material-symbols-outlined text-amber-500 text-4xl" style="font-variation-settings: 'FILL' 1;">warning</span>
+            </div>
+
+            <!-- Title -->
+            <h3 class="text-lg font-bold text-on-surface mb-2">Chưa có nhà trọ nào!</h3>
+
+            <!-- Message -->
+            <p class="text-sm text-on-surface-variant leading-relaxed">
+                Vì bạn chưa tạo nhà trọ nào nên chưa thể sử dụng chức năng cài đặt chi tiết này.
+            </p>
+
+            <button @onclick="GoToCreateBuilding" type="button" class="w-full mt-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-container transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm font-bold">add</span>
+                Tạo nhà trọ ngay
+            </button>
+
+            <!-- Countdown Bar -->
+            <div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden mt-6 relative">
+                <div class="bg-primary h-full transition-all duration-1000 ease-linear absolute left-0 top-0 bottom-0" style="width: @(_countdownSeconds * 20)%;"></div>
+            </div>
+            <p class="text-[11px] text-on-surface-variant mt-2 font-medium">Tự động chuyển hướng sau <span class="text-primary font-bold">@_countdownSeconds</span> giây</p>
+        </div>
+    </div>
+}
+
 <style>
     /* Animation mượt cho dropdown - CSS thuần, không cần JS, tối ưu GPU */
     .sotro-dropdown-enter {
@@ -146,6 +186,22 @@
             transform: scale(1) translateY(0);
         }
     }
+
+    /* Animation cho popup cảnh báo chưa tạo nhà trọ */
+    @@keyframes popupIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(12px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    .animate-popup-in {
+        animation: popupIn 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        will-change: transform, opacity;
+    }
 </style>
 
 @code {
@@ -158,6 +214,9 @@
     private string _avatarUrl = string.Empty;
     private bool _isDropdownOpen;
     private bool _isInitialized;
+    private bool _showPopup;
+    private int _countdownSeconds = 5;
+    private System.Threading.CancellationTokenSource? _countdownCts;
 
     private string _inputText = string.Empty;
     private System.Threading.CancellationTokenSource? _searchCts;
@@ -244,14 +303,78 @@
     private void NavigateToProfile()
     {
         _isDropdownOpen = false;
-        // Tạm thời chuyển đến trang cài đặt, sau này có thể tạo trang hồ sơ riêng
-        Navigation.NavigateTo("/cai-dat");
+        Navigation.NavigateTo("/ho-so-ca-nhan");
     }
 
-    private void NavigateToSettings()
+    private async Task NavigateToSettings()
     {
         _isDropdownOpen = false;
-        Navigation.NavigateTo("/cai-dat");
+
+        try
+        {
+            var response = await BuildingApiService.GetBuildingsAsync();
+            if (response.Success && response.Data != null && response.Data.Count > 0)
+            {
+                Navigation.NavigateTo("/cai-dat");
+            }
+            else
+            {
+                ShowNoBuildingPopup();
+            }
+        }
+        catch (Exception)
+        {
+            Navigation.NavigateTo("/cai-dat");
+        }
+    }
+
+    private void ShowNoBuildingPopup()
+    {
+        _showPopup = true;
+        _countdownSeconds = 5;
+        _countdownCts?.Cancel();
+        _countdownCts = new System.Threading.CancellationTokenSource();
+        var token = _countdownCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (_countdownSeconds > 0)
+                {
+                    await Task.Delay(1000, token);
+                    if (token.IsCancellationRequested) return;
+                    _countdownSeconds--;
+                    await InvokeAsync(StateHasChanged);
+                }
+
+                await InvokeAsync(() =>
+                {
+                    _showPopup = false;
+                    Navigation.NavigateTo("/tao-nha-tro");
+                });
+            }
+            catch (TaskCanceledException)
+            {
+                // Ignored
+            }
+        }, token);
+
+        StateHasChanged();
+    }
+
+    private void ClosePopup()
+    {
+        _countdownCts?.Cancel();
+        _showPopup = false;
+        StateHasChanged();
+    }
+
+    private void GoToCreateBuilding()
+    {
+        _countdownCts?.Cancel();
+        _showPopup = false;
+        Navigation.NavigateTo("/tao-nha-tro");
     }
 
     private async Task Logout()
@@ -287,5 +410,7 @@
     {
         _searchCts?.Cancel();
         _searchCts?.Dispose();
+        _countdownCts?.Cancel();
+        _countdownCts?.Dispose();
     }
 }

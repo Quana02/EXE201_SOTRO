@@ -20,18 +20,21 @@ namespace SoTro_BE.Services
         private readonly IOtpRepository _otpRepository;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly IImageUploadService _imageUploadService;
         private readonly PasswordHasher<User> _passwordHasher;
 
         public AuthService(
             IAuthRepository authRepository,
             IOtpRepository otpRepository,
             IEmailService emailService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IImageUploadService imageUploadService)
         {
             _authRepository = authRepository;
             _otpRepository = otpRepository;
             _emailService = emailService;
             _configuration = configuration;
+            _imageUploadService = imageUploadService;
             _passwordHasher = new PasswordHasher<User>();
         }
 
@@ -432,6 +435,122 @@ namespace SoTro_BE.Services
             catch (Exception ex)
             {
                 return ApiResponse<AuthResponse>.Fail($"Cập nhật thông tin thất bại: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<AuthResponse>> UpdateProfileAsync(UpdateProfileRequest request, Stream? avatarStream, string? avatarFileName)
+        {
+            try
+            {
+                var user = await _authRepository.GetUserByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    return ApiResponse<AuthResponse>.Fail("Không tìm thấy người dùng.");
+                }
+
+                var fullName = request.FullName?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(fullName))
+                {
+                    return ApiResponse<AuthResponse>.Fail("Họ tên không được để trống.");
+                }
+                if (fullName.Length < 2)
+                {
+                    return ApiResponse<AuthResponse>.Fail("Họ tên phải có ít nhất 2 ký tự.");
+                }
+                if (!Regex.IsMatch(fullName, @"^[a-zA-ZÀ-ỹ\s]{2,100}$"))
+                {
+                    return ApiResponse<AuthResponse>.Fail("Họ tên chỉ được chứa chữ cái và khoảng trắng.");
+                }
+
+                var phoneNumber = request.PhoneNumber?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(phoneNumber) || !Regex.IsMatch(phoneNumber, @"^0\d{9}$"))
+                {
+                    return ApiResponse<AuthResponse>.Fail("Số điện thoại không hợp lệ. Số điện thoại phải bắt đầu bằng 0 và gồm 10 chữ số.");
+                }
+
+                // Handle avatar upload
+                if (avatarStream != null && !string.IsNullOrWhiteSpace(avatarFileName))
+                {
+                    // Delete old avatar if any
+                    if (!string.IsNullOrWhiteSpace(user.AvatarUrl))
+                    {
+                        try
+                        {
+                            await _imageUploadService.DeleteImageAsync(user.AvatarUrl);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[WARNING] Failed to delete old avatar: {ex.Message}");
+                        }
+                    }
+
+                    // Upload new avatar
+                    user.AvatarUrl = await _imageUploadService.UploadImageAsync(avatarStream, avatarFileName);
+                }
+
+                user.FullName = fullName;
+                user.PhoneNumber = phoneNumber;
+                user.IsProfileCompleted = true;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                // If user is a landlord, sync display name
+                if (user.Landlord != null)
+                {
+                    user.Landlord.DisplayName = fullName;
+                    user.Landlord.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _authRepository.UpdateUserAsync(user);
+
+                return ApiResponse<AuthResponse>.Ok("Cập nhật thông tin cá nhân thành công.", CreateAuthResponse(user));
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<AuthResponse>.Fail($"Cập nhật hồ sơ thất bại: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<string>> ChangePasswordAsync(ChangePasswordRequest request)
+        {
+            try
+            {
+                var user = await _authRepository.GetUserByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    return ApiResponse<string>.Fail("Không tìm thấy người dùng.");
+                }
+
+                if (user.IsExternalLogin && string.IsNullOrWhiteSpace(user.PasswordHash))
+                {
+                    return ApiResponse<string>.Fail("Tài khoản này được đăng nhập bằng Google, không thể đổi mật khẩu.");
+                }
+
+                var passwordResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
+                if (passwordResult == PasswordVerificationResult.Failed)
+                {
+                    return ApiResponse<string>.Fail("Mật khẩu hiện tại không chính xác.");
+                }
+
+                if (!IsStrongPassword(request.NewPassword))
+                {
+                    return ApiResponse<string>.Fail("Mật khẩu mới phải có ít nhất 8 ký tự, gồm 1 chữ in hoa, 1 chữ thường, 1 chữ số và 1 ký tự đặc biệt.");
+                }
+
+                if (request.NewPassword != request.ConfirmPassword)
+                {
+                    return ApiResponse<string>.Fail("Mật khẩu xác nhận không khớp.");
+                }
+
+                user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _authRepository.UpdateUserAsync(user);
+
+                return ApiResponse<string>.Ok("Đổi mật khẩu thành công.");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<string>.Fail($"Đổi mật khẩu thất bại: {ex.Message}");
             }
         }
 

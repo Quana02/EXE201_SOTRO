@@ -1,14 +1,17 @@
-﻿@page "/cai-dat"
+@page "/cai-dat"
 @layout EmptyLayout
+@inject IJSRuntime JS
+@inject IBuildingApiService BuildingApiService
+@using System.IO
 
 <PageTitle>Cài đặt - SOTRO</PageTitle>
 
 @if (!string.IsNullOrEmpty(CustomStyles))
 {
     <style>
-        
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            transition: font-variation-settings 0.2s ease;
         }
         .active-icon {
             font-variation-settings: 'FILL' 1;
@@ -24,46 +27,155 @@
         .toggle-checkbox:checked + .toggle-label .toggle-dot {
             transform: translateX(100%);
         }
-    
-
     </style>
 }
+
 <HeaderDashboard/>
 <SideNavBar />
 
 <main class="flex-1 md:ml-64 bg-surface min-h-screen pb-20">
     <div class="max-w-container-max-width mx-auto px-6 py-8">
         <div class="mb-10">
+            <h1 class="font-headline-sm text-headline-sm text-on-surface mb-2">Cài đặt hệ thống</h1>
             <p class="text-on-surface-variant font-body-md text-body-md">Quản lý các thiết lập vận hành, tự động hóa và thông tin cơ sở kinh doanh của bạn.</p>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <!-- Left Column: Navigation Anchors -->
             <div class="lg:col-span-3">
                 <div class="sticky top-24 space-y-2">
-                    <button class="w-full text-left px-4 py-2 rounded-lg font-label-md text-label-md flex items-center justify-between text-on-surface-variant">
-                        Thông tin chung
-                        <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+                    <button @onclick='() => ScrollToSection("thong-tin-chung")'
+                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "thong-tin-chung" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
+                        <span>Thông tin chung</span>
+                        <span class="material-symbols-outlined text-sm" style="@(activeSection == "thong-tin-chung" ? "font-variation-settings: 'FILL' 1;" : "")">info</span>
                     </button>
-                    <button class="w-full text-left px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md flex items-center justify-between">
-                        Cấu hình dịch vụ
-                        <span class="material-symbols-outlined text-sm" data-icon="settings_input_component">settings_input_component</span>
+                    <button @onclick='() => ScrollToSection("cau-hinh-dich-vu")'
+                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "cau-hinh-dich-vu" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
+                        <span>Cấu hình dịch vụ</span>
+                        <span class="material-symbols-outlined text-sm" style="@(activeSection == "cau-hinh-dich-vu" ? "font-variation-settings: 'FILL' 1;" : "")">settings_input_component</span>
                     </button>
-                    <button class="w-full text-left px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md flex items-center justify-between">
-                        Bảo mật &amp; Tài khoản
-                        <span class="material-symbols-outlined text-sm" data-icon="shield">shield</span>
+                    <button @onclick='() => ScrollToSection("tu-dong-hoa")'
+                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "tu-dong-hoa" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
+                        <span>Tự động hóa</span>
+                        <span class="material-symbols-outlined text-sm" style="@(activeSection == "tu-dong-hoa" ? "font-variation-settings: 'FILL' 1;" : "")">auto_awesome</span>
                     </button>
-                    <button class="w-full text-left px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md flex items-center justify-between">
-                        Bảo mật &amp; Tài khoản
-                        <span class="material-symbols-outlined text-sm">shield</span>
+                    <button @onclick='() => ScrollToSection("bao-mat-tai-khoan")'
+                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "bao-mat-tai-khoan" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
+                        <span>Bảo mật &amp; Tài khoản</span>
+                        <span class="material-symbols-outlined text-sm" style="@(activeSection == "bao-mat-tai-khoan" ? "font-variation-settings: 'FILL' 1;" : "")">shield</span>
                     </button>
                 </div>
             </div>
+
             <!-- Right Column: Settings Forms -->
             <div class="lg:col-span-9 space-y-8">
-                <!-- Section: Tự động hóa VIP (Priority focus) -->
-                <section class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined text-red-600">error</span>
+                        <span>@errorMessage</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="p-4 bg-green-50 text-green-700 rounded-lg border border-green-200 text-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined text-green-600">check_circle</span>
+                        <span>@successMessage</span>
+                    </div>
+                }
+
+                @if (isLoading)
+                {
+                    <div class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant p-12 flex flex-col items-center justify-center gap-4">
+                        <span class="material-symbols-outlined text-primary text-5xl animate-spin">sync</span>
+                        <p class="text-on-surface-variant font-medium">Đang tải thông tin cấu hình nhà trọ...</p>
+                    </div>
+                }
+                else
+                {
+                    <!-- Section 1: Thông tin chung -->
+                    <section id="thong-tin-chung" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
+                        <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">info</span>
+                            <h3 class="font-headline-sm text-headline-sm text-primary">Cài đặt chung thông tin</h3>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tên cơ sở kinh doanh</label>
+                                    <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" @bind="buildingName">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Hotline quản lý</label>
+                                    <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="tel" @bind="hotline">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Email nhận báo cáo</label>
+                                    <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="email" @bind="email">
+                                </div>
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Địa chỉ chính</label>
+                                    <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" @bind="address">
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg">
+                                <InputFile OnChange="HandleLogoSelected" id="logo-upload" class="hidden" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                                <label for="logo-upload" class="w-24 h-24 rounded-lg bg-surface-variant flex-shrink-0 relative group cursor-pointer overflow-hidden block">
+                                    @if (!string.IsNullOrEmpty(imageUrl))
+                                    {
+                                        <img alt="Building Logo" class="w-full h-full object-cover" src="@imageUrl">
+                                    }
+                                    else
+                                    {
+                                        <div class="w-full h-full flex items-center justify-center bg-gray-100 border border-dashed border-gray-300 rounded-lg">
+                                            <span class="material-symbols-outlined text-gray-400">add_photo_alternate</span>
+                                        </div>
+                                    }
+                                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-white">photo_camera</span>
+                                    </div>
+                                </label>
+                                <div class="flex-1">
+                                    <h5 class="text-sm font-bold text-on-surface">Logo &amp; Hình ảnh thương hiệu</h5>
+                                    <p class="text-xs text-on-surface-variant mt-1">Logo này sẽ được in trên các hóa đơn và tin nhắn gửi cho khách thuê. Kích thước khuyến nghị 512x512px.</p>
+                                    <label for="logo-upload" class="mt-2 inline-block text-xs font-bold text-primary hover:underline cursor-pointer">Thay đổi hình ảnh</label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                <!-- Section 2: Cấu hình dịch vụ -->
+                <section id="cau-hinh-dich-vu" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
                     <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
-                        <span class="material-symbols-outlined text-primary" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">settings_input_component</span>
+                        <h3 class="font-headline-sm text-headline-sm text-primary">Cấu hình dịch vụ</h3>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <p class="text-sm text-on-surface-variant leading-relaxed">Thiết lập đơn giá cho các dịch vụ cố định hàng tháng.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền rác (VNĐ/tháng)</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền mạng / Internet (VNĐ/tháng)</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền vệ sinh hành lang (VNĐ/tháng)</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Phí quản lý / Chung (VNĐ/tháng)</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Tự động hóa VIP (đứng liền dưới Cấu hình dịch vụ) -->
+                <section id="tu-dong-hoa" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
+                    <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
                         <h3 class="font-headline-sm text-headline-sm text-primary">Tự động hóa VIP</h3>
                     </div>
                     <div class="p-6 space-y-8">
@@ -100,7 +212,7 @@
                         <!-- Meter Reading Cycle -->
                         <div class="space-y-4">
                             <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
+                                <span class="material-symbols-outlined text-secondary">calendar_today</span>
                                 <h4 class="font-label-md text-label-md font-bold text-on-surface">Cấu hình ngày chốt điện nước định kỳ</h4>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -124,168 +236,295 @@
                             </div>
                         </div>
                     </div>
-                </section><section class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden">
-                <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
-                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">settings_input_component</span>
-                    <h3 class="font-headline-sm text-headline-sm text-primary">Cấu hình dịch vụ</h3>
-                </div>
-                <div class="p-6 space-y-6">
-                    <p class="text-sm text-on-surface-variant leading-relaxed">Thiết lập đơn giá cho các dịch vụ cố định hàng tháng.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền rác (VNĐ/tháng)</label>
-                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền mạng / Internet (VNĐ/tháng)</label>
-                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền vệ sinh hành lang (VNĐ/tháng)</label>
-                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Phí quản lý / Chung (VNĐ/tháng)</label>
-                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Nhập số tiền" type="number">
-                        </div>
+                </section>
+
+                <!-- Section 4: Bảo mật & Tài khoản -->
+                <section id="bao-mat-tai-khoan" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
+                    <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">shield</span>
+                        <h3 class="font-headline-sm text-headline-sm text-primary">Bảo mật &amp; Tài khoản</h3>
                     </div>
-                </div>
-            </section>
-            <!-- Section: Thông tin nhà trọ -->
-            <section class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden">
-                <div class="px-6 py-4 border-b border-outline-variant">
-                    <h3 class="font-headline-sm text-headline-sm text-on-surface">Cài đặt chung thông tin</h3>
-                </div>
-                <div class="p-6 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="col-span-1 md:col-span-2">
-                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tên cơ sở kinh doanh</label>
-                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" value="SOTRO Apartment Quận 1">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Hotline quản lý</label>
-                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="tel" value="0901 234 567">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Email nhận báo cáo</label>
-                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="email" value="contact@sotro-apts.vn">
-                        </div>
-                        <div class="col-span-1 md:col-span-2">
-                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Địa chỉ chính</label>
-                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" value="123 Đề Thám, Phường Cô Giang, Quận 1, TP. HCM">
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg">
-                        <div class="w-24 h-24 rounded-lg bg-surface-variant flex-shrink-0 relative group cursor-pointer overflow-hidden">
-                            <img alt="Building Logo" class="w-full h-full object-cover" data-alt="A minimalist logo design for an apartment complex called SOTRO. The image shows a sleek, modern architectural silhouette in navy blue against a clean white background. The composition is professional and elegant, reflecting a high-end urban lifestyle. The lighting is bright and airy, typical of a modern SaaS management platform dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr-mgmVremVp6l7gcQUJ16QdMez83ZYP90A9oPnq3XvtcZZqBjHlQIIZyMjmiGFP33gBKsMqvhKVei68lQhUVwB9LBbYwFMjP0Fcw4EP3Pfcs6Njn-S8OZQgEpawRkCBN6-Q7bBzTGF-H3uYktSiXYGt0CG6DKniiNq-_RJpIdEDbYRYPIz9sHXclhpdj0qfbDqmfI8s015ptlIrKkKZk4ZLFgVNDiCY7t4sSLErVSD68L1I3flyk0fBvuNDRkIHBG4N6HhrWhfcN9">
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span class="material-symbols-outlined text-white" data-icon="photo_camera">photo_camera</span>
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <h5 class="text-sm font-bold text-on-surface">Logo &amp; Hình ảnh thương hiệu</h5>
-                            <p class="text-xs text-on-surface-variant mt-1">Logo này sẽ được in trên các hóa đơn và tin nhắn gửi cho khách thuê. Kích thước khuyến nghị 512x512px.</p>
-                            <button class="mt-2 text-xs font-bold text-primary hover:underline">Thay đổi hình ảnh</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <!-- Footer Actions -->
-            <section class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden" id="security-settings">
-                <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
-                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">shield</span>
-                    <h3 class="font-headline-sm text-headline-sm text-primary">Bảo mật &amp; Tài khoản</h3>
-                </div>
-                <div class="p-6 space-y-8">
-                    <!-- Password Reset Section -->
-                    <div class="space-y-4">
-                        <h4 class="font-label-md text-label-md font-bold text-on-surface">Đặt lại mật khẩu</h4>
-                        <div class="grid grid-cols-1 gap-4 max-w-md">
-                            <div>
-                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Mật khẩu hiện tại</label>
-                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="••••••••" type="password">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Mật khẩu mới</label>
-                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="••••••••" type="password">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Xác nhận mật khẩu mới</label>
-                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="••••••••" type="password">
-                            </div>
-                            <button class="w-fit px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-container transition-colors">Cập nhật mật khẩu</button>
-                        </div>
-                    </div>
-                    <hr class="border-outline-variant">
-                    <!-- Linked Accounts Section -->
-                    <div class="space-y-4">
-                        <h4 class="font-label-md text-label-md font-bold text-on-surface">Liên kết tài khoản</h4>
-                        <div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg">
-                            <div class="flex items-center gap-3">
-                                <img alt="Google Logo" class="w-6 h-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN0XIl7E0xXC3JchogkZgfQhBM0qrBeO0BCgyu7-kjoTGN8SfzaM7UUB_gQ05OzSoUkgU_kwSDjEJQFNsXPrAOe2iAAhiyHRlGMuTNR1UJSRmwr5IzSojJZHlxoudAqCZWSaCKPCQtJszdBB1HbqCRuib5o_A9ELSlSx-cMAcnV7EZRLj0A_1XlaKWrB5Pdo8i_Tee0mPvvw7DgKeua2xpuhs9YMrNMuObj0Wl_tchx4tXw4mzFhIbsg5F5TvW7rJLd9VS1Md8DkYQ">
-                                <div>
-                                    <p class="text-sm font-bold">Tài khoản Google</p>
-                                    <p class="text-xs text-on-surface-variant">Đăng nhập nhanh chóng bằng Google</p>
+                    <div class="p-6 space-y-8">
+                        <!-- Linked Accounts Section -->
+                        <div class="space-y-4">
+                            <h4 class="font-label-md text-label-md font-bold text-on-surface">Liên kết tài khoản</h4>
+                            <div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <img alt="Google Logo" class="w-6 h-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN0XIl7E0xXC3JchogkZgfQhBM0qrBeO0BCgyu7-kjoTGN8SfzaM7UUB_gQ05OzSoUkgU_kwSDjEJQFNsXPrAOe2iAAhiyHRlGMuTNR1UJSRmwr5IzSojJZHlxoudAqCZWSaCKPCQtJszdBB1HbqCRuib5o_A9ELSlSx-cMAcnV7EZRLj0A_1XlaKWrB5Pdo8i_Tee0mPvvw7DgKeua2xpuhs9YMrNMuObj0Wl_tchx4tXw4mzFhIbsg5F5TvW7rJLd9VS1Md8DkYQ">
+                                    <div>
+                                        <p class="text-sm font-bold">Tài khoản Google</p>
+                                        <p class="text-xs text-on-surface-variant">Đăng nhập nhanh chóng bằng Google</p>
+                                    </div>
                                 </div>
+                                <button class="px-4 py-1.5 border border-outline text-xs font-bold rounded-lg hover:bg-surface-container transition-colors">Liên kết</button>
                             </div>
-                            <button class="px-4 py-1.5 border border-outline text-xs font-bold rounded-lg hover:bg-surface-container transition-colors">Liên kết</button>
                         </div>
                     </div>
+                </section>
+
+                <!-- Footer Actions -->
+                <div class="flex items-center justify-end gap-4 pb-12">
+                    <button @onclick="CancelChanges" type="button" class="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">Hủy thay đổi</button>
+                    <button @onclick="SaveSettings" disabled="@isSaving" type="button" class="px-8 py-2.5 rounded-lg bg-primary text-white font-label-md text-label-md hover:shadow-lg hover:bg-primary-container transition-all flex items-center gap-2">
+                        @if (isSaving)
+                        {
+                            <span class="material-symbols-outlined text-sm animate-spin">sync</span>
+                            <span>Đang lưu...</span>
+                        }
+                        else
+                        {
+                            <span>Lưu cài đặt</span>
+                        }
+                    </button>
                 </div>
-            </section><div class="flex items-center justify-end gap-4 pb-12">
-            <button class="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">Hủy thay đổi</button>
-            <button class="px-8 py-2.5 rounded-lg bg-primary text-white font-label-md text-label-md hover:shadow-lg hover:bg-primary-container transition-all">Lưu cài đặt</button>
+                }
+            </div>
         </div>
     </div>
-</div>
-</div>
 </main>
+
 <!-- BottomNavBar for Mobile (Logic: Hidden on md:flex) -->
 <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant flex justify-around items-center h-16 z-50">
-<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
-<span class="material-symbols-outlined" data-icon="home_work">home_work</span>
-<span class="text-[10px] mt-1">PhÃ²ng</span>
-</a>
-<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
-<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
-<span class="text-[10px] mt-1">HÃ³a Ä‘Æ¡n</span>
-</a>
-<a class="flex flex-col items-center justify-center text-primary" href="#">
-<span class="material-symbols-outlined active-icon" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
-<span class="text-[10px] mt-1 font-bold">CÃ i Ä‘áº·t</span>
-</a>
-<a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
-<span class="material-symbols-outlined" data-icon="person">person</span>
-<span class="text-[10px] mt-1">TÃ´i</span>
-</a>
+    <a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+        <span class="material-symbols-outlined" data-icon="home_work">home_work</span>
+        <span class="text-[10px] mt-1">Phòng</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+        <span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+        <span class="text-[10px] mt-1">Hóa đơn</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-primary" href="#">
+        <span class="material-symbols-outlined active-icon" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+        <span class="text-[10px] mt-1 font-bold">Cài đặt</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
+        <span class="material-symbols-outlined" data-icon="person">person</span>
+        <span class="text-[10px] mt-1">Tôi</span>
+    </a>
 </nav>
+
 <script>
-        // Micro-interaction for form inputs and toggles
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    console.log('Setting updated: Enabled');
-                } else {
-                    console.log('Setting updated: Disabled');
-                }
-            });
-        });
-
-        // Simple smooth scroll effect for side links
-        document.querySelectorAll('button[class*="text-left"]').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // In a real app, this would navigate or scroll to section
-                this.parentElement.querySelectorAll('button').forEach(b => {
-                    b.classList.remove('bg-primary-container/10', 'text-primary', 'font-bold');
-                    b.classList.add('text-on-surface-variant');
-                });
-                this.classList.remove('text-on-surface-variant');
-                this.classList.add('bg-primary-container/10', 'text-primary', 'font-bold');
-            });
-        });
-    </script>
-
+    // Global function to scroll smoothly with offset for header
+    window.sotroScrollTo = (elementId) => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            const yOffset = -96; // 64px header height + padding
+            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+    };
+</script>
 
 @code {
     private const string CustomStyles = "CaiDat";
+    private string activeSection = "thong-tin-chung";
+
+    private int buildingId;
+    private BuildingResponse? activeBuilding;
+    private string buildingName = string.Empty;
+    private string address = string.Empty;
+    private string hotline = string.Empty;
+    private string email = string.Empty;
+    private string imageUrl = string.Empty;
+    private string description = string.Empty;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    // File upload state for new logo
+    private byte[]? newLogoBytes;
+    private string newLogoFileName = string.Empty;
+
+    private async Task ScrollToSection(string elementId)
+    {
+        activeSection = elementId;
+        await JS.InvokeVoidAsync("sotroScrollTo", elementId);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadBuildingData();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadBuildingData()
+    {
+        isLoading = true;
+        errorMessage = null;
+        try
+        {
+            var idStr = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
+            var userPhone = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_phone_number");
+            var userEmail = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_email");
+
+            hotline = userPhone ?? string.Empty;
+            email = userEmail ?? string.Empty;
+
+            if (int.TryParse(idStr, out buildingId) && buildingId > 0)
+            {
+                var response = await BuildingApiService.GetBuildingByIdAsync(buildingId);
+                if (response.Success && response.Data != null)
+                {
+                    activeBuilding = response.Data;
+                    buildingName = activeBuilding.BuildingName ?? string.Empty;
+                    address = activeBuilding.Address ?? string.Empty;
+                    imageUrl = activeBuilding.ImageUrl ?? string.Empty;
+                    description = activeBuilding.Description ?? string.Empty;
+                }
+                else
+                {
+                    errorMessage = response.Message ?? "Không tải được thông tin tòa nhà.";
+                }
+            }
+            else
+            {
+                errorMessage = "Chưa chọn tòa nhà hoạt động. Vui lòng chọn một tòa nhà từ trang Nhà trọ.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi tải dữ liệu: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleLogoSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        successMessage = null;
+        var file = e.File;
+        if (file != null)
+        {
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                errorMessage = "Ảnh logo không được vượt quá 5MB.";
+                return;
+            }
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+            {
+                errorMessage = "Chỉ chấp nhận file ảnh hợp lệ (jpg, png, webp, gif).";
+                return;
+            }
+
+            try
+            {
+                var buffer = new byte[file.Size];
+                await file.OpenReadStream(5 * 1024 * 1024).ReadExactlyAsync(buffer);
+                newLogoBytes = buffer;
+                newLogoFileName = file.Name;
+                imageUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Lỗi đọc file logo: {ex.Message}";
+            }
+        }
+    }
+
+    private async Task SaveSettings()
+    {
+        if (activeBuilding == null || buildingId <= 0)
+        {
+            errorMessage = "Không tìm thấy tòa nhà hoạt động.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(buildingName))
+        {
+            errorMessage = "Tên cơ sở kinh doanh không được để trống.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            errorMessage = "Địa chỉ chính không được để trống.";
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            // Prepare update request
+            var request = new CreateBuildingRequest
+            {
+                BuildingName = buildingName.Trim(),
+                BuildingTypeId = activeBuilding.BuildingTypeId ?? 1,
+                Address = address.Trim(),
+                Description = string.IsNullOrWhiteSpace(description) ? (activeBuilding.Description ?? "Mô tả nhà trọ") : description.Trim(),
+                TotalFloors = activeBuilding.TotalFloors ?? 1,
+                BillingDay = activeBuilding.BillingDay ?? 30,
+                DueDay = activeBuilding.DueDay ?? 5
+            };
+
+            List<(Stream Stream, string FileName)>? imageFiles = null;
+            if (newLogoBytes != null)
+            {
+                imageFiles = new List<(Stream Stream, string FileName)>
+                {
+                    (new MemoryStream(newLogoBytes), newLogoFileName)
+                };
+            }
+
+            var response = await BuildingApiService.UpdateBuildingAsync(buildingId, request, imageFiles);
+            if (response.Success && response.Data != null)
+            {
+                successMessage = "Cập nhật cấu hình thông tin chung thành công!";
+                activeBuilding = response.Data;
+                imageUrl = activeBuilding.ImageUrl ?? string.Empty;
+                newLogoBytes = null; // Clear selected logo
+
+                // Sync new name with active_building_name in localStorage
+                await JS.InvokeVoidAsync("localStorage.setItem", "active_building_name", buildingName.Trim());
+
+                // Sync hotline & email in localStorage if changed
+                if (!string.IsNullOrWhiteSpace(hotline))
+                {
+                    await JS.InvokeVoidAsync("localStorage.setItem", "sotro_phone_number", hotline.Trim());
+                }
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", email.Trim());
+                }
+            }
+            else
+            {
+                errorMessage = response.Message ?? "Không thể lưu thông tin trọ.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi lưu cấu hình: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void CancelChanges()
+    {
+        errorMessage = null;
+        successMessage = null;
+        if (activeBuilding != null)
+        {
+            buildingName = activeBuilding.BuildingName ?? string.Empty;
+            address = activeBuilding.Address ?? string.Empty;
+            imageUrl = activeBuilding.ImageUrl ?? string.Empty;
+            description = activeBuilding.Description ?? string.Empty;
+            newLogoBytes = null;
+        }
+    }
 }

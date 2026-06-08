@@ -77,5 +77,27 @@ namespace SoTro_BE.Controllers
             var response = await _authService.CompleteProfileAsync(request);
             return response.Success ? Ok(response) : BadRequest(response);
         }
+
+        [HttpPost("update-profile")]
+        public async Task<IActionResult> UpdateProfile([FromForm] UpdateProfileRequest request, IFormFile? avatar)
+        {
+            Stream? avatarStream = null;
+            string? fileName = null;
+            if (avatar != null)
+            {
+                avatarStream = avatar.OpenReadStream();
+                fileName = avatar.FileName;
+            }
+
+            var response = await _authService.UpdateProfileAsync(request, avatarStream, fileName);
+            return response.Success ? Ok(response) : BadRequest(response);
+        }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+        {
+            var response = await _authService.ChangePasswordAsync(request);
+            return response.Success ? Ok(response) : BadRequest(response);
+        }
     }
 }

@@ -13,5 +13,7 @@ namespace SoTro_BE.Services
         Task<ApiResponse<string>> ResetPasswordAsync(ResetPasswordRequest request);
         Task<ApiResponse<AuthResponse>> GoogleLoginAsync(GoogleLoginRequest request);
         Task<ApiResponse<AuthResponse>> CompleteProfileAsync(CompleteProfileRequest request);
+        Task<ApiResponse<AuthResponse>> UpdateProfileAsync(UpdateProfileRequest request, Stream? avatarStream, string? avatarFileName);
+        Task<ApiResponse<string>> ChangePasswordAsync(ChangePasswordRequest request);
     }
 }
