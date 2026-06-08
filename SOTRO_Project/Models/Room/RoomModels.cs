@@ -167,6 +167,7 @@ namespace SOTRO_Project.Models.Room
         public decimal? IncidentFee { get; set; }
 
         public int? Capacity { get; set; }
+        public int? CurrentTenantCount { get; set; }
         public int? BillingDay { get; set; }
         public int? PaymentDueDay { get; set; }
 
@@ -192,6 +193,7 @@ namespace SOTRO_Project.Models.Room
         public decimal? IncidentFee { get; set; }
 
         public int? Capacity { get; set; }
+        public int? CurrentTenantCount { get; set; }
         public int? BillingDay { get; set; }
         public int? PaymentDueDay { get; set; }
 

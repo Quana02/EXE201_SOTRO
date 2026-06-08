@@ -2,6 +2,7 @@
 @layout EmptyLayout
 @inject NavigationManager Navigation
 @inject IRoomApiService RoomApiService
+@inject IBuildingApiService BuildingApiService
 @inject IJSRuntime JS
 
 <PageTitle>Chỉnh sửa phòng - SOTRO Admin</PageTitle>
@@ -85,7 +86,7 @@
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
-                <div class="mb-6 p-4 bg-error-container text-on-error-container rounded-xl flex items-center gap-3">
+                <div id="error-message-container" class="mb-6 p-4 bg-error-container text-on-error-container rounded-xl flex items-center gap-3">
                     <span class="material-symbols-outlined">error</span>
                     <p>@errorMessage</p>
                 </div>
@@ -112,7 +113,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="flex flex-col gap-2">
                                     <label class="font-label-md text-label-md text-on-surface-variant">Mã phòng <span class="text-error">*</span></label>
-                                    <input @bind="request.RoomCode"
+                                    <input value="@request.RoomCode" @oninput="OnRoomCodeInput"
                                            class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md"
                                            placeholder="VD: P101" type="text" />
                                 </div>
@@ -123,10 +124,14 @@
                                            placeholder="VD: Phòng cao cấp" type="text" />
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    <label class="font-label-md text-label-md text-on-surface-variant">Tầng</label>
-                                    <input @bind="request.FloorNumber"
-                                           class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md"
-                                           type="number" placeholder="1" />
+                                    <label class="font-label-md text-label-md text-on-surface-variant">Tầng <span class="text-error">*</span></label>
+                                    <select @bind="request.FloorNumber"
+                                            class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md bg-white">
+                                        @for (int f = 1; f <= totalFloors; f++)
+                                        {
+                                            <option value="@f">@GetFloorLabel(f)</option>
+                                        }
+                                    </select>
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <label class="font-label-md text-label-md text-on-surface-variant">Khu vực / Zone</label>
@@ -136,7 +141,7 @@
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <label class="font-label-md text-label-md text-on-surface-variant">Trạng thái phòng</label>
-                                    <select @bind="request.Status"
+                                    <select value="@request.Status" @onchange="OnStatusChanged"
                                             class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md bg-white">
                                         <option value="Available">Trống</option>
                                         <option value="Occupied">Đang thuê</option>
@@ -145,10 +150,25 @@
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <label class="font-label-md text-label-md text-on-surface-variant">Sức chứa (người)</label>
-                                    <input @bind="request.Capacity"
+                                    <input value="@request.Capacity" @oninput="OnCapacityInput"
                                            class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md"
                                            type="number" placeholder="2" min="1" />
                                 </div>
+                                @if (request.Status != "Available")
+                                {
+                                    <div class="flex flex-col gap-2 md:col-span-2">
+                                        <label class="font-label-md text-label-md text-on-surface-variant">
+                                            Số người đang thuê
+                                            <span class="text-on-surface-variant text-[11px] font-normal ml-1">
+                                                / @(request.Capacity?.ToString() ?? "?")
+                                            </span>
+                                        </label>
+                                        <input value="@request.CurrentTenantCount" @oninput="OnCurrentTenantCountInput"
+                                               class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md"
+                                               type="number" min="0" max="@request.Capacity" placeholder="0" />
+                                        <p class="text-caption text-on-surface-variant">Nhập số người hiện đang ở trong phòng</p>
+                                    </div>
+                                }
                             </div>
                         </section>
 
@@ -206,7 +226,7 @@
                                 <div class="flex flex-col gap-2">
                                     <label class="font-label-md text-label-md text-on-surface-variant">Ngày thu tiền (1–15)</label>
                                     <div class="relative flex items-center">
-                                        <input @bind="request.BillingDay" class="form-input pr-10" type="number" min="1" max="15" />
+                                        <input value="@request.BillingDay" @oninput="OnBillingDayInput" class="form-input pr-10" type="number" min="1" max="15" />
                                         <div class="absolute right-3 flex items-center justify-center w-6 h-6 pointer-events-none text-on-surface-variant">
                                             <span class="material-symbols-outlined text-[20px]">calendar_month</span>
                                         </div>
@@ -270,12 +290,20 @@
     private bool showToast;
     private string? loadError;
     private string? errorMessage;
+    private int totalFloors = 1;
 
     // Formatted display strings
     private string basePriceDisplay     = "";
     private string electricPriceDisplay = "";
     private string waterPriceDisplay    = "";
     private string serviceFeeDisplay    = "";
+
+    private string GetFloorLabel(int floorNum)
+    {
+        if (floorNum == 1) return "Tầng 1 (Trệt)";
+        if (floorNum == totalFloors && totalFloors > 1) return "Sân thượng";
+        return $"Tầng {floorNum}";
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -306,6 +334,7 @@
                     WaterPrice     = room.WaterPrice,
                     ServiceFee     = room.ServiceFee,
                     Capacity       = room.Capacity,
+                    CurrentTenantCount = room.CurrentTenantCount,
                     BillingDay     = room.BillingDay,
                     PaymentDueDay  = room.PaymentDueDay,
                     BankName       = room.BankName,
@@ -317,6 +346,16 @@
                 electricPriceDisplay = request.ElectricPrice.HasValue ? FormatNumber(request.ElectricPrice.Value) : "";
                 waterPriceDisplay    = request.WaterPrice.HasValue ? FormatNumber(request.WaterPrice.Value) : "";
                 serviceFeeDisplay    = request.ServiceFee.HasValue ? FormatNumber(request.ServiceFee.Value) : "";
+
+                // Fetch building floors
+                if (room.BuildingId.HasValue)
+                {
+                    var buildingResp = await BuildingApiService.GetBuildingByIdAsync(room.BuildingId.Value);
+                    if (buildingResp.Success && buildingResp.Data != null)
+                    {
+                        totalFloors = buildingResp.Data.TotalFloors ?? 1;
+                    }
+                }
             }
             else
             {
@@ -333,27 +372,90 @@
         }
     }
 
+    private async Task ScrollToError()
+    {
+        StateHasChanged();
+        await Task.Delay(50);
+        await JS.InvokeVoidAsync("eval", "document.getElementById('error-message-container')?.scrollIntoView({ behavior: 'smooth', block: 'center' })");
+    }
+
     private async Task HandleSubmit()
     {
         errorMessage = null;
         if (string.IsNullOrWhiteSpace(request.RoomCode))
         {
             errorMessage = "Vui lòng nhập mã phòng.";
+            await ScrollToError();
             return;
         }
         if (request.BasePrice == null)
         {
             errorMessage = "Vui lòng nhập tiền phòng.";
+            await ScrollToError();
             return;
         }
         if (request.BasePrice <= 0)
         {
             errorMessage = "Tiền phòng phải lớn hơn 0.";
+            await ScrollToError();
+            return;
+        }
+        if (request.ElectricPrice.HasValue && request.ElectricPrice < 0)
+        {
+            errorMessage = "Đơn giá điện không được nhỏ hơn 0.";
+            await ScrollToError();
+            return;
+        }
+        if (request.WaterPrice.HasValue && request.WaterPrice < 0)
+        {
+            errorMessage = "Đơn giá nước không được nhỏ hơn 0.";
+            await ScrollToError();
+            return;
+        }
+        if (request.ServiceFee.HasValue && request.ServiceFee < 0)
+        {
+            errorMessage = "Phí dịch vụ không được nhỏ hơn 0.";
+            await ScrollToError();
+            return;
+        }
+        if (request.Capacity.HasValue && request.Capacity <= 0)
+        {
+            errorMessage = "Sức chứa phải lớn hơn 0.";
+            await ScrollToError();
+            return;
+        }
+        // Validate số người thuê khi phòng đang được thuê
+        if (request.Status == "Occupied")
+        {
+            if (!request.Capacity.HasValue || request.Capacity <= 0)
+            {
+                errorMessage = "Khi phòng đang thuê, vui lòng nhập sức chứa tối đa của phòng.";
+                await ScrollToError();
+                return;
+            }
+            if (!request.CurrentTenantCount.HasValue || request.CurrentTenantCount <= 0)
+            {
+                errorMessage = "Khi phòng đang thuê, bắt buộc phải nhập số người đang thuê (lớn hơn 0).";
+                await ScrollToError();
+                return;
+            }
+            if (request.CurrentTenantCount > request.Capacity)
+            {
+                errorMessage = $"Số người đang thuê ({request.CurrentTenantCount}) không được vượt quá sức chứa ({request.Capacity} người).";
+                await ScrollToError();
+                return;
+            }
+        }
+        if (request.Status == "Maintenance" && request.CurrentTenantCount.HasValue && request.CurrentTenantCount < 0)
+        {
+            errorMessage = "Số người đang ở không được nhỏ hơn 0.";
+            await ScrollToError();
             return;
         }
         if (request.BillingDay.HasValue && (request.BillingDay < 1 || request.BillingDay > 15))
         {
             errorMessage = "Ngày thu tiền phải từ ngày 1 đến ngày 15.";
+            await ScrollToError();
             return;
         }
 
@@ -373,11 +475,13 @@
             else
             {
                 errorMessage = result.Message ?? "Cập nhật thất bại. Vui lòng thử lại.";
+                await ScrollToError();
             }
         }
         catch (Exception ex)
         {
             errorMessage = $"Lỗi: {ex.Message}";
+            await ScrollToError();
         }
         finally
         {
@@ -389,33 +493,105 @@
 
     private void OnBillingDateChanged(ChangeEventArgs e)
     {
+        errorMessage = null;
         if (DateTime.TryParse(e.Value?.ToString(), out var date))
         {
             request.BillingDay = date.Day;
         }
     }
 
+    private void OnRoomCodeInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        request.RoomCode = e.Value?.ToString() ?? "";
+    }
+
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        var newStatus = e.Value?.ToString();
+        request.Status = newStatus;
+        if (newStatus == "Occupied")
+        {
+            if (!request.Capacity.HasValue || request.Capacity <= 0)
+            {
+                request.Capacity = 2;
+            }
+            if (!request.CurrentTenantCount.HasValue || request.CurrentTenantCount <= 0)
+            {
+                request.CurrentTenantCount = 1;
+            }
+        }
+        else if (newStatus == "Available")
+        {
+            request.CurrentTenantCount = 0;
+        }
+    }
+
+    private void OnCapacityInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        if (int.TryParse(e.Value?.ToString(), out var val))
+        {
+            request.Capacity = val;
+        }
+        else
+        {
+            request.Capacity = null;
+        }
+    }
+
+    private void OnCurrentTenantCountInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        if (int.TryParse(e.Value?.ToString(), out var val))
+        {
+            request.CurrentTenantCount = val;
+        }
+        else
+        {
+            request.CurrentTenantCount = null;
+        }
+    }
+
+    private void OnBillingDayInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        if (int.TryParse(e.Value?.ToString(), out var val))
+        {
+            request.BillingDay = val;
+        }
+        else
+        {
+            request.BillingDay = null;
+        }
+    }
+
     // ── Input handlers với format tiền tệ ──
     private void OnBasePriceInput(ChangeEventArgs e)
     {
+        errorMessage = null;
         var raw = ParseRawNumber(e.Value?.ToString());
         request.BasePrice = raw;
         basePriceDisplay = raw.HasValue ? FormatNumber(raw.Value) : "";
     }
     private void OnElectricPriceInput(ChangeEventArgs e)
     {
+        errorMessage = null;
         var raw = ParseRawNumber(e.Value?.ToString());
         request.ElectricPrice = raw;
         electricPriceDisplay = raw.HasValue ? FormatNumber(raw.Value) : "";
     }
     private void OnWaterPriceInput(ChangeEventArgs e)
     {
+        errorMessage = null;
         var raw = ParseRawNumber(e.Value?.ToString());
         request.WaterPrice = raw;
         waterPriceDisplay = raw.HasValue ? FormatNumber(raw.Value) : "";
     }
     private void OnServiceFeeInput(ChangeEventArgs e)
     {
+        errorMessage = null;
         var raw = ParseRawNumber(e.Value?.ToString());
         request.ServiceFee = raw;
         serviceFeeDisplay = raw.HasValue ? FormatNumber(raw.Value) : "";

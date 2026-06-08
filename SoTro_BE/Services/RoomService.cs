@@ -123,6 +123,24 @@ namespace SoTro_BE.Services
                 if (await _roomRepository.RoomCodeExistsAsync(buildingId, request.RoomCode))
                     return Fail<RoomResponse>($"Mã phòng '{request.RoomCode}' đã tồn tại trong nhà trọ này.");
 
+                // Validate số người thuê khi phòng đang được thuê
+                if (request.Status == "Occupied")
+                {
+                    if (!request.Capacity.HasValue || request.Capacity <= 0)
+                        return Fail<RoomResponse>("Khi phòng đang thuê, vui lòng nhập sức chứa tối đa của phòng.");
+
+                    if (!request.CurrentTenantCount.HasValue || request.CurrentTenantCount <= 0)
+                        return Fail<RoomResponse>("Khi phòng đang thuê, bắt buộc phải nhập số người đang thuê (lớn hơn 0).");
+
+                    if (request.CurrentTenantCount > request.Capacity)
+                        return Fail<RoomResponse>($"Số người đang thuê ({request.CurrentTenantCount}) không được vượt quá sức chứa ({request.Capacity} người).");
+                }
+                else if (request.Status == "Maintenance")
+                {
+                    if (request.CurrentTenantCount.HasValue && request.CurrentTenantCount < 0)
+                        return Fail<RoomResponse>("Số người đang ở không được nhỏ hơn 0.");
+                }
+
                 // Lưu extra fields (RoomName, Zone, ServiceFee, IncidentFee, BankInfo, BillingDay, PaymentDueDay)
                 // vào field Note dạng JSON để không cần migration
                 var extraData = new RoomExtraData
@@ -149,7 +167,7 @@ namespace SoTro_BE.Services
                     ElectricPrice = request.ElectricPrice,
                     WaterPrice = request.WaterPrice,
                     Capacity = request.Capacity,
-                    CurrentTenantCount = 0,
+                    CurrentTenantCount = request.Status == "Available" ? 0 : (request.CurrentTenantCount ?? 0),
                     Status = request.Status,
                     Note = JsonSerializer.Serialize(extraData),
                     IsDeleted = false,
@@ -197,6 +215,24 @@ namespace SoTro_BE.Services
                         return Fail<RoomResponse>($"Mã phòng '{request.RoomCode}' đã tồn tại trong nhà trọ này.");
                 }
 
+                // Validate số người thuê khi phòng đang được thuê
+                if (request.Status == "Occupied")
+                {
+                    if (!request.Capacity.HasValue || request.Capacity <= 0)
+                        return Fail<RoomResponse>("Khi phòng đang thuê, vui lòng nhập sức chứa tối đa của phòng.");
+
+                    if (!request.CurrentTenantCount.HasValue || request.CurrentTenantCount <= 0)
+                        return Fail<RoomResponse>("Khi phòng đang thuê, bắt buộc phải nhập số người đang thuê (lớn hơn 0).");
+
+                    if (request.CurrentTenantCount > request.Capacity)
+                        return Fail<RoomResponse>($"Số người đang thuê ({request.CurrentTenantCount}) không được vượt quá sức chứa ({request.Capacity} người).");
+                }
+                else if (request.Status == "Maintenance")
+                {
+                    if (request.CurrentTenantCount.HasValue && request.CurrentTenantCount < 0)
+                        return Fail<RoomResponse>("Số người đang ở không được nhỏ hơn 0.");
+                }
+
                 var extraData = new RoomExtraData
                 {
                     RoomName = request.RoomName,
@@ -226,6 +262,12 @@ namespace SoTro_BE.Services
                 {
                     room.Status = request.Status;
                 }
+
+                // Cập nhật số người đang thuê
+                if (request.Status == "Available")
+                    room.CurrentTenantCount = 0;
+                else if (request.CurrentTenantCount.HasValue)
+                    room.CurrentTenantCount = request.CurrentTenantCount.Value;
 
                 var updated = await _roomRepository.UpdateRoomAsync(room);
                 return new ApiResponse<RoomResponse>
