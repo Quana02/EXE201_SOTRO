@@ -1,13 +1,33 @@
-﻿<header class="flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop w-full sticky top-0 z-50 bg-surface border-b border-outline-variant shadow-sm">
-    <div class="flex items-center mr-4"><div class="flex items-center gap-3"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhYXYem8pnyf-x-_Q-OAYvvYT0Eoie3QgsyWlMQv2uEKGvKUp3z6Dbcw9UNfefANq1wABhAS-3ivWQk_fd6YnvgsbRlzbSfL68H4ewsArldRQEyArQD3FljdvTKCm_2ijqMAcHsjfWpBHqpB4T84JuU75OjyVyrjaohxLJmkhMz4OSU_WnfAAq-05ZQvzH7w9KvGBY6PJ7LqpOLwJdwUBAWlrvmRfYzxU7kVNQ4DiIDlk72cWywGIrDHYXL81x1HVYNT6X3BKj98a6" alt="Sổ Trọ Logo" class="h-10 w-auto object-contain"><span class="text-primary font-semibold text-headline-sm font-headline-sm">Sổ Trọ</span></div></div>
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<header class="flex justify-between items-center h-16 px-margin-mobile md:px-margin-desktop w-full sticky top-0 z-50 bg-surface border-b border-outline-variant shadow-sm">
+    <div class="flex items-center mr-4">
+        <div class="flex items-center gap-3">
+            <a href="/" class="flex items-center cursor-pointer transition-opacity hover:opacity-85" title="Về trang chủ">
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhYXYem8pnyf-x-_Q-OAYvvYT0Eoie3QgsyWlMQv2uEKGvKUp3z6Dbcw9UNfefANq1wABhAS-3ivWQk_fd6YnvgsbRlzbSfL68H4ewsArldRQEyArQD3FljdvTKCm_2ijqMAcHsjfWpBHqpB4T84JuU75OjyVyrjaohxLJmkhMz4OSU_WnfAAq-05ZQvzH7w9KvGBY6PJ7LqpOLwJdwUBAWlrvmRfYzxU7kVNQ4DiIDlk72cWywGIrDHYXL81x1HVYNT6X3BKj98a6" alt="Sổ Trọ Logo" class="h-10 w-auto object-contain">
+            </a>
+            <a href="/nha-tro" class="text-primary font-semibold text-headline-sm font-headline-sm cursor-pointer transition-colors hover:text-blue-800" title="Chọn nhà trọ">
+                Sổ Trọ
+            </a>
+        </div>
+    </div>
     <div class="flex items-center gap-4">
-        <button class="md:hidden p-2 hover:bg-surface-container-low rounded-full">
+        <button class="md:hidden p-2 hover:bg-surface-container-low rounded-full transition-colors">
             <span class="material-symbols-outlined">menu</span>
         </button>
-        <div class="hidden md:flex bg-surface-container-low rounded-full px-4 py-1.5 items-center gap-2 border border-outline-variant w-80">
-            <span class="material-symbols-outlined text-on-surface-variant text-xl">search</span>
-            <input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-on-surface-variant" placeholder="Tìm kiếm nhà trọ..." type="text">
-        </div>
+        @if (OnSearch.HasDelegate)
+        {
+            <div class="hidden md:flex bg-surface-container-low rounded-full px-4 py-1.5 items-center gap-2 border border-outline-variant w-80 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-200">
+                <span class="material-symbols-outlined text-on-surface-variant text-xl">search</span>
+                <input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-on-surface-variant focus:outline-none" 
+                       placeholder="@SearchPlaceholder" 
+                       type="text" 
+                       value="@_inputText"
+                       @oninput="HandleInput">
+            </div>
+        }
     </div>
     <div class="flex items-center gap-2 md:gap-4">
         <button class="p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-full relative">
@@ -18,12 +38,254 @@
             <span class="material-symbols-outlined">help_outline</span>
         </button>
         <div class="h-8 w-px bg-outline-variant mx-1 hidden md:block"></div>
-        <div class="flex items-center gap-3 pl-2">
-            <div class="text-right hidden sm:block">
-                <p class="font-label-md text-xs font-bold text-on-surface leading-tight">Admin Manager</p>
-                <p class="font-caption text-[10px] text-on-surface-variant">Quản lý cao cấp</p>
-            </div>
-            <img alt="Manager Profile" class="w-9 h-9 rounded-full object-cover border border-primary/20" data-alt="A professional portrait of a confident property manager in a modern, brightly lit corporate office setting. The lighting is soft and high-key, emphasizing a clean and efficient professional atmosphere. The color palette is dominated by professional blues and clean whites, reflecting a trustworthy institutional brand identity. The style is sharp and contemporary digital photography with a shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAupmFUQV77WfgCiDcBjVXbpv9kXrWg8VvgdvUgHm1ZOU8MMtaWJ38EpVf0hn1hAxjyG_krOa5VzfixcqtWJ_a4dX1S_zSzkpHSZniwVEMaH_H2EpKod0CibPaI3DajFXSL181NSgyDN4-0On7C1i3cejC00jzcezY0YsEMVHY7xMNd53tVX4DLc4VqIkQqH0M3M4pfJZVUBrmKVu4BZiBZSlP-gzR2O8brFkChMqpndQ0ctgBPuuADvJWtVxTOc1DU1pjpfayZ4OHS">
+
+        @* === Avatar + Dropdown === *@
+        <div class="relative">
+            <button @onclick="ToggleDropdown"
+                    @onclick:stopPropagation="true"
+                    class="flex items-center gap-3 pl-2 cursor-pointer rounded-full hover:bg-surface-container-low transition-colors duration-200 p-1"
+                    aria-haspopup="true"
+                    aria-expanded="@_isDropdownOpen"
+                    aria-label="Menu người dùng"
+                    id="header-avatar-btn">
+
+                @* Tên + vai trò (ẩn trên mobile) *@
+                <div class="text-right hidden sm:block select-none">
+                    <p class="font-label-md text-xs font-bold text-on-surface leading-tight truncate max-w-[140px]">
+                        @(string.IsNullOrWhiteSpace(_userName) ? "Chủ trọ" : _userName)
+                    </p>
+                    <p class="font-caption text-[10px] text-on-surface-variant">Quản lý</p>
+                </div>
+
+                @* Avatar hoặc icon mặc định kiểu Facebook *@
+                @if (!string.IsNullOrWhiteSpace(_avatarUrl))
+                {
+                    <img alt="Ảnh đại diện"
+                         class="w-9 h-9 rounded-full object-cover border-2 border-primary/20 transition-transform duration-200 hover:scale-105"
+                         src="@_avatarUrl"
+                         loading="lazy"
+                         @onerror="HandleAvatarError" />
+                }
+                else
+                {
+                    <div class="w-9 h-9 rounded-full bg-surface-container-high border-2 border-outline-variant flex items-center justify-center transition-transform duration-200 hover:scale-105">
+                        <span class="material-symbols-outlined text-on-surface-variant text-xl" style="font-variation-settings: 'FILL' 1;">person</span>
+                    </div>
+                }
+            </button>
+
+            @* Overlay vô hình để bắt click bên ngoài — nhẹ hơn JS event listener *@
+            @if (_isDropdownOpen)
+            {
+                <div class="fixed inset-0 z-[99]" @onclick="CloseDropdown"></div>
+            }
+
+            @* Dropdown Menu *@
+            @if (_isDropdownOpen)
+            {
+                <div class="absolute right-0 top-full mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant overflow-hidden z-[100] sotro-dropdown-enter"
+                     role="menu"
+                     aria-label="Menu tài khoản">
+
+                    @* Thông tin user ở đầu dropdown *@
+                    <div class="px-4 py-3 border-b border-outline-variant bg-surface-container-low/50">
+                        <p class="text-sm font-bold text-on-surface truncate">
+                            @(string.IsNullOrWhiteSpace(_userName) ? "Chủ trọ" : _userName)
+                        </p>
+                        <p class="text-xs text-on-surface-variant truncate">@_userEmail</p>
+                    </div>
+
+                    <div class="py-1">
+                        @* Hồ sơ cá nhân *@
+                        <button @onclick="NavigateToProfile"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors duration-150 text-left"
+                                role="menuitem">
+                            <span class="material-symbols-outlined text-on-surface-variant text-xl">person</span>
+                            <span>Hồ sơ cá nhân</span>
+                        </button>
+
+                        @* Cài đặt *@
+                        <button @onclick="NavigateToSettings"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors duration-150 text-left"
+                                role="menuitem">
+                            <span class="material-symbols-outlined text-on-surface-variant text-xl">settings</span>
+                            <span>Cài đặt</span>
+                        </button>
+                    </div>
+
+                    <div class="border-t border-outline-variant py-1">
+                        @* Đăng xuất *@
+                        <button @onclick="Logout"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error-container/30 transition-colors duration-150 text-left"
+                                role="menuitem">
+                            <span class="material-symbols-outlined text-error text-xl">logout</span>
+                            <span>Đăng xuất</span>
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </header>
+
+<style>
+    /* Animation mượt cho dropdown - CSS thuần, không cần JS, tối ưu GPU */
+    .sotro-dropdown-enter {
+        animation: sotroDropdownIn 150ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        transform-origin: top right;
+        will-change: transform, opacity;
+    }
+
+    @@keyframes sotroDropdownIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-4px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+    [Parameter] public string SearchPlaceholder { get; set; } = "Tìm kiếm...";
+    [Parameter] public string SearchQuery { get; set; } = string.Empty;
+
+    private string _userName = string.Empty;
+    private string _userEmail = string.Empty;
+    private string _avatarUrl = string.Empty;
+    private bool _isDropdownOpen;
+    private bool _isInitialized;
+
+    private string _inputText = string.Empty;
+    private System.Threading.CancellationTokenSource? _searchCts;
+
+    protected override void OnParametersSet()
+    {
+        if (_inputText != SearchQuery)
+        {
+            _inputText = SearchQuery;
+        }
+    }
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        _inputText = e.Value?.ToString() ?? string.Empty;
+        
+        _searchCts?.Cancel();
+        _searchCts = new System.Threading.CancellationTokenSource();
+        var token = _searchCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(300, token);
+                if (!token.IsCancellationRequested)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        if (OnSearch.HasDelegate)
+                        {
+                            await OnSearch.InvokeAsync(_inputText);
+                        }
+                    });
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // Ignored
+            }
+        }, token);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _isInitialized)
+        {
+            return;
+        }
+
+        _isInitialized = true;
+
+        try
+        {
+            // Đọc song song 3 key từ localStorage — giảm round-trip JS interop
+            var nameTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_name");
+            var emailTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_email");
+            var avatarTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_avatar_url");
+
+            await Task.WhenAll(nameTask.AsTask(), emailTask.AsTask(), avatarTask.AsTask());
+
+            _userName = nameTask.Result ?? string.Empty;
+            _userEmail = emailTask.Result ?? string.Empty;
+            _avatarUrl = avatarTask.Result ?? string.Empty;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"HeaderDashboard init error: {ex.Message}");
+        }
+    }
+
+    private void ToggleDropdown()
+    {
+        _isDropdownOpen = !_isDropdownOpen;
+    }
+
+    private void CloseDropdown()
+    {
+        _isDropdownOpen = false;
+    }
+
+    private void NavigateToProfile()
+    {
+        _isDropdownOpen = false;
+        // Tạm thời chuyển đến trang cài đặt, sau này có thể tạo trang hồ sơ riêng
+        Navigation.NavigateTo("/cai-dat");
+    }
+
+    private void NavigateToSettings()
+    {
+        _isDropdownOpen = false;
+        Navigation.NavigateTo("/cai-dat");
+    }
+
+    private async Task Logout()
+    {
+        _isDropdownOpen = false;
+
+        try
+        {
+            // Xóa toàn bộ dữ liệu auth khỏi localStorage
+            await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_token");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_user_email");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_user_name");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_phone_number");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_avatar_url");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "active_building_name");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Logout cleanup error: {ex.Message}");
+        }
+
+        Navigation.NavigateTo("/dang-nhap", forceLoad: true);
+    }
+
+    private void HandleAvatarError()
+    {
+        // Nếu ảnh avatar lỗi (404, broken URL), fallback về icon mặc định
+        _avatarUrl = string.Empty;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+    }
+}

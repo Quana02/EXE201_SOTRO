@@ -21,7 +21,7 @@
 </style>
 
 <!-- TopNavBar Shell -->
-<HeaderDashboard/>
+<HeaderDashboard OnSearch="HandleSearch" SearchPlaceholder="Tìm kiếm phòng (số phòng, tên, khách thuê)..." SearchQuery="@searchQuery" />
 <!-- SideNavBar Shell -->
 <SideNavBar/>
 <!-- Main Content Canvas -->
@@ -107,7 +107,7 @@ else
         </button>
     </div>
 
-    @if (filteredRooms.Count == 0)
+    @if (rooms.Count == 0)
     {
         <div class="flex flex-col items-center justify-center py-24 gap-4 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant">
             <span class="material-symbols-outlined text-on-surface-variant text-5xl">meeting_room</span>
@@ -116,6 +116,14 @@ else
             <button @onclick="GoToCreateRoom" class="mt-2 px-6 py-2.5 bg-primary text-white rounded-full text-label-md font-bold flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">add</span> Thêm phòng
             </button>
+        </div>
+    }
+    else if (filteredRooms.Count == 0)
+    {
+        <div class="flex flex-col items-center justify-center py-24 gap-4 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant">
+            <span class="material-symbols-outlined text-on-surface-variant text-5xl">search_off</span>
+            <p class="text-on-surface-variant font-bold text-body-lg">Không tìm thấy phòng phù hợp</p>
+            <p class="text-caption text-on-surface-variant">Vui lòng thử lại với từ khóa khác hoặc thay đổi bộ lọc trạng thái.</p>
         </div>
     }
     else
@@ -270,11 +278,39 @@ else
     private string? errorMessage;
     private int buildingId;
     private string buildingName = "—";
+    private string searchQuery = string.Empty;
 
-    private List<RoomResponse> filteredRooms =>
-        string.IsNullOrEmpty(filterStatus)
-            ? rooms
-            : rooms.Where(r => r.Status == filterStatus).ToList();
+    private List<RoomResponse> filteredRooms
+    {
+        get
+        {
+            var result = rooms;
+            
+            // Lọc theo trạng thái
+            if (!string.IsNullOrEmpty(filterStatus))
+            {
+                result = result.Where(r => r.Status == filterStatus).ToList();
+            }
+            
+            // Lọc theo từ khóa tìm kiếm
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                result = result.Where(r => 
+                    (r.RoomCode?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (r.RoomName?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (r.PrimaryTenant?.FullName?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ?? false)
+                ).ToList();
+            }
+            
+            return result;
+        }
+    }
+
+    private void HandleSearch(string query)
+    {
+        searchQuery = query;
+        StateHasChanged();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

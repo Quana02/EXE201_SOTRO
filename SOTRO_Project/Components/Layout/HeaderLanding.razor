@@ -1,8 +1,12 @@
-﻿<!-- Top Navigation Bar -->
+@inject IJSRuntime JS
+
+<!-- Top Navigation Bar -->
 <nav class="bg-surface-container-lowest fixed top-0 w-full z-50 border-b border-outline-variant shadow-sm">
     <div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 max-w-container-max-width mx-auto">
         <div class="flex items-center gap-base">
-            <img alt="Sổ trọ" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANJD5EmxbcsSZLNfF2ZG9JLR7uagtin8P7k29LXSqnvz6SyhUHjfgggNcpmvNGFPSjpPa0WZFhjPaDWvW4SSUneZ7_5FVpANPZ-R4jBpKjdOjZTbQ7p7C7QRltXl4aUKcVXsCAEaYapJnp1EfWbOagwOfnl9sXHGU9CLszUGRbfD-YsZik_p_sWstH-t0WQYTd4dfj8eXpINZL82NnU8PLPBKX4yNL0KOdVptMu1gwUv8pUVa55iYKMh0jvbPJ09pF_aF8M8hkEjhK" />
+            <a href="/" class="flex items-center cursor-pointer transition-opacity hover:opacity-85" title="Về trang chủ">
+                <img alt="Sổ trọ" class="h-10 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANJD5EmxbcsSZLNfF2ZG9JLR7uagtin8P7k29LXSqnvz6SyhUHjfgggNcpmvNGFPSjpPa0WZFhjPaDWvW4SSUneZ7_5FVpANPZ-R4jBpKjdOjZTbQ7p7C7QRltXl4aUKcVXsCAEaYapJnp1EfWbOagwOfnl9sXHGU9CLszUGRbfD-YsZik_p_sWstH-t0WQYTd4dfj8eXpINZL82NnU8PLPBKX4yNL0KOdVptMu1gwUv8pUVa55iYKMh0jvbPJ09pF_aF8M8hkEjhK" />
+            </a>
             <a href="/" class="font-headline-sm text-headline-sm font-bold text-primary">Sổ Trọ</a>
         </div>
         <div class="hidden md:flex items-center gap-gutter font-body-md text-body-md">
@@ -11,13 +15,48 @@
             <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/bang-gia">Bảng giá</a>
             <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/lien-he">Liên hệ</a>
         </div>
-        <div class="flex items-center gap-base">
-            <a href="/dang-nhap" class="px-6 py-2 bg-primary-container text-on-primary rounded-xl font-label-md text-label-md hover:bg-primary transition-all active:opacity-80">
-                Đăng nhập
-            </a>
+        <div class="flex items-center gap-4">
+            @if (!string.IsNullOrWhiteSpace(_token))
+            {
+                <a href="/nha-tro" class="px-5 py-2 bg-primary text-white rounded-xl font-label-md text-label-md hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center gap-1.5 active:scale-95 duration-200">
+                    <span>Vào ứng dụng</span>
+                    <span class="material-symbols-outlined text-base">arrow_forward</span>
+                </a>
+            }
+            else
+            {
+                <a href="/dang-nhap" class="px-6 py-2 bg-primary-container text-on-primary rounded-xl font-label-md text-label-md hover:bg-primary transition-all active:opacity-80">
+                    Đăng nhập
+                </a>
+            }
             <button class="md:hidden p-2 text-on-surface-variant">
                 <span class="material-symbols-outlined">menu</span>
             </button>
         </div>
     </div>
 </nav>
+
+@code {
+    private string _token = string.Empty;
+    private bool _isInitialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _isInitialized)
+        {
+            return;
+        }
+
+        _isInitialized = true;
+
+        try
+        {
+            _token = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_token") ?? string.Empty;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"HeaderLanding init error: {ex.Message}");
+        }
+    }
+}

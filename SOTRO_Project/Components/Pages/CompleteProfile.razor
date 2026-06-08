@@ -92,6 +92,7 @@
             await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", response.Data.Email);
             await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_name", response.Data.FullName ?? "");
             await JS.InvokeVoidAsync("localStorage.setItem", "sotro_phone_number", response.Data.PhoneNumber ?? "");
+            await JS.InvokeVoidAsync("localStorage.setItem", "sotro_avatar_url", response.Data.User?.AvatarUrl ?? "");
             Navigation.NavigateTo("/nha-tro");
         }
 

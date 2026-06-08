@@ -252,11 +252,13 @@
         var email = authResponse.User?.Email ?? authResponse.Email;
         var fullName = authResponse.User?.FullName ?? authResponse.FullName ?? string.Empty;
         var phoneNumber = authResponse.User?.PhoneNumber ?? authResponse.PhoneNumber ?? string.Empty;
+        var avatarUrl = authResponse.User?.AvatarUrl ?? string.Empty;
 
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_token", authResponse.Token);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", email);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_name", fullName);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_phone_number", phoneNumber);
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_avatar_url", avatarUrl);
     }
 
     private bool ValidateLogin()
