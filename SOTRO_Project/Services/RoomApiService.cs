@@ -74,66 +74,102 @@ namespace SOTRO_Project.Services
             }
         }
 
+        private async Task<ApiResponse<T>> ReadResponseAsync<T>(HttpResponseMessage response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    return Fail<T>($"API trả về mã lỗi {response.StatusCode} (Không có nội dung phản hồi).");
+                }
+                
+                try
+                {
+                    var errorResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<T>>(content, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Message))
+                    {
+                        return errorResponse;
+                    }
+                }
+                catch
+                {
+                    // Not a JSON error response or failed to parse
+                }
+                
+                var snippet = content.Length > 200 ? content.Substring(0, 200) + "..." : content;
+                return Fail<T>($"API trả về lỗi {response.StatusCode}: {snippet}");
+            }
+
+            try
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+                return apiResponse ?? Fail<T>("Không đọc được phản hồi từ API.");
+            }
+            catch (Exception ex)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var snippet = content.Length > 200 ? content.Substring(0, 200) + "..." : content;
+                return Fail<T>($"Lỗi đọc JSON phản hồi (HTTP status {response.StatusCode}): {ex.Message}. Nội dung nhận được: {snippet}");
+            }
+        }
+
         public async Task<ApiResponse<RoomResponse>> CreateRoomAsync(int buildingId, CreateRoomRequest request)
         {
             await SetAuthorizationHeaderAsync();
             try
             {
                 var response = await _httpClient.PostAsJsonAsync($"api/rooms?buildingId={buildingId}", request);
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<RoomResponse>>();
-                return apiResponse ?? Fail<RoomResponse>("Không đọc được phản hồi từ API.");
+                return await ReadResponseAsync<RoomResponse>(response);
             }
             catch (Exception ex)
             {
                 return Fail<RoomResponse>($"Lỗi: {ex.Message}");
             }
         }
-
+ 
         public async Task<ApiResponse<RoomResponse>> UpdateRoomAsync(int roomId, UpdateRoomRequest request)
         {
             await SetAuthorizationHeaderAsync();
             try
             {
                 var response = await _httpClient.PutAsJsonAsync($"api/rooms/{roomId}", request);
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<RoomResponse>>();
-                return apiResponse ?? Fail<RoomResponse>("Không đọc được phản hồi từ API.");
+                return await ReadResponseAsync<RoomResponse>(response);
             }
             catch (Exception ex)
             {
                 return Fail<RoomResponse>($"Lỗi: {ex.Message}");
             }
         }
-
+ 
         public async Task<ApiResponse<bool>> DeleteRoomAsync(int roomId)
         {
             await SetAuthorizationHeaderAsync();
             try
             {
                 var response = await _httpClient.DeleteAsync($"api/rooms/{roomId}");
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
-                return apiResponse ?? Fail<bool>("Không đọc được phản hồi từ API.");
+                return await ReadResponseAsync<bool>(response);
             }
             catch (Exception ex)
             {
                 return Fail<bool>($"Lỗi: {ex.Message}");
             }
         }
-
+ 
         public async Task<ApiResponse<RoomResponse>> ChangeRoomStatusAsync(int roomId, ChangeRoomStatusRequest request)
         {
             await SetAuthorizationHeaderAsync();
             try
             {
                 var response = await _httpClient.PatchAsJsonAsync($"api/rooms/{roomId}/status", request);
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<RoomResponse>>();
-                return apiResponse ?? Fail<RoomResponse>("Không đọc được phản hồi từ API.");
+                return await ReadResponseAsync<RoomResponse>(response);
             }
             catch (Exception ex)
             {
                 return Fail<RoomResponse>($"Lỗi: {ex.Message}");
             }
         }
-
+ 
         private static ApiResponse<T> Fail<T>(string message) =>
             new ApiResponse<T> { Success = false, Message = message };
     }

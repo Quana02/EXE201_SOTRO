@@ -42,6 +42,7 @@ namespace SoTro_BE.DTOs.Room
 
         // Sức chứa
         public int? Capacity { get; set; }
+        public int? CurrentTenantCount { get; set; }
 
         // Thông tin bill
         [Range(1, 15, ErrorMessage = "Ngày thu tiền phải từ ngày 1 đến ngày 15")]
@@ -97,6 +98,7 @@ namespace SoTro_BE.DTOs.Room
         public decimal? IncidentFee { get; set; }
 
         public int? Capacity { get; set; }
+        public int? CurrentTenantCount { get; set; }
 
         [Range(1, 15, ErrorMessage = "Ngày thu tiền phải từ ngày 1 đến ngày 15")]
         public int? BillingDay { get; set; }
