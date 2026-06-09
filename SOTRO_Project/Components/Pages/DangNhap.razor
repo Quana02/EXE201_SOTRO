@@ -58,9 +58,13 @@
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">lock</span>
                         <input @bind="LoginModel.Password"
-                               class="w-full pl-10 pr-4 py-3 bg-white rounded-lg border border-gray-300 focus:border-blue-700 focus:ring-1 focus:ring-blue-700 outline-none"
+                               class="w-full pl-10 pr-11 py-3 bg-white rounded-lg border border-gray-300 focus:border-blue-700 focus:ring-1 focus:ring-blue-700 outline-none"
                                placeholder="••••••••"
-                               type="password" />
+                               type="@(_showLoginPassword ? "text" : "password")" />
+                        <button @onclick="() => _showLoginPassword = !_showLoginPassword" type="button" tabindex="-1"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-lg text-gray-400 hover:text-blue-700 transition-colors">
+                            <span class="material-symbols-outlined text-xl">@(_showLoginPassword ? "visibility" : "visibility_off")</span>
+                        </button>
                     </div>
                     @ShowFieldError(nameof(LoginModel.Password))
                 </div>
@@ -112,6 +116,7 @@
     private bool ShowError { get; set; }
     private bool IsLoading { get; set; }
     private bool IsGoogleLoading { get; set; }
+    private bool _showLoginPassword;
     private string ErrorMessage { get; set; } = "Sai email hoặc mật khẩu";
     private Dictionary<string, string> Errors { get; set; } = new();
     private DotNetObjectReference<DangNhap>? GoogleCallbackRef { get; set; }
@@ -246,19 +251,20 @@
         var clientId = Configuration["Authentication:Google:ClientId"] ?? string.Empty;
         return await JS.InvokeAsync<bool>("sotroGoogleAuth.init", clientId, GoogleCallbackRef);
     }
-
     private async Task SaveAuthData(AuthResponse authResponse)
     {
         var email = authResponse.User?.Email ?? authResponse.Email;
         var fullName = authResponse.User?.FullName ?? authResponse.FullName ?? string.Empty;
         var phoneNumber = authResponse.User?.PhoneNumber ?? authResponse.PhoneNumber ?? string.Empty;
         var avatarUrl = authResponse.User?.AvatarUrl ?? string.Empty;
+        var provider = authResponse.User?.Provider ?? string.Empty;
 
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_token", authResponse.Token);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", email);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_name", fullName);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_phone_number", phoneNumber);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_avatar_url", avatarUrl);
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_provider", provider);
     }
 
     private bool ValidateLogin()

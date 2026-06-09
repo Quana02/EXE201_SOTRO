@@ -3,6 +3,8 @@
 @inject IAuthApiService AuthApi
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject IConfiguration Configuration
+@implements IDisposable
 @using System.IO
 @using SOTRO_Project.Models.Auth
 
@@ -195,6 +197,56 @@
                                     </button>
                                 </div>
                             </form>
+
+                            <!-- Linked Accounts Section -->
+                            <div class="mt-8 pt-8 border-t border-outline-variant">
+                                <div class="flex items-center gap-2.5 mb-4">
+                                    <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">link</span>
+                                    <h4 class="text-sm font-bold text-on-surface uppercase tracking-wider">Liên kết tài khoản</h4>
+                                </div>
+                                <p class="text-xs text-on-surface-variant mb-4">Liên kết tài khoản bên ngoài để đăng nhập nhanh hơn và tăng cường bảo mật.</p>
+                                <div class="flex items-center justify-between p-4 bg-surface-container-low border border-outline-variant rounded-xl hover:border-primary/30 transition-all">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center border border-outline-variant">
+                                            <img alt="Google Logo" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN0XIl7E0xXC3JchogkZgfQhBM0qrBeO0BCgyu7-kjoTGN8SfzaM7UUB_gQ05OzSoUkgU_kwSDjEJQFNsXPrAOe2iAAhiyHRlGMuTNR1UJSRmwr5IzSojJZHlxoudAqCZWSaCKPCQtJszdBB1HbqCRuib5o_A9ELSlSx-cMAcnV7EZRLj0A_1XlaKWrB5Pdo8i_Tee0mPvvw7DgKeua2xpuhs9YMrNMuObj0Wl_tchx4tXw4mzFhIbsg5F5TvW7rJLd9VS1Md8DkYQ">
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-on-surface">Tài khoản Google</p>
+                                            <p class="text-xs text-on-surface-variant">
+                                                @if (IsGoogleLinked)
+                                                {
+                                                    <span>Đã liên kết với Google: @_email</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Đăng nhập nhanh chóng bằng Google</span>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                    @if (IsGoogleLinked)
+                                    {
+                                        <div class="flex items-center gap-1.5 px-4 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-xl border border-green-200 shadow-sm select-none">
+                                            <span class="material-symbols-outlined text-sm font-bold text-green-600" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                            Đã liên kết
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button @onclick="LinkWithGoogle" disabled="@_isLinkingGoogle" type="button" class="px-5 py-2 border border-outline text-xs font-bold rounded-xl hover:bg-primary hover:text-white hover:border-primary transition-all duration-200 flex items-center gap-1.5 disabled:opacity-60">
+                                            @if (_isLinkingGoogle)
+                                            {
+                                                <span class="material-symbols-outlined text-xs animate-spin">sync</span>
+                                                <span>Đang xử lý...</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Liên kết</span>
+                                            }
+                                        </button>
+                                    }
+                                </div>
+                            </div>
                         </div>
 
                         <!-- TAB 2: Change Password Form -->
@@ -206,10 +258,15 @@
                                     <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider">Mật khẩu hiện tại</label>
                                     <div class="relative">
                                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">lock_open</span>
-                                        <input @bind="_currentPassword" 
-                                               class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
+                                        <input @oninput="OnCurrentPasswordInput"
+                                               value="@_currentPassword"
+                                               class="w-full pl-12 pr-12 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
                                                placeholder="Nhập mật khẩu hiện tại" 
-                                               type="password" />
+                                               type="@(_showCurrentPassword ? "text" : "password")" />
+                                        <button @onclick="() => _showCurrentPassword = !_showCurrentPassword" type="button" tabindex="-1"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary/5 transition-colors">
+                                            <span class="material-symbols-outlined text-xl">@(_showCurrentPassword ? "visibility" : "visibility_off")</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -220,10 +277,22 @@
                                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
                                         <input @oninput="OnNewPasswordInput"
                                                value="@_newPassword"
-                                               class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
+                                               class="w-full pl-12 pr-12 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md @(_isNewPasswordSameAsCurrent ? "border-red-400 focus:border-red-500 focus:ring-red-200/40" : "")" 
                                                placeholder="Tạo mật khẩu mới" 
-                                               type="password" />
+                                               type="@(_showNewPassword ? "text" : "password")" />
+                                        <button @onclick="() => _showNewPassword = !_showNewPassword" type="button" tabindex="-1"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary/5 transition-colors">
+                                            <span class="material-symbols-outlined text-xl">@(_showNewPassword ? "visibility" : "visibility_off")</span>
+                                        </button>
                                     </div>
+                                    <!-- Duplicate password warning -->
+                                    @if (_isNewPasswordSameAsCurrent)
+                                    {
+                                        <div class="flex items-center gap-1.5 mt-1.5 animate-slide-in">
+                                            <span class="material-symbols-outlined text-red-500 text-sm" style="font-variation-settings: 'FILL' 1;">warning</span>
+                                            <span class="text-[11px] font-semibold text-red-500">Mật khẩu mới không được trùng với mật khẩu hiện tại.</span>
+                                        </div>
+                                    }
                                     <!-- Interactive Strength Meter -->
                                     <div class="pt-2">
                                         <div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden relative">
@@ -242,9 +311,13 @@
                                     <div class="relative">
                                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">lock_reset</span>
                                         <input @bind="_confirmPassword" 
-                                               class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
+                                               class="w-full pl-12 pr-12 py-3 bg-white border border-outline-variant rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all font-body-md text-body-md" 
                                                placeholder="Xác nhận mật khẩu mới" 
-                                               type="password" />
+                                               type="@(_showConfirmPassword ? "text" : "password")" />
+                                        <button @onclick="() => _showConfirmPassword = !_showConfirmPassword" type="button" tabindex="-1"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary/5 transition-colors">
+                                            <span class="material-symbols-outlined text-xl">@(_showConfirmPassword ? "visibility" : "visibility_off")</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -276,7 +349,56 @@
 
         </div>
     </div>
+
+    @* ===== Password Change Success Overlay ===== *@
+    @if (_showPasswordSuccessModal)
+    {
+        <div class="fixed inset-0 z-[9999] flex items-center justify-center" style="animation: fadeInOverlay .25s ease-out;">
+            <!-- Backdrop -->
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+            <!-- Card -->
+            <div class="relative bg-white rounded-2xl shadow-2xl w-[380px] max-w-[90vw] p-8 flex flex-col items-center text-center" style="animation: scaleUpCard .3s cubic-bezier(.22,1,.36,1);">
+                <!-- Animated Check Circle -->
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mb-5 shadow-lg" style="animation: popIn .4s cubic-bezier(.22,1,.36,1) .15s both;">
+                    <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">check</span>
+                </div>
+
+                <h3 class="text-lg font-bold text-on-surface mb-2">Đổi mật khẩu thành công!</h3>
+                <p class="text-sm text-on-surface-variant leading-relaxed mb-6">Bạn sẽ được tự động đăng xuất để bảo mật tài khoản.<br/>Vui lòng đăng nhập lại bằng mật khẩu mới.</p>
+
+                <!-- Countdown progress bar -->
+                <div class="w-full h-1 bg-gray-100 rounded-full overflow-hidden mb-5">
+                    <div class="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full" style="animation: shrinkBar 3s linear forwards;"></div>
+                </div>
+
+                <button @onclick="ForceLogoutNow" type="button" class="px-6 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-on-surface text-sm font-semibold transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                    Đóng & Đăng xuất
+                </button>
+            </div>
+        </div>
+    }
 </main>
+
+<style>
+    @@keyframes fadeInOverlay {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @@keyframes scaleUpCard {
+        from { opacity: 0; transform: scale(.85) translateY(16px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @@keyframes popIn {
+        from { opacity: 0; transform: scale(0); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    @@keyframes shrinkBar {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
+</style>
 
 <script>
     // JS layout synchronizer to refresh the header layout dynamically without page refreshes
@@ -311,6 +433,11 @@
     private string _fullName = string.Empty;
     private string _phoneNumber = string.Empty;
     private string _avatarPreviewUrl = string.Empty;
+    private string _provider = string.Empty;
+
+    private bool IsGoogleLinked => 
+        (!string.IsNullOrWhiteSpace(_provider) && _provider.Equals("Google", StringComparison.OrdinalIgnoreCase)) ||
+        (!string.IsNullOrWhiteSpace(_email) && _email.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase));
 
     // Reset variables
     private string _originalFullName = string.Empty;
@@ -326,15 +453,28 @@
     private string _newPassword = string.Empty;
     private string _confirmPassword = string.Empty;
 
+    // Password visibility toggles
+    private bool _showCurrentPassword;
+    private bool _showNewPassword;
+    private bool _showConfirmPassword;
+
     // Password strength visual states
     private int _passwordStrength = 0;
     private string _passwordStrengthText = "Không có";
     private string _passwordStrengthColorClass = "bg-gray-200 w-0";
     private string _passwordStrengthTextClass = "text-gray-400";
 
+    // Duplicate password check
+    private bool _isNewPasswordSameAsCurrent => 
+        !string.IsNullOrEmpty(_newPassword) && 
+        !string.IsNullOrEmpty(_currentPassword) && 
+        _newPassword == _currentPassword;
+
     // Operations states
     private bool _isSavingProfile;
     private bool _isSavingPassword;
+    private bool _showPasswordSuccessModal;
+    private CancellationTokenSource? _logoutCts;
     private string? _errorMessage;
     private string? _successMessage;
 
@@ -348,13 +488,15 @@
                 var emailTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_email");
                 var phoneTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_phone_number");
                 var avatarTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_avatar_url");
+                var providerTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_provider");
 
-                await Task.WhenAll(nameTask.AsTask(), emailTask.AsTask(), phoneTask.AsTask(), avatarTask.AsTask());
+                await Task.WhenAll(nameTask.AsTask(), emailTask.AsTask(), phoneTask.AsTask(), avatarTask.AsTask(), providerTask.AsTask());
 
                 _fullName = nameTask.Result ?? string.Empty;
                 _email = emailTask.Result ?? string.Empty;
                 _phoneNumber = phoneTask.Result ?? string.Empty;
                 _avatarPreviewUrl = avatarTask.Result ?? string.Empty;
+                _provider = providerTask.Result ?? string.Empty;
 
                 _originalFullName = _fullName;
                 _originalPhoneNumber = _phoneNumber;
@@ -511,6 +653,11 @@
         }
     }
 
+    private void OnCurrentPasswordInput(ChangeEventArgs e)
+    {
+        _currentPassword = e.Value?.ToString() ?? "";
+    }
+
     private void OnNewPasswordInput(ChangeEventArgs e)
     {
         var val = e.Value?.ToString() ?? "";
@@ -562,6 +709,9 @@
         _currentPassword = string.Empty;
         _newPassword = string.Empty;
         _confirmPassword = string.Empty;
+        _showCurrentPassword = false;
+        _showNewPassword = false;
+        _showConfirmPassword = false;
         _passwordStrength = 0;
         _passwordStrengthText = "Không có";
         _passwordStrengthColorClass = "bg-gray-200 w-0";
@@ -584,6 +734,12 @@
         if (string.IsNullOrEmpty(_newPassword))
         {
             _errorMessage = "Vui lòng nhập mật khẩu mới.";
+            return;
+        }
+
+        if (_isNewPasswordSameAsCurrent)
+        {
+            _errorMessage = "Mật khẩu mới không được trùng với mật khẩu hiện tại.";
             return;
         }
 
@@ -621,8 +777,25 @@
             var response = await AuthApi.ChangePasswordAsync(req);
             if (response.Success)
             {
-                _successMessage = response.Message ?? "Đổi mật khẩu thành công!";
                 ClearPasswordFields();
+                _isSavingPassword = false;
+                _showPasswordSuccessModal = true;
+                StateHasChanged();
+
+                // Auto-logout sau 3 giây
+                _logoutCts?.Cancel();
+                _logoutCts = new CancellationTokenSource();
+                var token = _logoutCts.Token;
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(3000, token);
+                        await InvokeAsync(async () => await PerformLogout());
+                    }
+                    catch (TaskCanceledException) { /* bỏ qua nếu đã đóng bằng tay */ }
+                });
+                return;
             }
             else
             {
@@ -638,5 +811,152 @@
             _isSavingPassword = false;
             StateHasChanged();
         }
+    }
+
+    // Google Link variables
+    private bool _isLinkingGoogle;
+    private DotNetObjectReference<HoSoCaNhan>? _googleCallbackRef;
+
+    private async Task LinkWithGoogle()
+    {
+        _errorMessage = null;
+        _successMessage = null;
+
+        var clientId = Configuration["Authentication:Google:ClientId"];
+        if (string.IsNullOrWhiteSpace(clientId) || clientId == "YOUR_GOOGLE_CLIENT_ID")
+        {
+            _errorMessage = "Chưa cấu hình Google ClientId trong appsettings.json.";
+            return;
+        }
+
+        _googleCallbackRef = DotNetObjectReference.Create(this);
+        var initialized = await JS.InvokeAsync<bool>("sotroGoogleAuth.init", clientId, _googleCallbackRef);
+        if (!initialized)
+        {
+            _errorMessage = "Không thể khởi tạo Google Login. Vui lòng tải lại trang và thử lại.";
+            return;
+        }
+
+        _isLinkingGoogle = true;
+        StateHasChanged();
+
+        var prompted = await JS.InvokeAsync<bool>("sotroGoogleAuth.prompt");
+        if (!prompted)
+        {
+            _errorMessage = "Không thể mở liên kết tài khoản Google. Vui lòng thử lại.";
+            _isLinkingGoogle = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleGoogleCredential(string credential)
+    {
+        try
+        {
+            _errorMessage = null;
+            _successMessage = null;
+            _isLinkingGoogle = true;
+            await InvokeAsync(StateHasChanged);
+
+            var parts = credential.Split('.');
+            if (parts.Length < 2)
+            {
+                _errorMessage = "Mã xác thực Google không hợp lệ.";
+                return;
+            }
+
+            var payload = parts[1].Replace('-', '+').Replace('_', '/');
+            payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(payload));
+            using var document = System.Text.Json.JsonDocument.Parse(json);
+            var root = document.RootElement;
+
+            var googleEmail = root.TryGetProperty("email", out var emailElement) ? emailElement.GetString() : null;
+            var name = root.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : null;
+            var sub = root.TryGetProperty("sub", out var subElement) ? subElement.GetString() : null;
+            var picture = root.TryGetProperty("picture", out var pictureElement) ? pictureElement.GetString() : null;
+
+            if (string.IsNullOrWhiteSpace(googleEmail) || string.IsNullOrWhiteSpace(sub))
+            {
+                _errorMessage = "Không lấy được thông tin email Google.";
+                return;
+            }
+
+            var response = await AuthApi.LinkGoogleAsync(new LinkGoogleRequest
+            {
+                CurrentEmail = _email,
+                GoogleEmail = googleEmail,
+                GoogleId = sub,
+                AvatarUrl = picture
+            });
+
+            if (response.Success && response.Data != null)
+            {
+                _successMessage = "Liên kết tài khoản Google thành công!";
+                
+                // Cập nhật thông tin tài khoản hiện tại
+                _email = response.Data.User?.Email ?? response.Data.Email;
+                _fullName = response.Data.User?.FullName ?? response.Data.FullName ?? _fullName;
+                _provider = response.Data.User?.Provider ?? "Google";
+                _originalFullName = _fullName;
+
+                if (!string.IsNullOrWhiteSpace(response.Data.User?.AvatarUrl))
+                {
+                    _avatarPreviewUrl = response.Data.User.AvatarUrl;
+                    _originalAvatarUrl = _avatarPreviewUrl;
+                }
+
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_token", response.Data.Token);
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", _email);
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_name", _fullName);
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_avatar_url", _avatarPreviewUrl);
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_provider", _provider);
+
+                await JS.InvokeVoidAsync("sotroSyncHeaderUser", _fullName, _avatarPreviewUrl);
+            }
+            else
+            {
+                _errorMessage = response.Message ?? "Liên kết tài khoản Google thất bại.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Lỗi liên kết Google: {ex.Message}";
+        }
+        finally
+        {
+            _isLinkingGoogle = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ForceLogoutNow()
+    {
+        _logoutCts?.Cancel();
+        await PerformLogout();
+    }
+
+    private async Task PerformLogout()
+    {
+        _showPasswordSuccessModal = false;
+        StateHasChanged();
+
+        // Xóa toàn bộ dữ liệu phiên đăng nhập
+        await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_token");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_user_email");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_user_name");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_phone_number");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_avatar_url");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_provider");
+
+        Navigation.NavigateTo("/dang-nhap", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        _logoutCts?.Cancel();
+        _logoutCts?.Dispose();
+        _googleCallbackRef?.Dispose();
     }
 }

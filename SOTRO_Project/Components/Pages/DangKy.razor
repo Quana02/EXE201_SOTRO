@@ -91,19 +91,31 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="text-sm font-semibold text-gray-600 block mb-2">Mật khẩu</label>
-                            <input @bind="RegisterModel.Password"
-                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 outline-none"
-                                   placeholder="••••••••"
-                                   type="password" />
+                            <div class="relative">
+                                <input @bind="RegisterModel.Password"
+                                       class="w-full px-4 py-3 pr-11 rounded-lg border border-gray-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 outline-none"
+                                       placeholder="••••••••"
+                                       type="@(_showRegPassword ? "text" : "password")" />
+                                <button @onclick="() => _showRegPassword = !_showRegPassword" type="button" tabindex="-1"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-lg text-gray-400 hover:text-blue-700 transition-colors">
+                                    <span class="material-symbols-outlined text-xl">@(_showRegPassword ? "visibility" : "visibility_off")</span>
+                                </button>
+                            </div>
                             @ShowFieldError(nameof(RegisterModel.Password))
                         </div>
 
                         <div>
                             <label class="text-sm font-semibold text-gray-600 block mb-2">Nhập lại mật khẩu</label>
-                            <input @bind="RegisterModel.ConfirmPassword"
-                                   class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 outline-none"
-                                   placeholder="••••••••"
-                                   type="password" />
+                            <div class="relative">
+                                <input @bind="RegisterModel.ConfirmPassword"
+                                       class="w-full px-4 py-3 pr-11 rounded-lg border border-gray-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 outline-none"
+                                       placeholder="••••••••"
+                                       type="@(_showRegConfirmPassword ? "text" : "password")" />
+                                <button @onclick="() => _showRegConfirmPassword = !_showRegConfirmPassword" type="button" tabindex="-1"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-lg text-gray-400 hover:text-blue-700 transition-colors">
+                                    <span class="material-symbols-outlined text-xl">@(_showRegConfirmPassword ? "visibility" : "visibility_off")</span>
+                                </button>
+                            </div>
                             @ShowFieldError(nameof(RegisterModel.ConfirmPassword))
                         </div>
                     </div>
@@ -145,6 +157,8 @@
     private bool AcceptedTerms { get; set; }
     private bool IsLoading { get; set; }
     private bool IsSuccess { get; set; }
+    private bool _showRegPassword;
+    private bool _showRegConfirmPassword;
     private string? Message { get; set; }
     private Dictionary<string, string> Errors { get; set; } = new();
 

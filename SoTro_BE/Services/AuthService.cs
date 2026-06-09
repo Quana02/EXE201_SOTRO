@@ -554,6 +554,56 @@ namespace SoTro_BE.Services
             }
         }
 
+        public async Task<ApiResponse<AuthResponse>> LinkGoogleAccountAsync(LinkGoogleRequest request)
+        {
+            try
+            {
+                var currentEmail = NormalizeEmail(request.CurrentEmail);
+                var googleEmail = NormalizeEmail(request.GoogleEmail);
+
+                var currentUser = await _authRepository.GetUserByEmailAsync(currentEmail);
+                if (currentUser == null)
+                {
+                    return ApiResponse<AuthResponse>.Fail("Không tìm thấy người dùng hiện tại.");
+                }
+
+                // Check if the Google ID is already linked to another account
+                var existingUserByGoogleId = await _authRepository.GetUserByGoogleIdAsync(request.GoogleId);
+                if (existingUserByGoogleId != null && existingUserByGoogleId.UserId != currentUser.UserId)
+                {
+                    return ApiResponse<AuthResponse>.Fail("Tài khoản Google này đã được liên kết với một tài khoản khác.");
+                }
+
+                // Check if Google Email is already in use by another user
+                var existingUserByEmail = await _authRepository.GetUserByEmailAsync(googleEmail);
+                if (existingUserByEmail != null && existingUserByEmail.UserId != currentUser.UserId)
+                {
+                    return ApiResponse<AuthResponse>.Fail("Email Google này đang được sử dụng bởi một tài khoản khác.");
+                }
+
+                // Update the current user account
+                currentUser.Email = googleEmail;
+                currentUser.GoogleId = request.GoogleId;
+                currentUser.Provider = "Google";
+                currentUser.IsExternalLogin = true;
+                currentUser.EmailConfirmed = true;
+                currentUser.UpdatedAt = DateTime.UtcNow;
+
+                if (string.IsNullOrWhiteSpace(currentUser.AvatarUrl) && !string.IsNullOrWhiteSpace(request.AvatarUrl))
+                {
+                    currentUser.AvatarUrl = request.AvatarUrl;
+                }
+
+                await _authRepository.UpdateUserAsync(currentUser);
+
+                return ApiResponse<AuthResponse>.Ok("Liên kết tài khoản Google thành công.", CreateAuthResponse(currentUser));
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<AuthResponse>.Fail($"Liên kết tài khoản Google thất bại: {ex.Message}");
+            }
+        }
+
         private async Task FillAndSavePendingRegistrationAsync(
             PendingRegistration pendingRegistration,
             RegisterSendOtpRequest request,
