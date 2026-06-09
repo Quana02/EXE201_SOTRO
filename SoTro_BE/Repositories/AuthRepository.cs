@@ -60,5 +60,14 @@ namespace SoTro_BE.Repositories
             var normalizedEmail = email.Trim().ToLower();
             return await _context.Users.AnyAsync(user => user.Email.ToLower() == normalizedEmail);
         }
+
+        public async Task<User?> GetUserByGoogleIdAsync(string googleId)
+        {
+            if (string.IsNullOrWhiteSpace(googleId)) return null;
+            return await _context.Users
+                .Include(user => user.Role)
+                .Include(user => user.Landlord)
+                .FirstOrDefaultAsync(user => user.GoogleId == googleId);
+        }
     }
 }

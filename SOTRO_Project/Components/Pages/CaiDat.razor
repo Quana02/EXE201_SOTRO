@@ -58,11 +58,7 @@
                         <span>Tự động hóa</span>
                         <span class="material-symbols-outlined text-sm" style="@(activeSection == "tu-dong-hoa" ? "font-variation-settings: 'FILL' 1;" : "")">auto_awesome</span>
                     </button>
-                    <button @onclick='() => ScrollToSection("bao-mat-tai-khoan")'
-                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "bao-mat-tai-khoan" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
-                        <span>Bảo mật &amp; Tài khoản</span>
-                        <span class="material-symbols-outlined text-sm" style="@(activeSection == "bao-mat-tai-khoan" ? "font-variation-settings: 'FILL' 1;" : "")">shield</span>
-                    </button>
+
                 </div>
             </div>
 
@@ -238,29 +234,7 @@
                     </div>
                 </section>
 
-                <!-- Section 4: Bảo mật & Tài khoản -->
-                <section id="bao-mat-tai-khoan" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
-                    <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
-                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">shield</span>
-                        <h3 class="font-headline-sm text-headline-sm text-primary">Bảo mật &amp; Tài khoản</h3>
-                    </div>
-                    <div class="p-6 space-y-8">
-                        <!-- Linked Accounts Section -->
-                        <div class="space-y-4">
-                            <h4 class="font-label-md text-label-md font-bold text-on-surface">Liên kết tài khoản</h4>
-                            <div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <img alt="Google Logo" class="w-6 h-6" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAN0XIl7E0xXC3JchogkZgfQhBM0qrBeO0BCgyu7-kjoTGN8SfzaM7UUB_gQ05OzSoUkgU_kwSDjEJQFNsXPrAOe2iAAhiyHRlGMuTNR1UJSRmwr5IzSojJZHlxoudAqCZWSaCKPCQtJszdBB1HbqCRuib5o_A9ELSlSx-cMAcnV7EZRLj0A_1XlaKWrB5Pdo8i_Tee0mPvvw7DgKeua2xpuhs9YMrNMuObj0Wl_tchx4tXw4mzFhIbsg5F5TvW7rJLd9VS1Md8DkYQ">
-                                    <div>
-                                        <p class="text-sm font-bold">Tài khoản Google</p>
-                                        <p class="text-xs text-on-surface-variant">Đăng nhập nhanh chóng bằng Google</p>
-                                    </div>
-                                </div>
-                                <button class="px-4 py-1.5 border border-outline text-xs font-bold rounded-lg hover:bg-surface-container transition-colors">Liên kết</button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+
 
                 <!-- Footer Actions -->
                 <div class="flex items-center justify-end gap-4 pb-12">

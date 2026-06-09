@@ -8,5 +8,6 @@ namespace SoTro_BE.Repositories
         Task<User> CreateUserAsync(User user);
         Task UpdateUserAsync(User user);
         Task<bool> EmailExistsAsync(string email);
+        Task<User?> GetUserByGoogleIdAsync(string googleId);
     }
 }

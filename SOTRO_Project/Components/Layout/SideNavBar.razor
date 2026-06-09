@@ -1,52 +1,93 @@
 @inject IJSRuntime JS
 
-<aside class="fixed left-0 top-0 h-full w-64 flex flex-col p-base z-40 bg-surface-container-low border-r border-outline-variant pt-20">
-    <div class="mb-8 px-4">
-        <div class="flex flex-col gap-2">
-            <div class="relative group w-fit cursor-pointer">
-                <img alt="SOTRO Logo" class="h-16 w-auto object-contain -ml-2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCSQcDX-oIfdypBbX9o96SZZBbormYxhI0ILsm-4pWeTa3Pkl_b_LffIuRj7sdG3XZ06c_KPyJr66lZxQ90683yCkXZ62Rr6nTouSBdM8EGUVwfTClBmY4CD0k9DbXXlBxo7XWaDpIiWB5D1_eP3bzDI_shlpwHTS06ESJoUW64rkt2-vksm9_1pnz_oAdTPRLFSG0DG1fWtfZnGGnooKZiqCkA41MpGkNP-stvzmUSYnU_bKaSYqAuMyRT84evXaGSP_psD2t7XH6" />
-                <div class="absolute right-0 bottom-0 bg-white border border-outline-variant rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="material-symbols-outlined text-[16px] text-primary">edit</span>
+<aside id="sotro-sidebar" class="fixed left-0 top-0 h-full flex flex-col p-base z-40 bg-surface-container-low border-r border-outline-variant pt-20 transition-all duration-300 overflow-hidden @(_isCollapsed ? "w-[72px]" : "w-64")">
+    <div class="mb-6 @(_isCollapsed ? "px-2" : "px-4") transition-all duration-300">
+        <div class="flex items-center @(_isCollapsed ? "justify-center" : "gap-3")">
+            <button @onclick="ToggleSidebar" type="button"
+                    class="w-10 h-10 hover:bg-surface-container-high rounded-xl transition-all duration-200 flex items-center justify-center text-on-surface-variant hover:text-primary flex-shrink-0"
+                    title="@(_isCollapsed ? "Mở rộng menu" : "Thu gọn menu")">
+                <span class="material-symbols-outlined text-2xl">menu</span>
+            </button>
+            @if (!_isCollapsed)
+            {
+                <div class="flex flex-col min-w-0">
+                    <span class="text-label-md font-bold text-on-surface whitespace-nowrap overflow-hidden text-ellipsis">@buildingName</span>
+                    <span class="text-[10px] text-outline uppercase font-bold">Quản lý</span>
                 </div>
-            </div>
-            <div class="flex flex-col">
-                <span class="text-label-md font-bold text-on-surface">@buildingName</span>
-                <span class="text-[10px] text-outline uppercase font-bold">Quản lý</span>
-            </div>
+            }
         </div>
     </div>
-    <nav class="flex-1 space-y-1 px-2">
-        <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/dashboard">
-            <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-            <span class="text-label-md font-label-md">Tổng quan</span>
+    <nav class="flex-1 space-y-1 @(_isCollapsed ? "px-1" : "px-2") transition-all duration-300">
+        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/dashboard" title="Tổng quan">
+            <span class="material-symbols-outlined flex-shrink-0" data-icon="dashboard">dashboard</span>
+            @if (!_isCollapsed)
+            {
+                <span class="text-label-md font-label-md whitespace-nowrap">Tổng quan</span>
+            }
         </a>
-        <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/quan-ly-phong">
-            <span class="material-symbols-outlined" data-icon="home_work">home_work</span>
-            <span class="text-label-md font-label-md">Phòng trọ</span>
+        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/quan-ly-phong" title="Phòng trọ">
+            <span class="material-symbols-outlined flex-shrink-0" data-icon="home_work">home_work</span>
+            @if (!_isCollapsed)
+            {
+                <span class="text-label-md font-label-md whitespace-nowrap">Phòng trọ</span>
+            }
         </a>
-        <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/nguoi-thue">
-            <span class="material-symbols-outlined" data-icon="group">group</span>
-            <span class="text-label-md font-label-md">Người thuê</span>
+        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/nguoi-thue" title="Người thuê">
+            <span class="material-symbols-outlined flex-shrink-0" data-icon="group">group</span>
+            @if (!_isCollapsed)
+            {
+                <span class="text-label-md font-label-md whitespace-nowrap">Người thuê</span>
+            }
         </a>
-        <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/hoa-don">
-            <span class="material-symbols-outlined" data-icon="description">description</span>
-            <span class="text-label-md font-label-md">Hóa đơn</span>
+        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/hoa-don" title="Hóa đơn">
+            <span class="material-symbols-outlined flex-shrink-0" data-icon="description">description</span>
+            @if (!_isCollapsed)
+            {
+                <span class="text-label-md font-label-md whitespace-nowrap">Hóa đơn</span>
+            }
         </a>
-        <div class="pt-4 pb-2 px-3">
-            <p class="text-[10px] font-bold text-outline uppercase tracking-widest">Tiện ích</p>
-        </div>
-        <a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/cai-dat">
-            <span class="material-symbols-outlined" data-icon="settings">settings</span>
-            <div class="flex flex-col">
-                <span class="text-label-md font-label-md">Cài đặt</span>
-                <span class="text-[10px] text-outline font-medium">Cài đặt tự động VIP</span>
+        @if (!_isCollapsed)
+        {
+            <div class="pt-4 pb-2 px-3">
+                <p class="text-[10px] font-bold text-outline uppercase tracking-widest whitespace-nowrap">Tiện ích</p>
             </div>
+        }
+        else
+        {
+            <div class="pt-3 pb-1 flex justify-center">
+                <div class="w-6 h-px bg-outline-variant"></div>
+            </div>
+        }
+        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#" title="Marketing">
+            <span class="material-symbols-outlined flex-shrink-0" data-icon="campaign">campaign</span>
+            @if (!_isCollapsed)
+            {
+                <span class="text-label-md font-label-md whitespace-nowrap">Marketing</span>
+            }
+        </a>
+        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="#" title="Nâng cấp dịch vụ">
+            <span class="material-symbols-outlined flex-shrink-0" data-icon="workspace_premium">workspace_premium</span>
+            @if (!_isCollapsed)
+            {
+                <span class="text-label-md font-label-md whitespace-nowrap">Nâng cấp dịch vụ</span>
+            }
+        </a>
+        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/cai-dat" title="Cài đặt">
+            <span class="material-symbols-outlined flex-shrink-0" data-icon="settings">settings</span>
+            @if (!_isCollapsed)
+            {
+                <div class="flex flex-col">
+                    <span class="text-label-md font-label-md whitespace-nowrap">Cài đặt</span>
+                    <span class="text-[10px] text-outline font-medium whitespace-nowrap">Cài đặt tự động VIP</span>
+                </div>
+            }
         </a>
     </nav>
 </aside>
 
 @code {
     private string buildingName = "SOTRO Apartment";
+    private bool _isCollapsed;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -54,17 +95,43 @@
         {
             try
             {
-                var name = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_name");
+                var nameTask = JS.InvokeAsync<string>("localStorage.getItem", "active_building_name");
+                var collapsedTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_sidebar_collapsed");
+
+                await Task.WhenAll(nameTask.AsTask(), collapsedTask.AsTask());
+
+                var name = nameTask.Result;
                 if (!string.IsNullOrWhiteSpace(name))
                 {
                     buildingName = name;
-                    StateHasChanged();
                 }
+
+                _isCollapsed = collapsedTask.Result == "true";
+
+                // Cập nhật CSS variable cho content margin
+                await JS.InvokeVoidAsync("eval", $"document.documentElement.style.setProperty('--sidebar-width', '{(_isCollapsed ? "72px" : "16rem")}')");
+
+                StateHasChanged();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading building name: {ex.Message}");
+                Console.WriteLine($"Error loading sidebar state: {ex.Message}");
             }
+        }
+    }
+
+    private async Task ToggleSidebar()
+    {
+        _isCollapsed = !_isCollapsed;
+
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "sotro_sidebar_collapsed", _isCollapsed ? "true" : "false");
+            await JS.InvokeVoidAsync("eval", $"document.documentElement.style.setProperty('--sidebar-width', '{(_isCollapsed ? "72px" : "16rem")}')");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving sidebar state: {ex.Message}");
         }
     }
 }

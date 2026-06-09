@@ -15,5 +15,6 @@ namespace SOTRO_Project.Services
         Task<ApiResponse<AuthResponse>> CompleteProfileAsync(CompleteProfileRequest request);
         Task<ApiResponse<AuthResponse>> UpdateProfileAsync(UpdateProfileRequest request, Stream? avatarStream, string? avatarFileName);
         Task<ApiResponse<string>> ChangePasswordAsync(ChangePasswordRequest request);
+        Task<ApiResponse<AuthResponse>> LinkGoogleAsync(LinkGoogleRequest request);
     }
 }

@@ -133,6 +133,21 @@ namespace SOTRO_Project.Services
             }
         }
 
+        public async Task<ApiResponse<AuthResponse>> LinkGoogleAsync(LinkGoogleRequest request)
+        {
+            await SetAuthorizationHeaderAsync();
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/auth/link-google", request);
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
+                return apiResponse ?? new ApiResponse<AuthResponse> { Success = false, Message = "Không đọc được phản hồi từ API." };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<AuthResponse> { Success = false, Message = $"Lỗi liên kết Google: {ex.Message}" };
+            }
+        }
+
         private async Task<ApiResponse<T>> PostAsync<T>(string url, object request)
         {
             try

@@ -99,5 +99,12 @@ namespace SoTro_BE.Controllers
             var response = await _authService.ChangePasswordAsync(request);
             return response.Success ? Ok(response) : BadRequest(response);
         }
+
+        [HttpPost("link-google")]
+        public async Task<IActionResult> LinkGoogle(LinkGoogleRequest request)
+        {
+            var response = await _authService.LinkGoogleAccountAsync(request);
+            return response.Success ? Ok(response) : BadRequest(response);
+        }
     }
 }
