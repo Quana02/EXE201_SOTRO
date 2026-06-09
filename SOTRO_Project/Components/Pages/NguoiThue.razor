@@ -1,6 +1,8 @@
 ﻿@page "/nguoi-thue"
 @layout EmptyLayout
 @inject NavigationManager Navigation
+@inject ITenantApiService TenantApi
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Quáº£n lÃ½ NgÆ°á»i thuÃª | SOTRO</PageTitle>
 
@@ -35,10 +37,10 @@
 <span class="text-primary font-medium">Danh sách người thuê</span>
 </nav>
 <h1 class="font-display-lg-mobile md:font-display-lg text-primary leading-tight">Người thuê</h1>
-<p class="text-body-md text-on-surface-variant mt-1">Hiện có 128 người thuê đang lưu trú.</p>
+<p class="text-body-md text-on-surface-variant mt-1">Hiện có @tenantStats.ActiveTenants người thuê đang lưu trú.</p>
 </div>
 <div class="flex flex-wrap gap-3">
-<button class="flex items-center px-6 py-3 bg-surface border border-primary text-primary font-bold rounded-xl hover:bg-primary-container/10 transition-all shadow-sm">
+<button @onclick="ExportTenantsToExcel" class="flex items-center px-6 py-3 bg-surface border border-primary text-primary font-bold rounded-xl hover:bg-primary-container/10 transition-all shadow-sm">
 <span class="material-symbols-outlined mr-2">download</span>
                         Xuất danh sách
                     </button>
@@ -55,9 +57,9 @@
 <span class="text-caption text-on-surface-variant font-medium">Tổng người thuê</span>
 <span class="p-2 bg-primary/10 text-primary rounded-lg material-symbols-outlined">groups</span>
 </div>
-<div class="text-headline-sm font-black text-on-surface">128</div>
+<div class="text-headline-sm font-black text-on-surface">@tenantStats.TotalTenants</div>
 <div class="text-[10px] text-green-600 font-bold mt-2 flex items-center">
-<span class="material-symbols-outlined text-[14px] mr-1">trending_up</span> +4 trong tháng này
+<span class="material-symbols-outlined text-[14px] mr-1">trending_up</span> +@tenantStats.NewThisMonth trong tháng này
                     </div>
 </div>
 <div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
@@ -65,15 +67,15 @@
 <span class="text-caption text-on-surface-variant font-medium">Đang lưu trú</span>
 <span class="p-2 bg-tertiary/10 text-tertiary rounded-lg material-symbols-outlined">meeting_room</span>
 </div>
-<div class="text-headline-sm font-black text-on-surface">115</div>
-<div class="text-[10px] text-on-surface-variant mt-2">89% tỷ lệ lấp đầy</div>
+<div class="text-headline-sm font-black text-on-surface">@tenantStats.ActiveTenants</div>
+<div class="text-[10px] text-on-surface-variant mt-2">@tenantStats.OccupancyRate% tỷ lệ lấp đầy</div>
 </div>
 <div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
 <div class="flex justify-between items-start mb-2">
 <span class="text-caption text-on-surface-variant font-medium">Tổng tiền cọc</span>
 <span class="p-2 bg-secondary-container text-on-secondary-container rounded-lg material-symbols-outlined">payments</span>
 </div>
-<div class="text-headline-sm font-black text-on-surface">450tr</div>
+<div class="text-headline-sm font-black text-on-surface">@FormatCompactMoney(tenantStats.TotalDepositAmount)</div>
 <div class="text-[10px] text-on-surface-variant mt-2">Đang được giữ an toàn</div>
 </div>
 <div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
@@ -81,7 +83,7 @@
 <span class="text-caption text-on-surface-variant font-medium">Sắp hết hạn HD</span>
 <span class="p-2 bg-error-container text-on-error-container rounded-lg material-symbols-outlined">event_busy</span>
 </div>
-<div class="text-headline-sm font-black text-on-surface">12</div>
+<div class="text-headline-sm font-black text-on-surface">@tenantStats.ExpiringContracts</div>
 <div class="text-[10px] text-error font-bold mt-2 flex items-center">Cần gia hạn gấp</div>
 </div>
 </div>
@@ -107,7 +109,7 @@
 <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-outline text-[18px]">keyboard_arrow_down</span>
 </div>
 </div>
-<div class="text-caption text-on-surface-variant italic">Hiển thị 1 - 10 trên 128 kết quả</div>
+<div class="text-caption text-on-surface-variant italic">Hiển thị @tenants.Count trên @tenantStats.TotalTenants kết quả</div>
 </div>
 <!-- Table Container -->
 <div class="bg-surface rounded-b-xl border border-outline-variant overflow-hidden shadow-[0px_8px_24px_rgba(0,0,0,0.05)]">
@@ -125,6 +127,53 @@
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant">
+@if (tenants.Any())
+{
+    foreach (var tenant in tenants)
+    {
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold mr-3">@GetInitials(tenant.FullName)</div>
+<div>
+<div class="text-body-md font-bold text-on-surface">@tenant.FullName</div>
+<div class="text-[12px] text-on-surface-variant">ID: @tenant.TenantCode</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="text-label-md text-on-surface">@tenant.PhoneNumber</div>
+<div class="text-[12px] text-on-surface-variant">@tenant.Email</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-fixed-variant rounded-full text-[12px] font-bold">P.@tenant.RoomCode</span>
+</td>
+<td class="px-6 py-4 text-label-md text-on-surface">@FormatDate(tenant.StartDate)</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-green-100 text-green-800 border border-green-200">
+<span class="w-1.5 h-1.5 rounded-full bg-green-600 mr-1.5"></span>@GetStatusLabel(tenant.Status)
+                                    </span>
+</td>
+<td class="px-6 py-4 text-right font-bold text-primary">@FormatMoney(tenant.DepositAmount)</td>
+<td class="px-6 py-4 text-right">
+<button @onclick="() => EditTenant(tenant.TenantId)" class="p-2 text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="Sửa thông tin">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button @onclick="() => DeleteTenant(tenant.TenantId)" class="p-2 text-outline hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Xóa người thuê">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</td>
+</tr>
+    }
+}
+else
+{
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-8 text-center text-on-surface-variant" colspan="7">Chưa có người thuê nào.</td>
+</tr>
+}
+@if (showSampleTenants)
+{
 <!-- Row 1 -->
 <tr class="hover:bg-surface-container-lowest transition-colors group">
 <td class="px-6 py-4">
@@ -280,6 +329,7 @@
 </button>
 </td>
 </tr>
+}
 </tbody>
 </table>
 </div>
@@ -294,19 +344,18 @@
 </select>
 </div>
 <div class="flex items-center space-x-4">
+@if (tenants.Any())
+{
 <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container text-outline transition-colors disabled:opacity-30" disabled="">
 <span class="material-symbols-outlined">chevron_left</span>
 </button>
 <div class="flex items-center space-x-1">
 <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold text-label-md">1</button>
-<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container text-on-surface-variant font-bold text-label-md">2</button>
-<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container text-on-surface-variant font-bold text-label-md">3</button>
-<span class="text-outline">...</span>
-<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container text-on-surface-variant font-bold text-label-md">13</button>
 </div>
 <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container text-outline transition-colors">
 <span class="material-symbols-outlined">chevron_right</span>
 </button>
+}
 </div>
 </div>
 </div>
@@ -346,7 +395,127 @@
 
 @code {
     private const string CustomStyles = "NguoiThue";
-     private void GoToAddTenant()
+    private bool showSampleTenants => false;
+    private List<SOTRO_Project.Models.Tenant.TenantResponse> tenants = new();
+    private SOTRO_Project.Models.Tenant.TenantStatsResponse tenantStats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTenants();
+    }
+
+    private async Task LoadTenants()
+    {
+        var tenantResponse = await TenantApi.GetTenantsAsync();
+        tenants = tenantResponse.Data ?? new();
+
+        var statsResponse = await TenantApi.GetTenantStatsAsync();
+        tenantStats = statsResponse.Data ?? new();
+    }
+
+    private async Task DeleteTenant(int tenantId)
+    {
+        var response = await TenantApi.DeleteTenantAsync(tenantId);
+        if (response.Success)
+            await LoadTenants();
+    }
+
+    private void EditTenant(int tenantId)
+    {
+        Navigation.NavigateTo($"/sua-nguoi-thue/{tenantId}");
+    }
+
+    private async Task ExportTenantsToExcel()
+    {
+        var rows = tenants.Select(tenant => new[]
+        {
+            tenant.TenantCode,
+            tenant.FullName,
+            tenant.PhoneNumber ?? string.Empty,
+            tenant.Email ?? string.Empty,
+            tenant.RoomCode ?? string.Empty,
+            FormatDate(tenant.StartDate),
+            GetStatusLabel(tenant.Status),
+            tenant.DepositAmount?.ToString("N0") ?? "0"
+        }).ToList();
+
+        var html = BuildExcelHtml(rows);
+        var fileName = $"danh-sach-nguoi-thue-{DateTime.Now:yyyyMMdd-HHmm}.xls";
+        await JSRuntime.InvokeVoidAsync("sotroDownloadFile", fileName, "application/vnd.ms-excel;charset=utf-8", html);
+    }
+
+    private static string BuildExcelHtml(List<string[]> rows)
+    {
+        static string Cell(string? value) => System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
+
+        var builder = new System.Text.StringBuilder();
+        builder.Append("<html><head><meta charset=\"utf-8\"></head><body>");
+        builder.Append("<table border=\"1\">");
+        builder.Append("<thead><tr>");
+        foreach (var header in new[] { "Mã người thuê", "Họ tên", "Số điện thoại", "Email", "Phòng", "Ngày bắt đầu", "Trạng thái", "Tiền cọc" })
+        {
+            builder.Append("<th style=\"background-color:#003f87;color:#ffffff;font-weight:bold;\">")
+                .Append(Cell(header))
+                .Append("</th>");
+        }
+        builder.Append("</tr></thead><tbody>");
+
+        foreach (var row in rows)
+        {
+            builder.Append("<tr>");
+            for (var index = 0; index < row.Length; index++)
+            {
+                if (index == 0)
+                {
+                    builder.Append("<td style=\"background-color:#d7e2ff;color:#003f87;font-weight:bold;\">")
+                        .Append(Cell(row[index]))
+                        .Append("</td>");
+                }
+                else
+                {
+                    builder.Append("<td>")
+                        .Append(Cell(row[index]))
+                        .Append("</td>");
+                }
+            }
+            builder.Append("</tr>");
+        }
+
+        builder.Append("</tbody></table></body></html>");
+        return builder.ToString();
+    }
+
+    private static string GetInitials(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            return "?";
+
+        var words = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(words.TakeLast(2).Select(w => w[0])).ToUpperInvariant();
+    }
+
+    private static string FormatDate(DateOnly? value) => value?.ToString("dd/MM/yyyy") ?? "-";
+
+    private static string FormatMoney(decimal? value) => value.HasValue ? $"{value.Value:N0}đ" : "0đ";
+
+    private static string FormatCompactMoney(decimal value)
+    {
+        if (value >= 1_000_000)
+            return $"{Math.Round(value / 1_000_000, 0):N0}tr";
+
+        return $"{value:N0}đ";
+    }
+
+    private static string GetStatusLabel(string? status) => status switch
+    {
+        "Active" => "Đang hiệu lực",
+        "Reserved" => "Đã đặt cọc",
+        "Inactive" => "Đã rời đi",
+        "Blacklist" => "Nợ cọc",
+        _ => "Không rõ"
+    };
+
+    private void GoToAddTenant()
     {
         Navigation.NavigateTo("/them-nguoi-thue");
     }

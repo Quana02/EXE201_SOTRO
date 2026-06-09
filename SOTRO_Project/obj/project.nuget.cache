@@ -1,8 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "XYpmwQw3xuw=",
+  "dgSpecHash": "JjSjsIq/8pw=",
   "success": true,
-  "projectFilePath": "E:\\K8\\EXE201\\SoTro\\SOTRO_Project\\SOTRO_Project.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "D:\\PRN232\\SOTRO_Project\\SOTRO_Project\\SOTRO_Project.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ACER\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.25\\microsoft.windowsdesktop.app.ref.8.0.25.nupkg.sha512",
+    "C:\\Users\\ACER\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.25\\microsoft.netcore.app.ref.8.0.25.nupkg.sha512",
+    "C:\\Users\\ACER\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.25\\microsoft.aspnetcore.app.ref.8.0.25.nupkg.sha512",
+    "C:\\Users\\ACER\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.25\\microsoft.netcore.app.host.win-x64.8.0.25.nupkg.sha512"
+  ],
   "logs": []
 }

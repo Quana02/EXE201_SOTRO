@@ -1,5 +1,7 @@
 ﻿@page "/dashboard"
 @layout EmptyLayout
+@inject IDashboardApiService DashboardApi
+@inject IJSRuntime JSRuntime
 
 <PageTitle>SOTRO - Tá»•ng quan quáº£n lÃ½ trá»</PageTitle>
 
@@ -33,8 +35,8 @@
     <div class="p-gutter max-w-container-max-width mx-auto w-full">
         <div class="flex justify-between items-end mb-8">
             <div>
-                <h3 class="font-headline-sm text-headline-sm text-on-surface">Chào buổi sáng, Lê Minh Sáng!</h3>
-                <p class="text-body-md text-on-surface-variant">Hôm nay là Thứ Tư, ngày 24 tháng 5, 2024. Đây là những gì đang diễn ra.</p>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface">@GreetingText</h3>
+                <p class="text-body-md text-on-surface-variant">Hôm nay là @TodayText. Đây là những gì đang diễn ra.</p>
             </div>
             <button class="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-label-md flex items-center gap-2 hover:opacity-90 transition-opacity">
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
@@ -55,7 +57,7 @@
                 </div>
                 <div class="flex flex-col gap-1">
                     <p class="text-caption text-on-surface-variant uppercase tracking-wider font-bold">Doanh thu tháng này</p>
-                    <h4 class="text-2xl font-extrabold text-on-surface">452.8M <span class="text-label-md font-medium text-outline">VND</span></h4>
+                    <h4 class="text-2xl font-extrabold text-on-surface">@FormatRevenue(summary.MonthlyRevenue) <span class="text-label-md font-medium text-outline">VND</span></h4>
                 </div>
             </div>
 
@@ -66,12 +68,12 @@
                         <span class="material-symbols-outlined text-2xl">home_work</span>
                     </div>
                     <div class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-caption font-bold">
-                        98/102 phòng
+                        @summary.OccupiedRooms/@summary.TotalRooms phòng
                     </div>
                 </div>
                 <div class="flex flex-col gap-1">
                     <p class="text-caption text-on-surface-variant uppercase tracking-wider font-bold">Tỷ lệ lấp đầy</p>
-                    <h4 class="text-2xl font-extrabold text-on-surface">96.1%</h4>
+                    <h4 class="text-2xl font-extrabold text-on-surface">@summary.OccupancyRate%</h4>
                 </div>
             </div>
 
@@ -87,7 +89,7 @@
                 </div>
                 <div class="flex flex-col gap-1">
                     <p class="text-caption text-on-surface-variant uppercase tracking-wider font-bold">Hóa đơn chưa thu</p>
-                    <h4 class="text-2xl font-extrabold text-on-surface">12 <span class="text-label-md font-medium text-outline">Hóa đơn</span></h4>
+                    <h4 class="text-2xl font-extrabold text-on-surface">@summary.PendingInvoices <span class="text-label-md font-medium text-outline">Hóa đơn</span></h4>
                 </div>
             </div>
         </div>
@@ -103,31 +105,13 @@
                     </select>
                 </div>
                 <div class="h-64 flex items-end justify-between gap-4 px-4 border-b border-outline-variant">
-                    <!-- Simulated Chart Bars -->
+                    @foreach (var item in summary.RevenueLastSixMonths)
+                    {
                     <div class="flex flex-col items-center flex-1 group">
-                        <div class="w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container" style="height: 65%;"></div>
-                        <span class="text-caption text-on-surface-variant mt-4">T.1</span>
+                        <div class="@GetBarClass(item)" style="height: @GetRevenueHeight(item);"></div>
+                        <span class="@GetMonthLabelClass(item)">T.@item.Month</span>
                     </div>
-                    <div class="flex flex-col items-center flex-1 group">
-                        <div class="w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container" style="height: 80%;"></div>
-                        <span class="text-caption text-on-surface-variant mt-4">T.2</span>
-                    </div>
-                    <div class="flex flex-col items-center flex-1 group">
-                        <div class="w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container" style="height: 55%;"></div>
-                        <span class="text-caption text-on-surface-variant mt-4">T.3</span>
-                    </div>
-                    <div class="flex flex-col items-center flex-1 group">
-                        <div class="w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container" style="height: 90%;"></div>
-                        <span class="text-caption text-on-surface-variant mt-4">T.4</span>
-                    </div>
-                    <div class="flex flex-col items-center flex-1 group">
-                        <div class="w-full bg-primary rounded-t-lg chart-bar hover:bg-primary-container" style="height: 100%;"></div>
-                        <span class="text-caption font-bold text-primary mt-4">T.5</span>
-                    </div>
-                    <div class="flex flex-col items-center flex-1 group">
-                        <div class="w-full bg-surface-container-high rounded-t-lg chart-bar" style="height: 0%;"></div>
-                        <span class="text-caption text-on-surface-variant mt-4">T.6</span>
-                    </div>
+                    }
                 </div>
             </div>
             <!-- Todo List Container -->
@@ -194,33 +178,33 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-outline-variant">
+                        @if (summary.RecentActivities.Any())
+                        {
+                            foreach (var activity in summary.RecentActivities)
+                            {
                         <tr class="hover:bg-surface-container-low transition-colors">
-                            <td class="py-4 px-2 text-label-md text-on-surface-variant">09:45 AM</td>
-                            <td class="py-4 px-2 font-semibold text-on-surface">Hóa đơn điện nước tháng 5</td>
-                            <td class="py-4 px-2 text-label-md">P.102</td>
+                            <td class="py-4 px-2 text-label-md text-on-surface-variant">@activity.TimeLabel</td>
+                            <td class="py-4 px-2 font-semibold text-on-surface">@activity.Content</td>
+                            <td class="py-4 px-2 text-label-md">P.@activity.RoomCode</td>
                             <td class="py-4 px-2">
-                                <span class="px-2 py-1 bg-green-100 text-green-700 text-caption font-bold rounded-md">Đã thu</span>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-caption font-bold rounded-md">@GetStatusLabel(activity.Status)</span>
                             </td>
-                            <td class="py-4 px-2 text-right font-bold text-on-surface">1.250.000đ</td>
+                            <td class="py-4 px-2 text-right font-bold text-on-surface">@FormatMoney(activity.Amount)</td>
                         </tr>
+                            }
+                        }
+                        else
+                        {
                         <tr class="hover:bg-surface-container-low transition-colors">
-                            <td class="py-4 px-2 text-label-md text-on-surface-variant">Hôm qua</td>
-                            <td class="py-4 px-2 font-semibold text-on-surface">Ký mới hợp đồng thuê</td>
-                            <td class="py-4 px-2 text-label-md">P.402</td>
+                            <td class="py-4 px-2 text-label-md text-on-surface-variant">-</td>
+                            <td class="py-4 px-2 font-semibold text-on-surface">Chưa có hoạt động</td>
+                            <td class="py-4 px-2 text-label-md">-</td>
                             <td class="py-4 px-2">
-                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-caption font-bold rounded-md">Hoàn tất</span>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-caption font-bold rounded-md">Rỗng</span>
                             </td>
                             <td class="py-4 px-2 text-right font-bold text-on-surface">-</td>
                         </tr>
-                        <tr class="hover:bg-surface-container-low transition-colors">
-                            <td class="py-4 px-2 text-label-md text-on-surface-variant">22/05/2024</td>
-                            <td class="py-4 px-2 font-semibold text-on-surface">Thanh toán tiền nhà</td>
-                            <td class="py-4 px-2 text-label-md">P.201</td>
-                            <td class="py-4 px-2">
-                                <span class="px-2 py-1 bg-orange-100 text-orange-700 text-caption font-bold rounded-md">Chờ xác nhận</span>
-                            </td>
-                            <td class="py-4 px-2 text-right font-bold text-on-surface">5.500.000đ</td>
-                        </tr>
+                        }
                     </tbody>
                 </table>
             </div>
@@ -260,4 +244,94 @@
 
 @code {
     private const string CustomStyles = "Dashboard";
+    private SOTRO_Project.Models.Dashboard.DashboardSummaryResponse summary = new();
+    private string userFullName = "bạn";
+
+    private string GreetingText => $"{GetGreetingByTime()}, {userFullName}!";
+    private string TodayText => FormatVietnameseDate(DateTime.Today);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        userFullName = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "sotro_user_name") ?? "bạn";
+        var response = await DashboardApi.GetSummaryAsync();
+        summary = response.Data ?? new();
+        StateHasChanged();
+    }
+
+    private static string FormatRevenue(decimal value)
+    {
+        if (value >= 1_000_000)
+            return $"{Math.Round(value / 1_000_000, 1):N1}M";
+
+        return value.ToString("N0");
+    }
+
+    private decimal MaxRevenue => summary.RevenueLastSixMonths.Any()
+        ? Math.Max(1, summary.RevenueLastSixMonths.Max(x => x.Revenue))
+        : 1;
+
+    private string GetRevenueHeight(SOTRO_Project.Models.Dashboard.DashboardRevenuePoint item)
+    {
+        var height = item.Revenue <= 0 ? 4 : Math.Round(item.Revenue / MaxRevenue * 100, 0);
+        return $"{height}%";
+    }
+
+    private static string GetBarClass(SOTRO_Project.Models.Dashboard.DashboardRevenuePoint item)
+    {
+        var isCurrentMonth = item.Month == DateTime.Today.Month && item.Year == DateTime.Today.Year;
+        return isCurrentMonth
+            ? "w-full bg-primary rounded-t-lg chart-bar hover:bg-primary-container"
+            : "w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container";
+    }
+
+    private static string GetMonthLabelClass(SOTRO_Project.Models.Dashboard.DashboardRevenuePoint item)
+    {
+        var isCurrentMonth = item.Month == DateTime.Today.Month && item.Year == DateTime.Today.Year;
+        return isCurrentMonth
+            ? "text-caption font-bold text-primary mt-4"
+            : "text-caption text-on-surface-variant mt-4";
+    }
+
+    private static string FormatMoney(decimal? value) => value.HasValue ? $"{value.Value:N0}đ" : "-";
+
+    private static string GetStatusLabel(string? status) => status switch
+    {
+        "Paid" => "Đã thu",
+        "Unpaid" => "Chưa thu",
+        "PartiallyPaid" => "Thu một phần",
+        "Overdue" => "Quá hạn",
+        "Cancelled" => "Đã hủy",
+        _ => status ?? "-"
+    };
+
+    private static string GetGreetingByTime()
+    {
+        var hour = DateTime.Now.Hour;
+        if (hour < 11)
+            return "Chào buổi sáng";
+        if (hour < 14)
+            return "Chào buổi trưa";
+        if (hour < 18)
+            return "Chào buổi chiều";
+        return "Chào buổi tối";
+    }
+
+    private static string FormatVietnameseDate(DateTime date)
+    {
+        var dayOfWeek = date.DayOfWeek switch
+        {
+            DayOfWeek.Monday => "Thứ Hai",
+            DayOfWeek.Tuesday => "Thứ Ba",
+            DayOfWeek.Wednesday => "Thứ Tư",
+            DayOfWeek.Thursday => "Thứ Năm",
+            DayOfWeek.Friday => "Thứ Sáu",
+            DayOfWeek.Saturday => "Thứ Bảy",
+            _ => "Chủ Nhật"
+        };
+
+        return $"{dayOfWeek}, ngày {date:dd} tháng {date:MM}, {date:yyyy}";
+    }
 }
