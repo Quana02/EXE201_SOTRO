@@ -143,12 +143,12 @@
                 </button>
             </div>
 
-            @if (filteredRooms.Count == 0)
+            @if (rooms.Count == 0 && activeTab == "room-list")
             {
                 <div class="flex flex-col items-center justify-center py-24 gap-4 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant">
                     <span class="material-symbols-outlined text-on-surface-variant text-5xl">meeting_room</span>
                     <p class="text-on-surface-variant font-bold text-body-lg">Chưa có phòng nào</p>
-                    <p class="text-caption text-on-surface-variant">Bấm "Thêm phòng" để tạo phòng đầu tiên cho tòa nhà này</p>
+                    <p class="text-caption text-on-surface-variant">Chuyển sang “Sơ đồ mặt bằng” để thêm phòng vào từng tầng</p>
                     <button @onclick="GoToCreateRoom" class="mt-2 px-6 py-2.5 bg-primary text-white rounded-full text-label-md font-bold flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">add</span> Thêm phòng
                     </button>
@@ -163,7 +163,9 @@
 
                         <!-- Left Panel: KHU VỰC / TẦNG -->
                         <div class="lg:col-span-1 bg-white p-5 rounded-2xl border border-outline-variant shadow-sm space-y-4">
-                            <h3 class="font-label-md font-bold text-on-surface-variant uppercase tracking-wider text-xs">Khu vực / Tầng</h3>
+                            <h3 class="font-label-md font-bold text-on-surface-variant uppercase tracking-wider text-xs">
+                                @(IsBasicLevel ? "Khu vực / Dãy" : "Khu vực / Tầng")
+                            </h3>
 
                             <div class="flex flex-col gap-2">
                                 @for (int f = 1; f <= totalFloors; f++)
@@ -184,7 +186,7 @@
 
                                         <button type="button" @onclick:stopPropagation="true" @onclick="() => DeleteFloor(floorNum)"
                                                 class="p-1 text-on-surface-variant hover:bg-error-container hover:text-error rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                                title="Xóa tầng này">
+                                                title='@(IsBasicLevel ? "Xóa dãy này" : "Xóa tầng này")'>
                                             <span class="material-symbols-outlined text-sm">close</span>
                                         </button>
                                     </div>
@@ -201,7 +203,7 @@
                                 else
                                 {
                                     <span class="material-symbols-outlined text-sm">add</span>
-                                    <span>Thêm tầng</span>
+                                    <span>@(IsBasicLevel ? "Thêm dãy" : "Thêm tầng")</span>
                                 }
                             </button>
                         </div>
@@ -221,9 +223,9 @@
                             {
                                 <div class="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
                                     <span class="material-symbols-outlined text-on-surface-variant text-4xl">meeting_room</span>
-                                    <p class="text-on-surface-variant font-medium text-body-md">Chưa có phòng nào ở tầng này</p>
+                                    <p class="text-on-surface-variant font-medium text-body-md">@(IsBasicLevel ? "Chưa có phòng nào ở dãy này" : "Chưa có phòng nào ở tầng này")</p>
                                     <a href="/tao-phong?floor=@selectedFloor" class="px-5 py-2 bg-primary text-white text-xs font-bold rounded-full flex items-center gap-1.5 shadow-sm hover:opacity-90 transition-all">
-                                        <span class="material-symbols-outlined text-xs">add</span> Thêm phòng vào tầng
+                                        <span class="material-symbols-outlined text-xs">add</span> @(IsBasicLevel ? "Thêm phòng vào dãy" : "Thêm phòng vào tầng")
                                     </a>
                                 </div>
                             }
@@ -270,9 +272,15 @@
                                             }
                                             <span class="text-headline-sm font-black @textClass mb-1">@room.RoomCode</span>
                                             <span class="text-[10px] font-bold @textClass uppercase">@labelText</span>
+                                            @if (IsSharedRoom(room.Note))
+                                            {
+                                                <span class="mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 uppercase tracking-wider">
+                                                    Ở ghép
+                                                </span>
+                                            }
                                             @if (room.FloorNumber.HasValue)
                                             {
-                                                <span class="absolute top-1.5 right-2 text-[9px] text-on-surface-variant font-medium">T@(room.FloorNumber)</span>
+                                                <span class="absolute top-1.5 right-2 text-[9px] text-on-surface-variant font-medium">@(IsBasicLevel ? "D" : "T")@(room.FloorNumber)</span>
                                             }
                                         </div>
                                     }
@@ -282,10 +290,20 @@
 
                     </div>
                 }
+            }
 
                 <!-- Tab: Room List -->
                 @if (activeTab == "room-list")
                 {
+                    @if (filteredRooms.Count == 0 && rooms.Count > 0)
+                    {
+                        <div class="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
+                            <span class="material-symbols-outlined text-on-surface-variant text-4xl">search_off</span>
+                            <p class="text-on-surface-variant font-medium">Không có phòng nào khớp bộ lọc hiện tại</p>
+                        </div>
+                    }
+                    else
+                    {
                     <div class="flex flex-col gap-4">
                         @foreach (var room in filteredRooms)
                         {
@@ -308,6 +326,10 @@
                                                 @(room.PrimaryTenant != null ? room.PrimaryTenant.FullName : (room.Status == "Available" ? "Phòng trống" : room.RoomName ?? room.RoomCode))
                                             </h4>
                                             <span class="px-2 py-0.5 @GetStatusBadgeClass(room.Status) text-[10px] font-bold rounded-full uppercase">@room.StatusLabel</span>
+                                            @if (IsSharedRoom(room.Note))
+                                            {
+                                                <span class="px-2 py-0.5 bg-violet-100 text-violet-700 text-[10px] font-bold rounded-full uppercase">Ở ghép</span>
+                                            }
                                         </div>
                                         <div class="flex items-center gap-4 text-caption text-on-surface-variant">
                                             @if (room.PrimaryTenant?.StartDate != null)
@@ -328,7 +350,7 @@
                                             {
                                                 <span class="flex items-center gap-1">
                                                     <span class="material-symbols-outlined text-sm">layers</span>
-                                                    Tầng @room.FloorNumber
+                                                    @(IsBasicLevel ? "Dãy" : "Tầng") @room.FloorNumber
                                                 </span>
                                             }
                                         </div>
@@ -367,6 +389,7 @@
                             </div>
                         }
                     </div>
+                    }
                 }
 
                 <!-- Occupancy Stats -->
@@ -417,6 +440,10 @@
         rooms.Where(r => r.FloorNumber == selectedFloor &&
                          (string.IsNullOrEmpty(filterStatus) || r.Status == filterStatus))
              .ToList();
+
+    // True when the building is Basic level (dãy trọ) — show flat grid instead of floor-tabbed layout
+    private bool IsBasicLevel =>
+        building?.Description?.Contains("[Level:Basic]", StringComparison.OrdinalIgnoreCase) ?? false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -473,6 +500,7 @@
 
     private string GetFloorLabel(int floorNum)
     {
+        if (IsBasicLevel) return $"Dãy {floorNum}";
         if (floorNum == 1) return "Tầng 1 (Trệt)";
         if (floorNum == totalFloors && totalFloors > 1) return "Sân thượng";
         return $"Tầng {floorNum}";
@@ -481,7 +509,10 @@
     private async Task AddFloor()
     {
         if (building == null) return;
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn thêm 1 tầng mới cho tòa nhà?");
+        var msg = IsBasicLevel 
+            ? "Bạn có chắc chắn muốn thêm 1 dãy mới cho tòa nhà?"
+            : "Bạn có chắc chắn muốn thêm 1 tầng mới cho tòa nhà?";
+        var confirmed = await JS.InvokeAsync<bool>("confirm", msg);
         if (!confirmed) return;
 
         isUpdatingFloors = true;
@@ -508,7 +539,8 @@
             }
             else
             {
-                await JS.InvokeVoidAsync("alert", $"Không thể thêm tầng: {response.Message}");
+                var errMsg = IsBasicLevel ? $"Không thể thêm dãy: {response.Message}" : $"Không thể thêm tầng: {response.Message}";
+                await JS.InvokeVoidAsync("alert", errMsg);
             }
         }
         catch (Exception ex)
@@ -528,11 +560,17 @@
         var roomCountOnFloor = rooms.Count(r => r.FloorNumber == floorNum);
         if (roomCountOnFloor > 0)
         {
-            await JS.InvokeVoidAsync("alert", $"Không thể xóa tầng này vì đang có {roomCountOnFloor} phòng. Vui lòng xóa hoặc di chuyển các phòng trước.");
+            var alertMsg = IsBasicLevel
+                ? $"Không thể xóa dãy này vì đang có {roomCountOnFloor} phòng. Vui lòng xóa hoặc di chuyển các phòng trước."
+                : $"Không thể xóa tầng này vì đang có {roomCountOnFloor} phòng. Vui lòng xóa hoặc di chuyển các phòng trước.";
+            await JS.InvokeVoidAsync("alert", alertMsg);
             return;
         }
 
-        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Bạn có chắc chắn muốn xóa {GetFloorLabel(floorNum)}?");
+        var confirmMsg = IsBasicLevel
+            ? $"Bạn có chắc chắn muốn xóa Dãy {floorNum}?"
+            : $"Bạn có chắc chắn muốn xóa {GetFloorLabel(floorNum)}?";
+        var confirmed = await JS.InvokeAsync<bool>("confirm", confirmMsg);
         if (!confirmed) return;
 
         isUpdatingFloors = true;
@@ -563,7 +601,8 @@
             }
             else
             {
-                await JS.InvokeVoidAsync("alert", $"Không thể xóa tầng: {response.Message}");
+                var errMsg = IsBasicLevel ? $"Không thể xóa dãy: {response.Message}" : $"Không thể xóa tầng: {response.Message}";
+                await JS.InvokeVoidAsync("alert", errMsg);
             }
         }
         catch (Exception ex)
@@ -647,4 +686,25 @@
         "Maintenance" => "border-2 border-tertiary/20",
         _ => "border-dashed border-outline-variant",
     };
+
+    private bool IsSharedRoom(string? note)
+    {
+        if (string.IsNullOrWhiteSpace(note)) return false;
+        try
+        {
+            var data = System.Text.Json.JsonSerializer.Deserialize<RoomNoteData>(note);
+            return data?.RoomModel == "Shared";
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public class RoomNoteData
+    {
+        public string? RoomModel { get; set; }
+        public int? TotalBeds { get; set; }
+        public string? UserNote { get; set; }
+    }
 }

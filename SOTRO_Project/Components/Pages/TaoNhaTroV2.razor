@@ -1,0 +1,974 @@
+@page "/tao-nha-tro-v2"
+@layout EmptyLayout
+@implements IDisposable
+@inject IBuildingApiService BuildingApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Tạo nhà trọ mới - Sổ Trọ</PageTitle>
+
+<style>
+    @@keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @@keyframes fadeSlideOut {
+        from { opacity: 1; transform: translateY(0); }
+        to   { opacity: 0; transform: translateY(-12px); }
+    }
+    .step-enter { animation: fadeSlideIn 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+    .step-exit  { animation: fadeSlideOut 0.2s ease both; }
+
+    .option-card {
+        position: relative;
+        cursor: pointer;
+        border: 2px solid var(--color-border, #e2e8f0);
+        border-radius: 1.25rem;
+        padding: 2rem 1.5rem;
+        background: white;
+        transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        text-align: center;
+        user-select: none;
+    }
+    .option-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 8px 32px rgba(59,130,246,0.12);
+        transform: translateY(-3px);
+    }
+    .option-card.selected {
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        box-shadow: 0 8px 32px rgba(37,99,235,0.18);
+        transform: translateY(-4px);
+    }
+    .option-card .check-ring {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        border: 2px solid #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .option-card.selected .check-ring {
+        background: #2563eb;
+        border-color: #2563eb;
+    }
+    .option-card .icon-wrap {
+        width: 4rem;
+        height: 4rem;
+        border-radius: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        transition: all 0.25s;
+    }
+
+    .service-toggle {
+        position: relative;
+        width: 56px;
+        height: 30px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        cursor: pointer;
+        transition: background 0.3s;
+        flex-shrink: 0;
+    }
+    .service-toggle.on { background: #2563eb; }
+    .service-toggle::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+        transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .service-toggle.on::after { transform: translateX(26px); }
+
+    .form-field {
+        width: 100%;
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        outline: none;
+    }
+    .form-field:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+    }
+
+    .step-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: #cbd5e1;
+        transition: all 0.3s;
+    }
+    .step-dot.active {
+        background: #2563eb;
+        width: 1.5rem;
+        border-radius: 999px;
+    }
+    .step-dot.done { background: #22c55e; }
+</style>
+
+<HeaderDashboard />
+
+<main class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 pb-16">
+    <!-- Background blobs -->
+    <div class="fixed top-0 right-0 -z-10 w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="fixed bottom-0 left-0 -z-10 w-[400px] h-[400px] bg-indigo-200/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <div class="max-w-2xl mx-auto px-4 pt-10">
+        <!-- Header -->
+        <div class="mb-10">
+            <nav class="flex items-center gap-2 text-sm text-slate-500 mb-4">
+                <a href="/nha-tro" class="hover:text-blue-600 transition-colors">Danh sách nhà trọ</a>
+                <span class="material-symbols-outlined text-base">chevron_right</span>
+                <span class="text-blue-700 font-semibold">Tạo nhà trọ mới</span>
+            </nav>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight">Tạo nhà trọ mới</h1>
+            <p class="text-slate-500 mt-2">Thiết lập nhanh trong vài bước đơn giản.</p>
+        </div>
+
+        <!-- Stepper dots -->
+        <div class="flex items-center justify-center gap-2 mb-10">
+            @for (int s = 1; s <= 4; s++)
+            {
+                var stepNum = s;
+                <div class="step-dot @(currentStep == stepNum ? "active" : currentStep > stepNum ? "done" : "")"></div>
+                @if (s < 4)
+                {
+                    <div class="h-px flex-1 max-w-[3rem] @(currentStep > stepNum ? "bg-green-400" : "bg-slate-200") transition-all duration-300"></div>
+                }
+            }
+        </div>
+
+        <!-- Card container -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-200/80 overflow-hidden">
+
+            <!-- Error banner -->
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div id="v2-error-banner" class="mx-6 mt-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 text-red-700">
+                    <span class="material-symbols-outlined text-red-500 mt-0.5">error</span>
+                    <div>
+                        <p class="text-sm font-semibold">Có lỗi xảy ra</p>
+                        <p class="text-sm mt-0.5">@errorMessage</p>
+                    </div>
+                </div>
+            }
+
+            <!-- ══════════ STEP 1: RoomModel ══════════ -->
+            @if (currentStep == 1)
+            {
+                <div class="p-8 step-enter">
+                    <div class="mb-8">
+                        <div class="inline-flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-full mb-3">
+                            <span class="material-symbols-outlined text-base">looks_one</span> Bước 1 / 4
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-800">Loại phòng chính</h2>
+                        <p class="text-slate-500 mt-1.5">Nhà trọ của bạn chủ yếu có loại phòng nào?</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Private -->
+                        <div class="option-card @(selectedRoomModel == "Private" ? "selected" : "")"
+                             @onclick='() => selectedRoomModel = "Private"'>
+                            <div class="check-ring">
+                                @if (selectedRoomModel == "Private")
+                                {
+                                    <span class="material-symbols-outlined text-white text-sm">check</span>
+                                }
+                            </div>
+                            <div class="icon-wrap @(selectedRoomModel == "Private" ? "bg-blue-100" : "bg-slate-100")">
+                                <span class="material-symbols-outlined @(selectedRoomModel == "Private" ? "text-blue-600" : "text-slate-500") text-4xl">meeting_room</span>
+                            </div>
+                            <div>
+                                <p class="font-black text-slate-800 text-lg">Phòng riêng</p>
+                                <p class="text-sm text-slate-500 mt-1">Mỗi phòng cho 1 nhóm thuê riêng biệt</p>
+                            </div>
+                            <div class="flex gap-2 flex-wrap justify-center">
+                                <span class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">Phổ biến</span>
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">1–4 người/phòng</span>
+                            </div>
+                        </div>
+
+                        <!-- Shared -->
+                        <div class="option-card @(selectedRoomModel == "Shared" ? "selected" : "")"
+                             @onclick='() => selectedRoomModel = "Shared"'>
+                            <div class="check-ring">
+                                @if (selectedRoomModel == "Shared")
+                                {
+                                    <span class="material-symbols-outlined text-white text-sm">check</span>
+                                }
+                            </div>
+                            <div class="icon-wrap @(selectedRoomModel == "Shared" ? "bg-violet-100" : "bg-slate-100")">
+                                <span class="material-symbols-outlined @(selectedRoomModel == "Shared" ? "text-violet-600" : "text-slate-500") text-4xl">people</span>
+                            </div>
+                            <div>
+                                <p class="font-black text-slate-800 text-lg">Phòng chung</p>
+                                <p class="text-sm text-slate-500 mt-1">Nhiều người thuê chung 1 phòng (ở ghép)</p>
+                            </div>
+                            <div class="flex gap-2 flex-wrap justify-center">
+                                <span class="text-xs bg-violet-50 text-violet-700 px-2.5 py-1 rounded-full font-medium">Ở ghép</span>
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">Theo giường</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- ══════════ STEP 2: Level ══════════ -->
+            @if (currentStep == 2)
+            {
+                <div class="p-8 step-enter">
+                    <div class="mb-8">
+                        <div class="inline-flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-full mb-3">
+                            <span class="material-symbols-outlined text-base">looks_two</span> Bước 2 / 4
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-800">Phân khúc nhà trọ</h2>
+                        <p class="text-slate-500 mt-1.5">Mô tả tốt nhất cơ sở kinh doanh của bạn.</p>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        @foreach (var level in levels)
+                        {
+                            var lv = level;
+                            <div class="option-card flex-row text-left @(selectedLevel == lv.Key ? "selected" : "")"
+                                 style="padding: 1.25rem 1.5rem;"
+                                 @onclick="() => selectedLevel = lv.Key">
+                                <div class="check-ring" style="position:relative; top:auto; right:auto; flex-shrink:0;">
+                                    @if (selectedLevel == lv.Key)
+                                    {
+                                        <span class="material-symbols-outlined text-white text-sm">check</span>
+                                    }
+                                </div>
+                                <div class="icon-wrap flex-shrink-0 @(selectedLevel == lv.Key ? lv.SelectedBg : "bg-slate-100")" style="width:3rem; height:3rem; border-radius:0.75rem;">
+                                    <span class="material-symbols-outlined @(selectedLevel == lv.Key ? lv.SelectedIcon : "text-slate-500") text-2xl">@lv.Icon</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <p class="font-black text-slate-800">@lv.Label</p>
+                                        @if (!string.IsNullOrEmpty(lv.Badge))
+                                        {
+                                            <span class="text-xs @lv.BadgeClass px-2 py-0.5 rounded-full font-bold">@lv.Badge</span>
+                                        }
+                                    </div>
+                                    <p class="text-sm text-slate-500">@lv.Description</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- ══════════ STEP 3: HasService ══════════ -->
+            @if (currentStep == 3)
+            {
+                <div class="p-8 step-enter">
+                    <div class="mb-8">
+                        <div class="inline-flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-full mb-3">
+                            <span class="material-symbols-outlined text-base">looks_3</span> Bước 3 / 4
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-800">Dịch vụ kèm theo</h2>
+                        <p class="text-slate-500 mt-1.5">Nhà trọ có cung cấp dịch vụ kèm theo không?</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Main toggle -->
+                        <div class="p-6 rounded-2xl border-2 @(hasService ? "border-blue-300 bg-blue-50/60" : "border-slate-200 bg-white") transition-all duration-300 flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-2xl @(hasService ? "bg-blue-100" : "bg-slate-100") flex items-center justify-center transition-all">
+                                <span class="material-symbols-outlined @(hasService ? "text-blue-600" : "text-slate-400") text-3xl">room_service</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-bold text-slate-800 text-lg">@(hasService ? "Có dịch vụ kèm theo" : "Không có dịch vụ kèm theo")</p>
+                                <p class="text-sm text-slate-500 mt-0.5">
+                                    @(hasService ? "Tiện ích được tính thêm vào hóa đơn hàng tháng" : "Khách thuê tự lo điện nước và các dịch vụ khác")
+                                </p>
+                            </div>
+                            <button type="button" @onclick="() => hasService = !hasService"
+                                    class="service-toggle @(hasService ? "on" : "")" aria-label="Toggle service"></button>
+                        </div>
+
+                        <!-- Service chips + default prices -->
+                        @if (hasService)
+                        {
+                            <div class="space-y-4 step-enter">
+                                <!-- Service tags -->
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                                    <p class="text-sm font-semibold text-slate-600 mb-3">Dịch vụ có trong tòa nhà:</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach (var svc in serviceOptions)
+                                        {
+                                            var s = svc;
+                                            var isOn = selectedServices.Contains(s.Key);
+                                            <button type="button"
+                                                    @onclick="() => ToggleService(s.Key)"
+                                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all @(isOn ? "bg-blue-600 text-white border-blue-600" : "bg-white text-slate-600 border-slate-300 hover:border-blue-400")">
+                                                <span class="material-symbols-outlined text-base">@s.Icon</span>
+                                                @s.Label
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Default prices for room creation pre-fill -->
+                                <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-3">
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-700">Giá mặc định cho các phòng</p>
+                                        <p class="text-xs text-slate-400 mt-0.5">Sẽ được điền sẵn khi bạn tạo phòng — có thể chỉnh riêng cho từng phòng sau</p>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <div class="space-y-1.5">
+                                            <label class="text-xs font-semibold text-slate-600">Điện (đ/kWh)</label>
+                                            <input class="form-field text-sm" value="@defaultElectricPriceDisplay"
+                                                   @oninput="OnDefaultElectricPriceInput"
+                                                   type="text" inputmode="numeric" placeholder="3.500" />
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-xs font-semibold text-slate-600">Nước (đ/m³)</label>
+                                            <input class="form-field text-sm" value="@defaultWaterPriceDisplay"
+                                                   @oninput="OnDefaultWaterPriceInput"
+                                                   type="text" inputmode="numeric" placeholder="15.000" />
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-xs font-semibold text-slate-600">Phí DV (đ/tháng)</label>
+                                            <input class="form-field text-sm" value="@defaultServiceFeeDisplay"
+                                                   @oninput="OnDefaultServiceFeeInput"
+                                                   type="text" inputmode="numeric" placeholder="100.000" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                                <span class="material-symbols-outlined text-amber-500">lightbulb</span>
+                                <p class="text-sm text-amber-800">Bạn vẫn có thể thêm phí điện, nước vào từng phòng sau khi tạo nhà trọ.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- ══════════ STEP 4: Basic Info ══════════ -->
+            @if (currentStep == 4)
+            {
+                <div class="p-8 step-enter">
+                    <div class="mb-8">
+                        <div class="inline-flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-full mb-3">
+                            <span class="material-symbols-outlined text-base">looks_4</span> Bước 4 / 4
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-800">Thông tin cơ bản</h2>
+                        <p class="text-slate-500 mt-1.5">Vài thông tin cuối để hoàn tất.</p>
+                    </div>
+
+                    <!-- Summary badges -->
+                    <div class="flex flex-wrap gap-2 mb-7">
+                        <span class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                            <span class="material-symbols-outlined text-base">@(selectedRoomModel == "Private" ? "meeting_room" : "people")</span>
+                            @(selectedRoomModel == "Private" ? "Phòng riêng" : "Phòng chung")
+                        </span>
+                        <span class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            <span class="material-symbols-outlined text-base">@(levels.FirstOrDefault(l => l.Key == selectedLevel)?.Icon ?? "apartment")</span>
+                            @(levels.FirstOrDefault(l => l.Key == selectedLevel)?.Label ?? "")
+                        </span>
+                        @if (hasService)
+                        {
+                            <span class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="material-symbols-outlined text-base">room_service</span>
+                                Có dịch vụ
+                            </span>
+                        }
+                    </div>
+
+                    <div class="space-y-5">
+                        <!-- Tên nhà trọ -->
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-semibold text-slate-700">
+                                Tên nhà trọ <span class="text-red-500">*</span>
+                            </label>
+                            <input class="form-field" @bind="model.BuildingName"
+                                   placeholder="VD: Nhà trọ Sổ Trọ Central" type="text" />
+                        </div>
+
+                        <!-- Địa chỉ -->
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-semibold text-slate-700">
+                                Địa chỉ <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">location_on</span>
+                                <input class="form-field pl-11" id="address-input-v2"
+                                       value="@model.Address"
+                                       @oninput="e => model.Address = e.Value?.ToString() ?? string.Empty"
+                                       placeholder="Số nhà, đường, phường, quận, thành phố"
+                                       type="text" />
+                            </div>
+                        </div>
+
+                        <!-- Số tầng / Số dãy -->
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-semibold text-slate-700">
+                                @(selectedLevel == "Basic" ? "Số dãy" : "Số tầng") <span class="text-red-500">*</span>
+                            </label>
+                            <input class="form-field" @bind="model.TotalFloors"
+                                   type="number" min="1" placeholder='@(selectedLevel == "Basic" ? "Ví dụ: 1" : "Ví dụ: 5")' />
+                        </div>
+
+                        <!-- Ngày lập hóa đơn hàng tháng -->
+                        <div class="space-y-2 p-4 bg-blue-50/70 rounded-2xl border border-blue-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-semibold text-slate-700">
+                                        Ngày lập hóa đơn hàng tháng <span class="text-red-500">*</span>
+                                    </label>
+                                    <p class="text-xs text-slate-400 mt-0.5">Hệ thống tự tạo hóa đơn vào ngày này mỗi tháng</p>
+                                </div>
+                                @if (model.BillingDay.HasValue)
+                                {
+                                    <span class="text-xs font-bold text-blue-600 bg-blue-100 px-3 py-1.5 rounded-full whitespace-nowrap ml-3">
+                                        📅 Ngày @model.BillingDay
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-xs text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full ml-3 whitespace-nowrap">Chưa chọn</span>
+                                }
+                            </div>
+                            <div class="grid grid-cols-7 gap-1">
+                                @for (int d = 1; d <= 31; d++)
+                                {
+                                    var billingDay = d;
+                                    <button type="button"
+                                            @onclick="() => { model.BillingDay = billingDay; if (model.DueDay.HasValue && model.DueDay <= billingDay) model.DueDay = null; }"
+                                            class="flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all @(model.BillingDay == billingDay ? "bg-blue-600 text-white shadow-md scale-105" : "bg-white hover:bg-blue-200 text-slate-600 border border-slate-200")">
+                                        @billingDay
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Ngày hạn thanh toán -->
+                        <div class="space-y-2 p-4 bg-rose-50/70 rounded-2xl border border-rose-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-semibold text-slate-700">
+                                        Ngày hạn thanh toán <span class="text-red-500">*</span>
+                                    </label>
+                                    <p class="text-xs text-slate-400 mt-0.5">Khách thuê phải nộp tiền trước ngày này</p>
+                                </div>
+                                @if (model.DueDay.HasValue)
+                                {
+                                    <span class="text-xs font-bold text-rose-600 bg-rose-100 px-3 py-1.5 rounded-full whitespace-nowrap ml-3">
+                                        ⏰ Hạn ngày @model.DueDay
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-xs text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full ml-3 whitespace-nowrap">Chưa chọn</span>
+                                }
+                            </div>
+                            @if (model.BillingDay.HasValue && model.DueDay.HasValue && model.BillingDay >= model.DueDay)
+                            {
+                                <div class="flex items-center gap-1.5 text-xs text-red-600 font-medium bg-red-50 px-3 py-2 rounded-lg">
+                                    <span class="material-symbols-outlined text-sm">warning</span>
+                                    Ngày thanh toán phải sau ngày lập hóa đơn (ngày @model.BillingDay)
+                                </div>
+                            }
+                            <div class="grid grid-cols-7 gap-1">
+                                @for (int d = 1; d <= 31; d++)
+                                {
+                                    var dueDay = d;
+                                    var isDueDisabled = model.BillingDay.HasValue && dueDay <= model.BillingDay.Value;
+                                    <button type="button"
+                                            disabled="@isDueDisabled"
+                                            @onclick="() => model.DueDay = dueDay"
+                                            class="flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all @(model.DueDay == dueDay ? "bg-rose-500 text-white shadow-md scale-105" : isDueDisabled ? "opacity-30 bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white hover:bg-rose-200 text-slate-600 border border-slate-200")">
+                                        @dueDay
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Mô tả -->
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-semibold text-slate-700">Mô tả nhà trọ</label>
+                            <textarea class="form-field resize-none" @bind="model.Description"
+                                      rows="3" placeholder="Quy định chung, tiện ích, môi trường sống..."></textarea>
+                        </div>
+
+                        <!-- Image upload -->
+                        <div class="space-y-3">
+                            <label class="text-sm font-semibold text-slate-700">
+                                Ảnh nhà trọ <span class="text-red-500">*</span>
+                                <span class="text-slate-400 font-normal ml-1">(tối thiểu 1 ảnh)</span>
+                            </label>
+
+                            <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                                @for (int i = 0; i < selectedImages.Count; i++)
+                                {
+                                    var index = i;
+                                    var img = selectedImages[index];
+                                    <div class="relative group rounded-xl overflow-hidden border-2 @(index == 0 ? "border-blue-400" : "border-slate-200") aspect-square bg-slate-100">
+                                        @if (!string.IsNullOrEmpty(img.PreviewUrl))
+                                        {
+                                            <img src="@img.PreviewUrl" alt="Preview" class="w-full h-full object-cover" />
+                                        }
+                                        @if (index == 0)
+                                        {
+                                            <div class="absolute bottom-0 left-0 right-0 bg-blue-600/80 text-white text-[10px] font-bold text-center py-0.5">
+                                                Ảnh đại diện
+                                            </div>
+                                        }
+                                        <button type="button"
+                                                class="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                                                @onclick="() => RemoveImage(index)">
+                                            <span class="material-symbols-outlined text-sm">close</span>
+                                        </button>
+                                    </div>
+                                }
+
+                                <!-- Add button -->
+                                <label for="img-upload-v2"
+                                       class="border-2 border-dashed border-slate-300 rounded-xl aspect-square flex flex-col items-center justify-center bg-slate-50 hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer group">
+                                    <span class="material-symbols-outlined text-slate-400 group-hover:text-blue-600 text-2xl transition-colors">add_photo_alternate</span>
+                                    <p class="text-xs text-slate-500 group-hover:text-blue-600 mt-1 font-medium">Thêm ảnh</p>
+                                </label>
+                                <InputFile OnChange="HandleFilesSelected" id="img-upload-v2"
+                                           class="hidden" accept=".jpg,.jpeg,.png,.webp" multiple />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- ══════════ Success State ══════════ -->
+            @if (isSuccess)
+            {
+                <div class="p-12 flex flex-col items-center gap-4 step-enter">
+                    <div class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-emerald-500 text-4xl">check_circle</span>
+                    </div>
+                    <h2 class="text-2xl font-black text-slate-800">Tạo thành công!</h2>
+                    <p class="text-slate-500 text-center">Nhà trọ đã được tạo. Đang chuyển về danh sách...</p>
+                    <div class="flex items-center gap-2 text-blue-600">
+                        <span class="material-symbols-outlined animate-spin text-base">progress_activity</span>
+                        <span class="text-sm">Đang chuyển hướng...</span>
+                    </div>
+                </div>
+            }
+
+            <!-- ══════════ Navigation Footer ══════════ -->
+            @if (!isSuccess)
+            {
+                <div class="px-8 pb-8 flex items-center @(currentStep > 1 ? "justify-between" : "justify-end") gap-4">
+                    @if (currentStep > 1)
+                    {
+                        <button type="button" @onclick="PreviousStep"
+                                class="px-6 py-3 rounded-xl border-2 border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined text-xl">arrow_back</span>
+                            Quay lại
+                        </button>
+                    }
+                    @if (currentStep == 1)
+                    {
+                        <a href="/nha-tro"
+                           class="px-6 py-3 rounded-xl border-2 border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-all">
+                            Hủy
+                        </a>
+                    }
+
+                    @if (currentStep < 4)
+                    {
+                        <button type="button" @onclick="NextStep"
+                                disabled="@(!CanProceed)"
+                                class="px-8 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            Tiếp theo
+                            <span class="material-symbols-outlined text-xl">arrow_forward</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" @onclick="HandleSubmit"
+                                disabled="@(isSubmitting || !CanProceed)"
+                                class="px-10 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-50">
+                            @if (isSubmitting)
+                            {
+                                <span class="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+                                <span>Đang tạo...</span>
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined text-xl">rocket_launch</span>
+                                <span>Tạo nhà trọ</span>
+                            }
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Step context hint -->
+        @if (!isSuccess)
+        {
+            <div class="mt-5 flex items-center justify-center gap-2 text-slate-400 text-sm">
+                <span class="material-symbols-outlined text-base">@StepHintIcon</span>
+                <span>@StepHintText</span>
+            </div>
+        }
+    </div>
+</main>
+
+@code {
+    // ── Wizard state ──
+    private int currentStep = 1;
+    private string selectedRoomModel = "";   // "Private" | "Shared"
+    private string selectedLevel = "";       // "Basic" | "MiniApartment" | "ServiceApartment"
+    private bool hasService = false;
+    private HashSet<string> selectedServices = new();
+
+    // ── Default fees to sync to room creation (optional — pre-fills TaoPhong fields) ──
+    private decimal? defaultElectricPrice;
+    private decimal? defaultWaterPrice;
+    private decimal? defaultServiceFee;
+    private string defaultElectricPriceDisplay = "";
+    private string defaultWaterPriceDisplay = "";
+    private string defaultServiceFeeDisplay = "";
+
+    // ── Form state ──
+    private CreateBuildingRequest model = new() { BuildingTypeId = 1 };
+    private List<ImagePreview> selectedImages = new();
+    private string? errorMessage;
+    private bool isSubmitting;
+    private bool isSuccess;
+
+    // ── Lookup data ──
+    private List<BuildingTypeResponse> buildingTypes = new();
+    private DotNetObjectReference<TaoNhaTroV2>? dotNetHelper;
+
+    // ── Level definitions ──
+    private record LevelOption(string Key, string Label, string Description, string Icon,
+        string Badge, string BadgeClass, string SelectedBg, string SelectedIcon);
+
+    private readonly List<LevelOption> levels = new()
+    {
+        new("Basic", "Nhà trọ cơ bản", "Phòng trọ giá bình dân, tiện nghi cơ bản",
+            "home", "Phổ biến", "bg-blue-50 text-blue-700", "bg-blue-100", "text-blue-600"),
+        new("MiniApartment", "Chung cư mini", "Có phòng bếp riêng, tiện nghi đầy đủ hơn",
+            "apartment", "", "", "bg-violet-100", "text-violet-600"),
+        new("ServiceApartment", "Căn hộ dịch vụ", "Cao cấp, đầy đủ nội thất & dịch vụ",
+            "hotel", "Cao cấp", "bg-amber-50 text-amber-700", "bg-amber-100", "text-amber-600"),
+    };
+
+    private record ServiceOption(string Key, string Label, string Icon);
+    private readonly List<ServiceOption> serviceOptions = new()
+    {
+        new("electricity", "Điện", "bolt"),
+        new("water", "Nước", "water_drop"),
+        new("wifi", "Wifi", "wifi"),
+        new("cleaning", "Vệ sinh", "cleaning"),
+        new("security", "Bảo vệ", "security"),
+        new("parking", "Giữ xe", "local_parking"),
+    };
+
+    private class ImagePreview
+    {
+        public byte[] FileData { get; set; } = Array.Empty<byte>();
+        public string FileName { get; set; } = string.Empty;
+        public string ContentType { get; set; } = string.Empty;
+        public long FileSize { get; set; }
+        public string? PreviewUrl { get; set; }
+    }
+
+    // ── Computed ──
+    private bool CanProceed => currentStep switch
+    {
+        1 => !string.IsNullOrEmpty(selectedRoomModel),
+        2 => !string.IsNullOrEmpty(selectedLevel),
+        3 => true,
+        4 => !string.IsNullOrWhiteSpace(model.BuildingName)
+             && !string.IsNullOrWhiteSpace(model.Address)
+             && model.TotalFloors.HasValue
+             && selectedImages.Count > 0,
+        _ => false
+    };
+
+    private string StepHintIcon => currentStep switch
+    {
+        1 => "meeting_room",
+        2 => "apartment",
+        3 => "room_service",
+        4 => "photo_library",
+        _ => "info"
+    };
+
+    private string StepHintText => currentStep switch
+    {
+        1 => "Bạn có thể thay đổi cài đặt này sau khi tạo nhà trọ.",
+        2 => "Phân khúc giúp hệ thống gợi ý mẫu hóa đơn phù hợp.",
+        3 => "Dịch vụ sẽ được hiện trong mẫu hóa đơn hàng tháng.",
+        4 => "Ảnh đầu tiên sẽ được dùng làm ảnh đại diện nhà trọ.",
+        _ => ""
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resp = await BuildingApiService.GetBuildingTypesAsync();
+        if (resp.Success && resp.Data != null)
+            buildingTypes = resp.Data;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetHelper = DotNetObjectReference.Create(this);
+            try
+            {
+                await JS.InvokeVoidAsync("window.initAddressAutocomplete",
+                    "address-input-v2", dotNetHelper, nameof(OnAddressSelected));
+            }
+            catch { /* autocomplete optional */ }
+        }
+    }
+
+    [JSInvokable]
+    public void OnAddressSelected(string address)
+    {
+        model.Address = address;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task<List<string>> GetSuggestions(string query)
+    {
+        try
+        {
+            var response = await BuildingApiService.SuggestAddressAsync(query);
+            if (response.Success && response.Data != null)
+                return response.Data;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AddressAutocomplete] Error: {ex.Message}");
+        }
+        return new List<string>();
+    }
+
+    private async Task NextStep()
+    {
+        if (!CanProceed) return;
+        errorMessage = null;
+        if (currentStep < 4) currentStep++;
+        // Re-initialize address autocomplete when reaching step 4
+        if (currentStep == 4)
+        {
+            StateHasChanged();
+            await Task.Delay(200);
+            try
+            {
+                await JS.InvokeVoidAsync("window.initAddressAutocomplete",
+                    "address-input-v2", dotNetHelper, nameof(OnAddressSelected));
+            }
+            catch { }
+        }
+    }
+
+    private void PreviousStep()
+    {
+        errorMessage = null;
+        if (currentStep > 1) currentStep--;
+    }
+
+    private void ToggleService(string key)
+    {
+        if (!selectedServices.Add(key))
+            selectedServices.Remove(key);
+    }
+
+    private void OnDefaultElectricPriceInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        var raw = ParseRawNumber(e.Value?.ToString());
+        defaultElectricPrice = raw;
+        defaultElectricPriceDisplay = raw.HasValue ? FormatNumber(raw.Value) : "";
+    }
+    private void OnDefaultWaterPriceInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        var raw = ParseRawNumber(e.Value?.ToString());
+        defaultWaterPrice = raw;
+        defaultWaterPriceDisplay = raw.HasValue ? FormatNumber(raw.Value) : "";
+    }
+    private void OnDefaultServiceFeeInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        var raw = ParseRawNumber(e.Value?.ToString());
+        defaultServiceFee = raw;
+        defaultServiceFeeDisplay = raw.HasValue ? FormatNumber(raw.Value) : "";
+    }
+
+    private static string FormatNumber(decimal value)
+        => value.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN"));
+
+    private static decimal? ParseRawNumber(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+        var cleaned = input.Replace(".", "").Replace(",", "");
+        return decimal.TryParse(cleaned, out var d) ? d : null;
+    }
+
+    private async Task HandleFilesSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        foreach (var file in e.GetMultipleFiles(10))
+        {
+            if (file.Size > 5 * 1024 * 1024) { errorMessage = $"'{file.Name}' vượt 5MB."; continue; }
+            try
+            {
+                var buf = new byte[file.Size];
+                await file.OpenReadStream(5 * 1024 * 1024).ReadExactlyAsync(buf);
+                selectedImages.Add(new ImagePreview
+                {
+                    FileData = buf, FileName = file.Name,
+                    ContentType = file.ContentType, FileSize = file.Size,
+                    PreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buf)}"
+                });
+                StateHasChanged();
+            }
+            catch (Exception ex) { errorMessage = $"Lỗi đọc file: {ex.Message}"; }
+        }
+        StateHasChanged();
+    }
+
+    private void RemoveImage(int index)
+    {
+        if (index >= 0 && index < selectedImages.Count)
+            selectedImages.RemoveAt(index);
+    }
+
+    private async Task ShowError(string msg)
+    {
+        errorMessage = msg;
+        StateHasChanged();
+        await Task.Delay(60);
+        await JS.InvokeVoidAsync("eval",
+            "document.getElementById('v2-error-banner')?.scrollIntoView({ behavior: 'smooth', block: 'center' })");
+    }
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = null;
+
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(model.BuildingName)) { await ShowError("Vui lòng nhập tên nhà trọ."); return; }
+        if (string.IsNullOrWhiteSpace(model.Address)) { await ShowError("Vui lòng nhập địa chỉ nhà trọ."); return; }
+        if (!model.TotalFloors.HasValue || model.TotalFloors <= 0) { await ShowError("Vui lòng nhập số tầng hợp lệ (≥ 1)."); return; }
+        if (!model.BillingDay.HasValue) { await ShowError("Vui lòng chọn ngày lập hóa đơn hàng tháng."); return; }
+        if (!model.DueDay.HasValue) { await ShowError("Vui lòng chọn ngày hạn thanh toán."); return; }
+        if (model.BillingDay >= model.DueDay) { await ShowError($"Ngày lập hóa đơn (ngày {model.BillingDay}) phải nhỏ hơn ngày hạn thanh toán (ngày {model.DueDay})."); return; }
+        if (selectedImages.Count == 0) { await ShowError("Vui lòng tải lên ít nhất 1 ảnh nhà trọ."); return; }
+
+        // ── Mapping: RoomModel + Level + HasService → BuildingTypeId ──
+        model.BuildingTypeId = MapToBuildingTypeId();
+
+        // ── Enrich description with new fields ──
+        var descParts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(model.Description))
+            descParts.Add(model.Description.Trim());
+
+        descParts.Add($"[RoomModel:{selectedRoomModel}]");
+        descParts.Add($"[Level:{selectedLevel}]");
+        if (hasService && selectedServices.Count > 0)
+            descParts.Add($"[Services:{string.Join(",", selectedServices)}]");
+        else if (hasService)
+            descParts.Add("[Services:yes]");
+
+        model.Description = string.Join(" | ", descParts);
+
+        // BillingDay and DueDay are validated and required (handled above)
+
+        isSubmitting = true;
+        try
+        {
+            var imageFiles = selectedImages
+                .Select(img => ((Stream)new MemoryStream(img.FileData), img.FileName))
+                .ToList();
+
+            var response = await BuildingApiService.CreateBuildingAsync(model, imageFiles);
+            if (response.Success)
+            {
+                // Sync defaults to localStorage so TaoPhong can pre-fill room prices
+                try
+                {
+                    await JS.InvokeVoidAsync("localStorage.setItem", "shared_billing_day", model.BillingDay!.Value.ToString());
+                    if (defaultElectricPrice.HasValue)
+                        await JS.InvokeVoidAsync("localStorage.setItem", "shared_electric_price", defaultElectricPrice.Value.ToString());
+                    if (defaultWaterPrice.HasValue)
+                        await JS.InvokeVoidAsync("localStorage.setItem", "shared_water_price", defaultWaterPrice.Value.ToString());
+                    if (defaultServiceFee.HasValue)
+                        await JS.InvokeVoidAsync("localStorage.setItem", "shared_service_fee", defaultServiceFee.Value.ToString());
+                }
+                catch { }
+                isSuccess = true;
+                StateHasChanged();
+                await Task.Delay(1800);
+                Navigation.NavigateTo("/nha-tro");
+            }
+            else
+            {
+                await ShowError(response.Message ?? "Tạo nhà trọ thất bại. Vui lòng thử lại.");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi kết nối: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Maps (RoomModel, Level, HasService) → BuildingTypeId from API lookup.
+    /// Falls back to first available type if no match found.
+    /// </summary>
+    private int MapToBuildingTypeId()
+    {
+        // Map level to type name keywords
+        var keyword = selectedLevel switch
+        {
+            "MiniApartment"     => "mini",
+            "ServiceApartment"  => "dịch vụ",
+            _                   => "nhà trọ"
+        };
+
+        var match = buildingTypes.FirstOrDefault(t =>
+            t.TypeName.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+
+        return match?.BuildingTypeId ?? buildingTypes.FirstOrDefault()?.BuildingTypeId ?? 1;
+    }
+
+    public void Dispose() => dotNetHelper?.Dispose();
+}

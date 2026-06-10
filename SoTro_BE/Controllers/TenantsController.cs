@@ -58,7 +58,13 @@ namespace SoTro_BE.Controllers
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
             if (!ModelState.IsValid)
-                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = ModelState });
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = errors });
+            }
 
             var response = await _tenantService.CreateTenantAsync(landlordId.Value, request);
             return response.Success ? Ok(response) : BadRequest(response);
@@ -72,7 +78,13 @@ namespace SoTro_BE.Controllers
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
             if (!ModelState.IsValid)
-                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = ModelState });
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = errors });
+            }
 
             var response = await _tenantService.UpdateTenantAsync(id, landlordId.Value, request);
             return response.Success ? Ok(response) : BadRequest(response);
