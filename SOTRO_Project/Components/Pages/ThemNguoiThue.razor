@@ -5,6 +5,8 @@
 @inject IBuildingApiService BuildingApi
 @inject IRoomApiService RoomApi
 @inject ITenantApiService TenantApi
+@inject IJSRuntime JS
+@implements IDisposable
 
 <PageTitle>@PageTitleText - SOTRO</PageTitle>
 
@@ -64,6 +66,13 @@
 </div>
 </div>
 <!-- Form Grid -->
+@if (errors.ContainsKey("Submit"))
+{
+    <div class="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 text-sm flex items-center gap-2 mb-6">
+        <span class="material-symbols-outlined text-red-500" data-icon="error">error</span>
+        <span>@errors["Submit"]</span>
+    </div>
+}
 <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_380px] gap-8 items-start">
 <!-- Left Column: Primary Info -->
 <div class="flex flex-col gap-8 min-w-0">
@@ -76,27 +85,56 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Họ và tên *</label>
-<input @bind="tenant.FullName" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Nguyễn Văn A" type="text">
+<input @bind="tenant.FullName" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("FullName") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="Nguyễn Văn A" type="text">
+@if (errors.ContainsKey("FullName"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["FullName"]</span>
+}
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Số điện thoại *</label>
-<input @bind="tenant.PhoneNumber" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="090x xxx xxx" type="tel">
+<input @bind="tenant.PhoneNumber" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("PhoneNumber") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="090x xxx xxx" type="tel">
+@if (errors.ContainsKey("PhoneNumber"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["PhoneNumber"]</span>
+}
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Email</label>
-<input @bind="tenant.Email" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="example@gmail.com" type="email">
+<input @bind="tenant.Email" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("Email") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="example@gmail.com" type="email">
+@if (errors.ContainsKey("Email"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["Email"]</span>
+}
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Số CCCD/Passport *</label>
-<input @bind="tenant.IdentityNumber" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="001xxxxxxxxx" type="text">
+<input @bind="tenant.IdentityNumber" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("IdentityNumber") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="001xxxxxxxxx" type="text">
+@if (errors.ContainsKey("IdentityNumber"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["IdentityNumber"]</span>
+}
 </div>
 <div class="flex flex-col gap-2">
-<label class="font-label-md text-label-md text-on-surface-variant">Ngày sinh</label>
-<input @bind="tenant.DateOfBirth" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" type="date">
+<label class="font-label-md text-label-md text-on-surface-variant">Ngày sinh *</label>
+<input @bind="tenant.DateOfBirth" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("DateOfBirth") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" type="date">
+@if (errors.ContainsKey("DateOfBirth"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["DateOfBirth"]</span>
+}
 </div>
-<div class="flex flex-col gap-2">
+<div class="flex flex-col gap-2 relative">
 <label class="font-label-md text-label-md text-on-surface-variant">Quê quán</label>
-<input @bind="tenant.PermanentAddress" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Thành phố Hồ Chí Minh" type="text">
+<input id="hometown-input"
+       value="@tenant.PermanentAddress"
+       @oninput="(e) => { tenant.PermanentAddress = e.Value?.ToString() ?? string.Empty; }"
+       class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("PermanentAddress") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none"
+       placeholder="Thành phố Hồ Chí Minh (Gợi ý địa chỉ thật)"
+       type="text">
+@if (errors.ContainsKey("PermanentAddress"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["PermanentAddress"]</span>
+}
 </div>
 </div>
 </section>
@@ -109,21 +147,33 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Chọn phòng *</label>
-<select @bind="tenant.RoomId" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white" id="room-select">
+<select @bind="tenant.RoomId" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("RoomId") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none bg-white" id="room-select">
 <option value="">Chọn phòng trống</option>
 @foreach (var room in availableRooms)
 {
 <option data-price="@room.BasePrice?.ToString("N0")" value="@room.RoomId">@room.RoomCode - @(room.RoomName ?? $"Tầng {room.FloorNumber}")</option>
 }
 </select>
+@if (errors.ContainsKey("RoomId"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["RoomId"]</span>
+}
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Ngày bắt đầu ở *</label>
-<input @bind="tenant.StartDate" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" type="date">
+<input @bind="tenant.StartDate" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("StartDate") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" type="date">
+@if (errors.ContainsKey("StartDate"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["StartDate"]</span>
+}
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Tiền đặt cọc (VNĐ)</label>
-<input @bind="tenant.DepositAmount" class="px-4 py-2.5 rounded-lg border border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none" placeholder="Ví dụ: 3500000" type="number">
+<input @bind="tenant.DepositAmount" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("DepositAmount") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="Ví dụ: 3500000" type="number">
+@if (errors.ContainsKey("DepositAmount"))
+{
+    <span class="text-red-500 text-xs mt-1">@errors["DepositAmount"]</span>
+}
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Giá thuê niêm yết</label>
@@ -213,6 +263,32 @@ else
 <!-- Spacer -->
 <div class="h-12"></div>
 </main>
+
+@if (showSuccessPopup)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white rounded-2xl shadow-xl border border-outline-variant max-w-md w-full p-6 mx-4 transform transition-all flex flex-col items-center text-center">
+            <!-- Check Circle Icon with background -->
+            <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4 text-green-600 shadow-inner">
+                <span class="material-symbols-outlined text-4xl" data-icon="check_circle">check_circle</span>
+            </div>
+            
+            <h3 class="text-headline-sm font-bold text-primary mb-2">Thao tác thành công!</h3>
+            <p class="text-body-md text-on-surface-variant mb-6">
+                Thông tin người thuê đã được lưu thành công vào hệ thống.
+            </p>
+            
+            <div class="text-caption text-secondary mb-4 flex items-center gap-1.5 justify-center">
+                <span class="material-symbols-outlined text-[16px] animate-spin">sync</span>
+                <span>Tự động quay lại sau <strong class="text-primary font-bold">@countdown</strong> giây...</span>
+            </div>
+            
+            <button @onclick="RedirectToTenants" class="w-full py-2.5 rounded-xl bg-primary-container text-on-primary font-label-md hover:opacity-90 transition-all font-bold">
+                Đóng
+            </button>
+        </div>
+    </div>
+}
 <script>
         // Simple micro-interaction for room selection
         const roomSelect = document.getElementById('room-select');
@@ -268,6 +344,13 @@ else
     private string PageTitleText => IsEditMode ? "Chỉnh sửa người thuê" : "Thêm người thuê mới";
     private string SelectedRoomPrice => availableRooms.FirstOrDefault(r => r.RoomId == tenant.RoomId)?.BasePrice?.ToString("N0") ?? "0";
 
+    // Validation and popup state
+    private Dictionary<string, string> errors = new();
+    private bool showSuccessPopup;
+    private int countdown = 3;
+    private System.Threading.CancellationTokenSource? popupCts;
+    private DotNetObjectReference<ThemNguoiThue>? dotNetHelper;
+
     protected override async Task OnInitializedAsync()
     {
         var buildings = await BuildingApi.GetBuildingsAsync();
@@ -313,8 +396,123 @@ else
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetHelper = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("window.initAddressAutocomplete", "hometown-input", dotNetHelper, nameof(OnAddressSelected));
+        }
+    }
+
+    [JSInvokable]
+    public void OnAddressSelected(string address)
+    {
+        tenant.PermanentAddress = address;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task<List<string>> GetSuggestions(string query)
+    {
+        try
+        {
+            var response = await BuildingApi.SuggestAddressAsync(query);
+            if (response.Success && response.Data != null)
+            {
+                return response.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching suggestions: {ex.Message}");
+        }
+        return new List<string>();
+    }
+
+    private bool Validate()
+    {
+        errors.Clear();
+
+        if (string.IsNullOrWhiteSpace(tenant.FullName))
+        {
+            errors["FullName"] = "Họ và tên là bắt buộc.";
+        }
+
+        if (string.IsNullOrWhiteSpace(tenant.PhoneNumber))
+        {
+            errors["PhoneNumber"] = "Số điện thoại là bắt buộc.";
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(tenant.PhoneNumber, @"^\d+$"))
+        {
+            errors["PhoneNumber"] = "Số điện thoại chỉ được nhập số.";
+        }
+
+        if (!string.IsNullOrWhiteSpace(tenant.Email))
+        {
+            if (!tenant.Email.Contains("@") || !System.Text.RegularExpressions.Regex.IsMatch(tenant.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                errors["Email"] = "Email không đúng định dạng (phải chứa @ và tên miền hợp lệ).";
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(tenant.IdentityNumber))
+        {
+            errors["IdentityNumber"] = "Số CCCD/Passport là bắt buộc.";
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(tenant.IdentityNumber, @"^\d+$"))
+        {
+            errors["IdentityNumber"] = "Số CCCD/Passport chỉ được nhập số.";
+        }
+
+        if (tenant.DateOfBirth == null)
+        {
+            errors["DateOfBirth"] = "Ngày sinh là bắt buộc.";
+        }
+        else
+        {
+            var ageLimitDate = DateOnly.FromDateTime(DateTime.Today).AddYears(-16);
+            if (tenant.DateOfBirth > ageLimitDate)
+            {
+                errors["DateOfBirth"] = "Ngày sinh phải từ 16 tuổi trở lên.";
+            }
+        }
+
+        if (tenant.RoomId <= 0)
+        {
+            errors["RoomId"] = "Vui lòng chọn phòng thuê.";
+        }
+
+        if (tenant.StartDate == default)
+        {
+            errors["StartDate"] = "Ngày bắt đầu ở là bắt buộc.";
+        }
+
+        var selectedRoom = availableRooms.FirstOrDefault(r => r.RoomId == tenant.RoomId);
+        decimal roomPrice = selectedRoom?.BasePrice ?? 0;
+        if (tenant.DepositAmount.HasValue)
+        {
+            if (tenant.DepositAmount.Value < 0)
+            {
+                errors["DepositAmount"] = "Tiền đặt cọc không được là số âm.";
+            }
+            else if (tenant.DepositAmount.Value > roomPrice)
+            {
+                errors["DepositAmount"] = $"Tiền đặt cọc ({tenant.DepositAmount.Value:N0} VNĐ) không được vượt quá giá thuê phòng ({roomPrice:N0} VNĐ).";
+            }
+        }
+
+        return errors.Count == 0;
+    }
+
     private async Task SaveTenant()
     {
+        if (!Validate())
+        {
+            StateHasChanged();
+            return;
+        }
+
         isSaving = true;
         tenant.MonthlyRent = availableRooms.FirstOrDefault(r => r.RoomId == tenant.RoomId)?.BasePrice;
         var response = IsEditMode
@@ -323,7 +521,38 @@ else
         isSaving = false;
 
         if (response.Success)
-            Navigation.NavigateTo("/nguoi-thue");
+        {
+            errors.Clear();
+            showSuccessPopup = true;
+            StateHasChanged();
+
+            popupCts = new System.Threading.CancellationTokenSource();
+            try
+            {
+                for (int i = 3; i > 0; i--)
+                {
+                    countdown = i;
+                    StateHasChanged();
+                    await Task.Delay(1000, popupCts.Token);
+                }
+                RedirectToTenants();
+            }
+            catch (TaskCanceledException)
+            {
+                // Redirected manually
+            }
+        }
+        else
+        {
+            errors["Submit"] = response.Message ?? "Đã xảy ra lỗi khi lưu thông tin người thuê.";
+            StateHasChanged();
+        }
+    }
+
+    private void RedirectToTenants()
+    {
+        popupCts?.Cancel();
+        Navigation.NavigateTo("/nguoi-thue");
     }
 
     private void Cancel()
@@ -365,5 +594,11 @@ else
         await stream.CopyToAsync(memoryStream);
         var base64 = Convert.ToBase64String(memoryStream.ToArray());
         return $"data:{file.ContentType};base64,{base64}";
+    }
+
+    public void Dispose()
+    {
+        dotNetHelper?.Dispose();
+        popupCts?.Dispose();
     }
 }
