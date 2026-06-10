@@ -75,7 +75,13 @@ namespace SoTro_BE.Controllers
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
             if (!ModelState.IsValid)
-                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = ModelState });
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = errors });
+            }
 
             var response = await _roomService.CreateRoomAsync(buildingId, landlordId.Value, request);
             return response.Success ? Ok(response) : BadRequest(response);
@@ -93,7 +99,13 @@ namespace SoTro_BE.Controllers
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
             if (!ModelState.IsValid)
-                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = ModelState });
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = errors });
+            }
 
             var response = await _roomService.UpdateRoomAsync(id, landlordId.Value, request);
             return response.Success ? Ok(response) : BadRequest(response);
@@ -130,7 +142,13 @@ namespace SoTro_BE.Controllers
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin người dùng." });
 
             if (!ModelState.IsValid)
-                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = ModelState });
+            {
+                var errors = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                );
+                return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = errors });
+            }
 
             var response = await _roomService.ChangeRoomStatusAsync(id, landlordId.Value, userId.Value, request);
             return response.Success ? Ok(response) : BadRequest(response);

@@ -76,14 +76,16 @@ namespace SOTRO_Project.Services
 
         private async Task<ApiResponse<T>> ReadResponseAsync<T>(HttpResponseMessage response)
         {
+            // Buffer toàn bộ content trước để có thể đọc lại nhiều lần khi cần debug
+            var content = await response.Content.ReadAsStringAsync();
+
             if (!response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
                 if (string.IsNullOrWhiteSpace(content))
                 {
                     return Fail<T>($"API trả về mã lỗi {response.StatusCode} (Không có nội dung phản hồi).");
                 }
-                
+
                 try
                 {
                     var errorResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<T>>(content, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -96,20 +98,21 @@ namespace SOTRO_Project.Services
                 {
                     // Not a JSON error response or failed to parse
                 }
-                
-                var snippet = content.Length > 200 ? content.Substring(0, 200) + "..." : content;
+
+                var snippet = content.Length > 300 ? content.Substring(0, 300) + "..." : content;
                 return Fail<T>($"API trả về lỗi {response.StatusCode}: {snippet}");
             }
 
             try
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<T>>();
+                var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<T>>(
+                    content,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                 return apiResponse ?? Fail<T>("Không đọc được phản hồi từ API.");
             }
             catch (Exception ex)
             {
-                var content = await response.Content.ReadAsStringAsync();
-                var snippet = content.Length > 200 ? content.Substring(0, 200) + "..." : content;
+                var snippet = content.Length > 300 ? content.Substring(0, 300) + "..." : content;
                 return Fail<T>($"Lỗi đọc JSON phản hồi (HTTP status {response.StatusCode}): {ex.Message}. Nội dung nhận được: {snippet}");
             }
         }

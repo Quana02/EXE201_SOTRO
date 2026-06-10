@@ -124,7 +124,7 @@
                                            placeholder="VD: Phòng cao cấp" type="text" />
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    <label class="font-label-md text-label-md text-on-surface-variant">Tầng <span class="text-error">*</span></label>
+                                    <label class="font-label-md text-label-md text-on-surface-variant">@(isBasicLevel ? "Dãy" : "Tầng") <span class="text-error">*</span></label>
                                     <select @bind="request.FloorNumber"
                                             class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md bg-white">
                                         @for (int f = 1; f <= totalFloors; f++)
@@ -140,6 +140,21 @@
                                            placeholder="VD: Khu A" type="text" />
                                 </div>
                                 <div class="flex flex-col gap-2">
+                                    <label class="font-label-md text-label-md text-on-surface-variant">Loại phòng</label>
+                                    <div class="flex gap-4">
+                                        <button type="button" @onclick='() => SetRoomModel("Private")'
+                                                class="flex-1 py-3 px-4 rounded-xl border-2 transition-all flex items-center justify-center gap-2 @(editRoomModel == "Private" ? "border-primary bg-primary-fixed/10 text-primary font-bold" : "border-outline-variant hover:bg-surface-container-low text-on-surface-variant")">
+                                            <span class="material-symbols-outlined text-base">meeting_room</span>
+                                            Phòng riêng
+                                        </button>
+                                        <button type="button" @onclick='() => SetRoomModel("Shared")'
+                                                class="flex-1 py-3 px-4 rounded-xl border-2 transition-all flex items-center justify-center gap-2 @(editRoomModel == "Shared" ? "border-primary bg-primary-fixed/10 text-primary font-bold" : "border-outline-variant hover:bg-surface-container-low text-on-surface-variant")">
+                                            <span class="material-symbols-outlined text-base">people</span>
+                                            Phòng chung / ở ghép
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2">
                                     <label class="font-label-md text-label-md text-on-surface-variant">Trạng thái phòng</label>
                                     <select value="@request.Status" @onchange="OnStatusChanged"
                                             class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md bg-white">
@@ -148,24 +163,36 @@
                                         <option value="Maintenance">Bảo trì</option>
                                     </select>
                                 </div>
-                                <div class="flex flex-col gap-2">
-                                    <label class="font-label-md text-label-md text-on-surface-variant">Sức chứa (người)</label>
-                                    <input value="@request.Capacity" @oninput="OnCapacityInput"
-                                           class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md"
-                                           type="number" placeholder="2" min="1" />
-                                </div>
+                                @if (editRoomModel == "Private")
+                                {
+                                    <div class="flex flex-col gap-2">
+                                        <label class="font-label-md text-label-md text-on-surface-variant">Sức chứa (người)</label>
+                                        <input value="@request.Capacity" @oninput="OnCapacityInput"
+                                               class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md"
+                                               type="number" placeholder="2" min="1" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="flex flex-col gap-2">
+                                        <label class="font-label-md text-label-md text-on-surface-variant">Số giường <span class="text-error">*</span></label>
+                                        <input value="@editTotalBeds" @oninput="OnTotalBedsInput"
+                                               class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md"
+                                               type="number" min="1" placeholder="4" />
+                                    </div>
+                                }
                                 @if (request.Status != "Available")
                                 {
                                     <div class="flex flex-col gap-2 md:col-span-2">
                                         <label class="font-label-md text-label-md text-on-surface-variant">
                                             Số người đang thuê
                                             <span class="text-on-surface-variant text-[11px] font-normal ml-1">
-                                                / @(request.Capacity?.ToString() ?? "?")
+                                                / @(editRoomModel == "Shared" ? editTotalBeds.ToString() : (request.Capacity?.ToString() ?? "?"))
                                             </span>
                                         </label>
                                         <input value="@request.CurrentTenantCount" @oninput="OnCurrentTenantCountInput"
                                                class="px-4 py-3 rounded-lg border border-outline form-focus-ring font-body-md"
-                                               type="number" min="0" max="@request.Capacity" placeholder="0" />
+                                               type="number" min="0" max="@(editRoomModel == "Shared" ? editTotalBeds : request.Capacity)" placeholder="0" />
                                         <p class="text-caption text-on-surface-variant">Nhập số người hiện đang ở trong phòng</p>
                                     </div>
                                 }
@@ -234,10 +261,10 @@
                                                class="absolute right-3 w-6 h-6 opacity-0 cursor-pointer" />
                                     </div>
                                 </div>
-                                <div class="flex flex-col gap-2 md:col-span-2">
-                                    <label class="font-label-md text-label-md text-on-surface-variant">Ghi chú</label>
-                                    <textarea @bind="request.Note" class="form-input resize-none" rows="2" placeholder="Ghi chú thêm..."></textarea>
-                                </div>
+                                 <div class="flex flex-col gap-2 md:col-span-2">
+                                     <label class="font-label-md text-label-md text-on-surface-variant">Ghi chú</label>
+                                     <textarea @bind="userNote" class="form-input resize-none" rows="2" placeholder="Ghi chú thêm..."></textarea>
+                                 </div>
                             </div>
                         </section>
 
@@ -291,6 +318,11 @@
     private string? loadError;
     private string? errorMessage;
     private int totalFloors = 1;
+    private bool isBasicLevel;
+
+    private string editRoomModel = "Private";
+    private int editTotalBeds = 4;
+    private string userNote = "";
 
     // Formatted display strings
     private string basePriceDisplay     = "";
@@ -300,6 +332,7 @@
 
     private string GetFloorLabel(int floorNum)
     {
+        if (isBasicLevel) return $"Dãy {floorNum}";
         if (floorNum == 1) return "Tầng 1 (Trệt)";
         if (floorNum == totalFloors && totalFloors > 1) return "Sân thượng";
         return $"Tầng {floorNum}";
@@ -341,6 +374,38 @@
                     BankAccountNumber = room.BankAccountNumber,
                     Note           = room.Note,
                 };
+
+                // Extract room model and beds from Note JSON if present
+                editRoomModel = "Private";
+                editTotalBeds = 4;
+                userNote = room.Note ?? "";
+
+                if (!string.IsNullOrWhiteSpace(room.Note))
+                {
+                    try
+                    {
+                        var parsed = System.Text.Json.JsonSerializer.Deserialize<RoomNoteData>(room.Note);
+                        if (parsed != null && (parsed.RoomModel == "Private" || parsed.RoomModel == "Shared"))
+                        {
+                            editRoomModel = parsed.RoomModel;
+                            if (parsed.TotalBeds.HasValue)
+                            {
+                                editTotalBeds = parsed.TotalBeds.Value;
+                            }
+                            userNote = parsed.UserNote ?? "";
+                        }
+                    }
+                    catch
+                    {
+                        // Note is not JSON, leave as is
+                    }
+                }
+
+                if (editRoomModel == "Shared")
+                {
+                    request.Capacity = editTotalBeds;
+                }
+
                 // Init formatted display
                 basePriceDisplay     = request.BasePrice.HasValue ? FormatNumber(request.BasePrice.Value) : "";
                 electricPriceDisplay = request.ElectricPrice.HasValue ? FormatNumber(request.ElectricPrice.Value) : "";
@@ -354,6 +419,7 @@
                     if (buildingResp.Success && buildingResp.Data != null)
                     {
                         totalFloors = buildingResp.Data.TotalFloors ?? 1;
+                        isBasicLevel = buildingResp.Data.Description?.Contains("[Level:Basic]", StringComparison.OrdinalIgnoreCase) ?? false;
                     }
                 }
             }
@@ -418,18 +484,35 @@
             await ScrollToError();
             return;
         }
-        if (request.Capacity.HasValue && request.Capacity <= 0)
+
+        if (editRoomModel == "Shared")
         {
-            errorMessage = "Sức chứa phải lớn hơn 0.";
-            await ScrollToError();
-            return;
+            request.Capacity = editTotalBeds;
+            if (editTotalBeds <= 0)
+            {
+                errorMessage = "Số giường phải lớn hơn 0.";
+                await ScrollToError();
+                return;
+            }
         }
+        else
+        {
+            if (request.Capacity.HasValue && request.Capacity <= 0)
+            {
+                errorMessage = "Sức chứa phải lớn hơn 0.";
+                await ScrollToError();
+                return;
+            }
+        }
+
         // Validate số người thuê khi phòng đang được thuê
         if (request.Status == "Occupied")
         {
             if (!request.Capacity.HasValue || request.Capacity <= 0)
             {
-                errorMessage = "Khi phòng đang thuê, vui lòng nhập sức chứa tối đa của phòng.";
+                errorMessage = editRoomModel == "Shared" 
+                    ? "Khi phòng đang thuê, vui lòng nhập số giường tối đa của phòng."
+                    : "Khi phòng đang thuê, vui lòng nhập sức chứa tối đa của phòng.";
                 await ScrollToError();
                 return;
             }
@@ -441,7 +524,9 @@
             }
             if (request.CurrentTenantCount > request.Capacity)
             {
-                errorMessage = $"Số người đang thuê ({request.CurrentTenantCount}) không được vượt quá sức chứa ({request.Capacity} người).";
+                errorMessage = editRoomModel == "Shared"
+                    ? $"Số người đang thuê ({request.CurrentTenantCount}) không được vượt quá số giường ({request.Capacity} giường)."
+                    : $"Số người đang thuê ({request.CurrentTenantCount}) không được vượt quá sức chứa ({request.Capacity} người).";
                 await ScrollToError();
                 return;
             }
@@ -458,6 +543,15 @@
             await ScrollToError();
             return;
         }
+
+        // Serialize Note fields to JSON
+        var noteObj = new RoomNoteData
+        {
+            RoomModel = editRoomModel,
+            TotalBeds = editRoomModel == "Shared" ? (int?)editTotalBeds : null,
+            UserNote = userNote
+        };
+        request.Note = System.Text.Json.JsonSerializer.Serialize(noteObj);
 
         isSaving = true;
         try
@@ -506,6 +600,35 @@
         request.RoomCode = e.Value?.ToString() ?? "";
     }
 
+    private void SetRoomModel(string model)
+    {
+        editRoomModel = model;
+        if (model == "Shared")
+        {
+            request.Capacity = editTotalBeds;
+        }
+        else
+        {
+            if (!request.Capacity.HasValue || request.Capacity <= 0)
+            {
+                request.Capacity = 2;
+            }
+        }
+    }
+
+    private void OnTotalBedsInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        if (int.TryParse(e.Value?.ToString(), out var val))
+        {
+            editTotalBeds = val;
+            if (editRoomModel == "Shared")
+            {
+                request.Capacity = val;
+            }
+        }
+    }
+
     private void OnStatusChanged(ChangeEventArgs e)
     {
         errorMessage = null;
@@ -513,9 +636,16 @@
         request.Status = newStatus;
         if (newStatus == "Occupied")
         {
-            if (!request.Capacity.HasValue || request.Capacity <= 0)
+            if (editRoomModel == "Private")
             {
-                request.Capacity = 2;
+                if (!request.Capacity.HasValue || request.Capacity <= 0)
+                {
+                    request.Capacity = 2;
+                }
+            }
+            else
+            {
+                request.Capacity = editTotalBeds;
             }
             if (!request.CurrentTenantCount.HasValue || request.CurrentTenantCount <= 0)
             {
@@ -539,6 +669,13 @@
         {
             request.Capacity = null;
         }
+    }
+
+    public class RoomNoteData
+    {
+        public string? RoomModel { get; set; }
+        public int? TotalBeds { get; set; }
+        public string? UserNote { get; set; }
     }
 
     private void OnCurrentTenantCountInput(ChangeEventArgs e)

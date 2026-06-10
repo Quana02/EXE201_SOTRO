@@ -351,7 +351,7 @@
                 await InvokeAsync(() =>
                 {
                     _showPopup = false;
-                    Navigation.NavigateTo("/tao-nha-tro");
+                    Navigation.NavigateTo("/tao-nha-tro-v2");
                 });
             }
             catch (TaskCanceledException)
@@ -374,7 +374,7 @@
     {
         _countdownCts?.Cancel();
         _showPopup = false;
-        Navigation.NavigateTo("/tao-nha-tro");
+        Navigation.NavigateTo("/tao-nha-tro-v2");
     }
 
     private async Task Logout()
