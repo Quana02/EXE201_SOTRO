@@ -274,7 +274,13 @@
         var response = await BuildingApiService.GetBuildingTypesAsync();
         if (response.Success && response.Data != null)
         {
-            buildingTypes = response.Data;
+            buildingTypes = response.Data
+                .Where(t => t.BuildingTypeId == 1 || t.BuildingTypeId == 2)
+                .Select(t => {
+                    if (t.BuildingTypeId == 1) t.TypeName = "Nhà trọ truyền thống";
+                    return t;
+                })
+                .ToList();
         }
         else
         {
