@@ -44,14 +44,14 @@
 <span class="material-symbols-outlined mr-2">download</span>
                         Xuất danh sách
                     </button>
-<button @onclick="GoToAddTenant" class="flex items-center px-6 py-3 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary-container transition-all shadow-lg shadow-primary/20">
+<button id="add-tenant-primary" @onclick="GoToAddTenant" class="flex items-center px-6 py-3 bg-primary text-on-primary font-bold rounded-xl hover:bg-primary-container transition-all shadow-lg shadow-primary/20">
 <span class="material-symbols-outlined mr-2">person_add</span>
                         Thêm người thuê mới
                     </button>
 </div>
 </div>
 <!-- Stats Bar - Bento Style -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+<div id="tenant-stats-overview" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
 <div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-[0px_4px_12px_rgba(0,0,0,0.05)]">
 <div class="flex justify-between items-start mb-2">
 <span class="text-caption text-on-surface-variant font-medium">Tổng người thuê</span>
@@ -88,7 +88,7 @@
 </div>
 </div>
 <!-- Filtering & Search -->
-<div class="bg-surface p-4 rounded-t-xl border-x border-t border-outline-variant flex flex-col md:flex-row gap-4 items-center justify-between">
+<div id="tenant-filter-bar" class="bg-surface p-4 rounded-t-xl border-x border-t border-outline-variant flex flex-col md:flex-row gap-4 items-center justify-between">
 <div class="flex flex-wrap gap-2 w-full md:w-auto">
 <div class="relative min-w-[150px]">
 <select class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2 text-label-md appearance-none focus:ring-primary/20">
@@ -112,7 +112,7 @@
 <div class="text-caption text-on-surface-variant italic">Hiển thị @tenants.Count trên @tenantStats.TotalTenants kết quả</div>
 </div>
 <!-- Table Container -->
-<div class="bg-surface rounded-b-xl border border-outline-variant overflow-hidden shadow-[0px_8px_24px_rgba(0,0,0,0.05)]">
+<div id="tenant-table-container" class="bg-surface rounded-b-xl border border-outline-variant overflow-hidden shadow-[0px_8px_24px_rgba(0,0,0,0.05)]">
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
 <thead class="bg-surface-container-low border-b border-outline-variant">
@@ -131,7 +131,7 @@
 {
     foreach (var tenant in tenants)
     {
-<tr class="hover:bg-surface-container-lowest transition-colors group">
+<tr id="@(tenant.TenantId == firstTenantId ? "first-tenant-row" : null)" class="hover:bg-surface-container-lowest transition-colors group">
 <td class="px-6 py-4">
 <div class="flex items-center">
 <div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-primary font-bold mr-3">@GetInitials(tenant.FullName)</div>
@@ -156,10 +156,10 @@
 </td>
 <td class="px-6 py-4 text-right font-bold text-primary">@FormatMoney(tenant.DepositAmount)</td>
 <td class="px-6 py-4 text-right">
-<button @onclick="() => EditTenant(tenant.TenantId)" class="p-2 text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="Sửa thông tin">
+<button id="@(tenant.TenantId == firstTenantId ? "first-tenant-edit" : null)" @onclick="() => EditTenant(tenant.TenantId)" class="p-2 text-outline hover:text-primary transition-colors @TenantActionVisibility(tenant.TenantId)" title="Sửa thông tin">
 <span class="material-symbols-outlined">edit</span>
 </button>
-<button @onclick="() => DeleteTenant(tenant.TenantId)" class="p-2 text-outline hover:text-error transition-colors opacity-0 group-hover:opacity-100" title="Xóa người thuê">
+<button id="@(tenant.TenantId == firstTenantId ? "first-tenant-delete" : null)" @onclick="() => DeleteTenant(tenant.TenantId)" class="p-2 text-outline hover:text-error transition-colors @TenantActionVisibility(tenant.TenantId)" title="Xóa người thuê">
 <span class="material-symbols-outlined">delete</span>
 </button>
 </td>
@@ -169,7 +169,7 @@
 else
 {
 <tr class="hover:bg-surface-container-low transition-colors">
-<td class="px-6 py-8 text-center text-on-surface-variant" colspan="7">Chưa có người thuê nào.</td>
+<td id="tenant-empty-row" class="px-6 py-8 text-center text-on-surface-variant" colspan="7">Chưa có người thuê nào.</td>
 </tr>
 }
 @if (showSampleTenants)
@@ -365,7 +365,10 @@ else
 <div class="relative z-10">
 <h3 class="text-headline-sm font-bold mb-2">Tự động hóa thông báo phí trọ</h3>
 <p class="text-body-md opacity-80 max-w-md mb-6">Tiết kiệm thời gian với hệ thống tự động gửi nhắc nhở thanh toán qua Zalo và Email cho người thuê vào ngày mùng 1 hàng tháng.</p>
-<button class="px-6 py-2 bg-on-primary text-primary font-bold rounded-lg hover:bg-opacity-90 transition-all">Thiết lập ngay</button>
+<div class="flex flex-wrap gap-3">
+<button id="auto-marketing-setup" @onclick="GoToSettings" class="px-6 py-2 bg-on-primary text-primary font-bold rounded-lg hover:bg-opacity-90 transition-all">Thiết lập ngay</button>
+<button id="pricing-upgrade-link" @onclick="GoToPricing" class="px-6 py-2 border border-white/70 text-white font-bold rounded-lg hover:bg-white/10 transition-all">Xem gói dịch vụ</button>
+</div>
 </div>
 <div class="absolute -right-10 -bottom-10 opacity-20 transform rotate-12">
 <span class="material-symbols-outlined text-[180px]">notifications_active</span>
@@ -382,6 +385,12 @@ else
 </div>
 </div>
 </main>
+<GuidedOnboarding IsVisible="showTenantTour"
+                  Steps="tenantGuidedSteps"
+                  StorageKey="sotro_tenant_guided_seen_v2"
+                  AllowSkip="true"
+                  OnCompleted="CloseTenantTour"
+                  OnSkipped="CloseTenantTour" />
 <button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center md:hidden transition-transform active:scale-90 z-50">
 <span class="material-symbols-outlined">add</span>
 </button>
@@ -398,10 +407,121 @@ else
     private bool showSampleTenants => false;
     private List<SOTRO_Project.Models.Tenant.TenantResponse> tenants = new();
     private SOTRO_Project.Models.Tenant.TenantStatsResponse tenantStats = new();
+    private bool showTenantTour;
+    private bool hasCheckedTenantTour;
+    private int? firstTenantId => tenants.FirstOrDefault()?.TenantId;
+    private IReadOnlyList<GuidedOnboarding.GuidedStep> tenantGuidedSteps => tenants.Any()
+        ? TenantGuidedStepsWithRows
+        : TenantGuidedStepsEmpty;
+
+    private IReadOnlyList<GuidedOnboarding.GuidedStep> TenantGuidedStepsEmpty => new[]
+    {
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-stats-overview",
+            "Theo dõi nhanh người thuê",
+            "Các ô này cho biết tổng người thuê, số đang lưu trú, tổng tiền cọc và hợp đồng sắp hết hạn. Đây là nơi quản lý nắm tình hình ngay khi mở trang.",
+            "Khi bạn thêm người thuê, các số liệu này sẽ tự cập nhật."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-filter-bar",
+            "Lọc danh sách người thuê",
+            "Khi danh sách có nhiều người, bộ lọc giúp xem theo phòng hoặc trạng thái như đang ở, đã rời đi hoặc đã đặt cọc.",
+            "Dùng khu vực này trước khi tìm người thuê cần kiểm tra."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-empty-row",
+            "Danh sách hiện đang trống",
+            "Trang này sẽ hiển thị từng người thuê theo từng dòng sau khi bạn thêm dữ liệu. Mỗi dòng sẽ có thông tin liên hệ, phòng, ngày bắt đầu, trạng thái và tiền cọc.",
+            "Sau khi có người thuê, nút sửa và xóa sẽ nằm ở cuối mỗi dòng."),
+        new GuidedOnboarding.GuidedStep(
+            "#auto-marketing-setup",
+            "Automarketing và nhắc phí trọ",
+            "Khu vực này dùng cho các tự động hóa như nhắc phí trọ qua Zalo/Email hoặc đăng tin phòng trống. Một số tính năng có thể cần gói dịch vụ phù hợp.",
+            "Click Thiết lập ngay nếu bạn muốn vào cài đặt tự động."),
+        new GuidedOnboarding.GuidedStep(
+            "#pricing-upgrade-link",
+            "Mua gói dịch vụ",
+            "Nếu cần automarketing, nhắc nợ đa kênh hoặc báo cáo nâng cao, người dùng có thể xem các gói dịch vụ tại đây.",
+            "Click Xem gói dịch vụ để mở trang bảng giá."),
+        new GuidedOnboarding.GuidedStep(
+            "#add-tenant-primary",
+            "Bắt đầu thêm người thuê",
+            "Bấm nút này để nhập thông tin người thuê, chọn phòng, ngày bắt đầu và tiền cọc.",
+            "Click Thêm người thuê mới để sang form nhập chi tiết.",
+            true)
+    };
+
+    private IReadOnlyList<GuidedOnboarding.GuidedStep> TenantGuidedStepsWithRows => new[]
+    {
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-stats-overview",
+            "Theo dõi nhanh người thuê",
+            "Các ô này cho biết tổng người thuê, số đang lưu trú, tổng tiền cọc và hợp đồng sắp hết hạn.",
+            "Xem khu này trước để biết tình trạng vận hành hiện tại."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-filter-bar",
+            "Lọc danh sách",
+            "Dùng bộ lọc để thu hẹp danh sách theo phòng hoặc trạng thái trước khi sửa, kiểm tra hoặc xuất dữ liệu.",
+            "Chọn phòng hoặc trạng thái cần xem."),
+        new GuidedOnboarding.GuidedStep(
+            "#first-tenant-row",
+            "Một dòng người thuê",
+            "Mỗi dòng chứa họ tên, liên hệ, phòng đang ở, ngày bắt đầu, trạng thái và tiền cọc.",
+            "Khi cần xử lý một người thuê, hãy thao tác trên đúng dòng của họ."),
+        new GuidedOnboarding.GuidedStep(
+            "#first-tenant-edit",
+            "Sửa thông tin người thuê",
+            "Nút bút chì dùng để mở trang chỉnh sửa thông tin như số điện thoại, email, phòng, ngày bắt đầu hoặc tiền cọc.",
+            "Đưa chuột vào dòng người thuê để thấy nút sửa, rồi bấm khi cần cập nhật."),
+        new GuidedOnboarding.GuidedStep(
+            "#first-tenant-delete",
+            "Xóa người thuê",
+            "Nút thùng rác dùng để xóa người thuê khỏi danh sách. Chỉ dùng khi chắc chắn dữ liệu không còn cần quản lý.",
+            "Đưa chuột vào dòng người thuê để thấy nút xóa."),
+        new GuidedOnboarding.GuidedStep(
+            "#add-tenant-primary",
+            "Thêm người thuê mới",
+            "Dùng nút này khi có khách thuê mới cần gắn vào phòng.",
+            "Click Thêm người thuê mới để sang form nhập chi tiết."),
+        new GuidedOnboarding.GuidedStep(
+            "#auto-marketing-setup",
+            "Automarketing và nhắc phí trọ",
+            "Khu vực này dùng cho các tự động hóa như nhắc phí trọ qua Zalo/Email hoặc đăng tin phòng trống.",
+            "Click Thiết lập ngay nếu bạn muốn vào cài đặt tự động."),
+        new GuidedOnboarding.GuidedStep(
+            "#pricing-upgrade-link",
+            "Mua gói dịch vụ",
+            "Nếu cần automarketing, nhắc nợ đa kênh hoặc báo cáo nâng cao, người dùng có thể xem các gói dịch vụ tại đây.",
+            "Click Xem gói dịch vụ để mở trang bảng giá.")
+    };
 
     protected override async Task OnInitializedAsync()
     {
         await LoadTenants();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || hasCheckedTenantTour)
+        {
+            return;
+        }
+
+        hasCheckedTenantTour = true;
+
+        try
+        {
+            var dismissed = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "sotro_tenant_guided_seen_v2");
+            showTenantTour = string.IsNullOrWhiteSpace(dismissed);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Tenant guided tour error: {ex.Message}");
+        }
+    }
+
+    private void CloseTenantTour()
+    {
+        showTenantTour = false;
     }
 
     private async Task LoadTenants()
@@ -415,6 +535,12 @@ else
 
     private async Task DeleteTenant(int tenantId)
     {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc muốn xóa người thuê này không?");
+        if (!confirmed)
+        {
+            return;
+        }
+
         var response = await TenantApi.DeleteTenantAsync(tenantId);
         if (response.Success)
             await LoadTenants();
@@ -515,8 +641,23 @@ else
         _ => "Không rõ"
     };
 
+    private string TenantActionVisibility(int tenantId)
+    {
+        return tenantId == firstTenantId ? "opacity-100" : "opacity-0 group-hover:opacity-100";
+    }
+
     private void GoToAddTenant()
     {
         Navigation.NavigateTo("/them-nguoi-thue");
+    }
+
+    private void GoToSettings()
+    {
+        Navigation.NavigateTo("/cai-dat");
+    }
+
+    private void GoToPricing()
+    {
+        Navigation.NavigateTo("/bang-gia");
     }
 }

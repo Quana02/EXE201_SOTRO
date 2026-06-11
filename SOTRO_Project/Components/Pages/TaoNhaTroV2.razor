@@ -189,7 +189,7 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Private -->
-                        <div class="option-card @(selectedRoomModel == "Private" ? "selected" : "")"
+                        <div id="building-room-model-private" class="option-card @(selectedRoomModel == "Private" ? "selected" : "")"
                              @onclick='() => selectedRoomModel = "Private"'>
                             <div class="check-ring">
                                 @if (selectedRoomModel == "Private")
@@ -211,7 +211,7 @@
                         </div>
 
                         <!-- Shared -->
-                        <div class="option-card @(selectedRoomModel == "Shared" ? "selected" : "")"
+                        <div id="building-room-model-shared" class="option-card @(selectedRoomModel == "Shared" ? "selected" : "")"
                              @onclick='() => selectedRoomModel = "Shared"'>
                             <div class="check-ring">
                                 @if (selectedRoomModel == "Shared")
@@ -251,7 +251,7 @@
                         @foreach (var level in levels)
                         {
                             var lv = level;
-                            <div class="option-card flex-row text-left @(selectedLevel == lv.Key ? "selected" : "")"
+                            <div id="@($"building-level-{lv.Key}")" class="option-card flex-row text-left @(selectedLevel == lv.Key ? "selected" : "")"
                                  style="padding: 1.25rem 1.5rem;"
                                  @onclick="() => selectedLevel = lv.Key">
                                 <div class="check-ring" style="position:relative; top:auto; right:auto; flex-shrink:0;">
@@ -303,7 +303,7 @@
                                     @(hasService ? "Tiện ích được tính thêm vào hóa đơn hàng tháng" : "Khách thuê tự lo điện nước và các dịch vụ khác")
                                 </p>
                             </div>
-                            <button type="button" @onclick="() => hasService = !hasService"
+                            <button id="building-service-toggle" type="button" @onclick="() => hasService = !hasService"
                                     class="service-toggle @(hasService ? "on" : "")" aria-label="Toggle service"></button>
                         </div>
 
@@ -406,7 +406,7 @@
                             <label class="text-sm font-semibold text-slate-700">
                                 Tên nhà trọ <span class="text-red-500">*</span>
                             </label>
-                            <input class="form-field" @bind="model.BuildingName"
+                            <input id="building-name-input" class="form-field" @bind="model.BuildingName"
                                    placeholder="VD: Nhà trọ Sổ Trọ Central" type="text" />
                         </div>
 
@@ -430,12 +430,12 @@
                             <label class="text-sm font-semibold text-slate-700">
                                 @(selectedLevel == "Basic" ? "Số dãy" : "Số tầng") <span class="text-red-500">*</span>
                             </label>
-                            <input class="form-field" @bind="model.TotalFloors"
+                            <input id="building-floors-input" class="form-field" @bind="model.TotalFloors"
                                    type="number" min="1" placeholder='@(selectedLevel == "Basic" ? "Ví dụ: 1" : "Ví dụ: 5")' />
                         </div>
 
                         <!-- Ngày lập hóa đơn hàng tháng -->
-                        <div class="space-y-2 p-4 bg-blue-50/70 rounded-2xl border border-blue-100">
+                        <div id="building-billing-day-picker" class="space-y-2 p-4 bg-blue-50/70 rounded-2xl border border-blue-100">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <label class="text-sm font-semibold text-slate-700">
@@ -468,7 +468,7 @@
                         </div>
 
                         <!-- Ngày hạn thanh toán -->
-                        <div class="space-y-2 p-4 bg-rose-50/70 rounded-2xl border border-rose-100">
+                        <div id="building-due-day-picker" class="space-y-2 p-4 bg-rose-50/70 rounded-2xl border border-rose-100">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <label class="text-sm font-semibold text-slate-700">
@@ -512,7 +512,7 @@
                         <!-- Mô tả -->
                         <div class="space-y-1.5">
                             <label class="text-sm font-semibold text-slate-700">Mô tả nhà trọ</label>
-                            <textarea class="form-field resize-none" @bind="model.Description"
+                            <textarea id="building-description-input" class="form-field resize-none" @bind="model.Description"
                                       rows="3" placeholder="Quy định chung, tiện ích, môi trường sống..."></textarea>
                         </div>
 
@@ -548,7 +548,7 @@
                                 }
 
                                 <!-- Add button -->
-                                <label for="img-upload-v2"
+                                <label id="building-image-upload-target" for="img-upload-v2"
                                        class="border-2 border-dashed border-slate-300 rounded-xl aspect-square flex flex-col items-center justify-center bg-slate-50 hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer group">
                                     <span class="material-symbols-outlined text-slate-400 group-hover:text-blue-600 text-2xl transition-colors">add_photo_alternate</span>
                                     <p class="text-xs text-slate-500 group-hover:text-blue-600 mt-1 font-medium">Thêm ảnh</p>
@@ -599,7 +599,7 @@
 
                     @if (currentStep < 4)
                     {
-                        <button type="button" @onclick="NextStep"
+                        <button id="building-v2-next" type="button" @onclick="NextStep"
                                 disabled="@(!CanProceed)"
                                 class="px-8 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
                             Tiếp theo
@@ -608,7 +608,7 @@
                     }
                     else
                     {
-                        <button type="button" @onclick="HandleSubmit"
+                        <button id="building-v2-submit" type="button" @onclick="HandleSubmit"
                                 disabled="@(isSubmitting || !CanProceed)"
                                 class="px-10 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-50">
                             @if (isSubmitting)
@@ -638,6 +638,13 @@
     </div>
 </main>
 
+<GuidedOnboarding IsVisible="showBuildingTour"
+                  Steps="buildingGuidedSteps"
+                  StorageKey="sotro_create_building_guided_seen"
+                  AllowSkip="true"
+                  OnCompleted="CloseBuildingTour"
+                  OnSkipped="CloseBuildingTour" />
+
 @code {
     // ── Wizard state ──
     private int currentStep = 1;
@@ -660,6 +667,82 @@
     private string? errorMessage;
     private bool isSubmitting;
     private bool isSuccess;
+    private bool showBuildingTour;
+    private bool hasCheckedBuildingTour;
+    private readonly IReadOnlyList<GuidedOnboarding.GuidedStep> buildingGuidedSteps = new[]
+    {
+        new GuidedOnboarding.GuidedStep(
+            "#building-room-model-private",
+            "Chọn loại phòng chính",
+            "Bước đầu tiên là cho hệ thống biết nhà trọ của bạn chủ yếu là phòng riêng hay phòng chung. Thông tin này giúp các bước tạo phòng và người thuê hợp lý hơn.",
+            "Click Phòng riêng nếu nhà trọ cho thuê theo phòng. Bạn có thể chọn Phòng chung nếu mô hình là ở ghép.",
+            true),
+        new GuidedOnboarding.GuidedStep(
+            "#building-v2-next",
+            "Sang bước phân khúc",
+            "Sau khi chọn loại phòng, hãy đi tiếp để mô tả phân khúc nhà trọ.",
+            "Click nút Tiếp theo đang sáng.",
+            true),
+        new GuidedOnboarding.GuidedStep(
+            "#building-level-Basic",
+            "Chọn phân khúc nhà trọ",
+            "Phân khúc giúp hệ thống gợi ý cách quản lý phù hợp: nhà trọ cơ bản, chung cư mini hoặc căn hộ dịch vụ.",
+            "Click Nhà trọ cơ bản nếu bạn đang bắt đầu với mô hình phổ biến nhất.",
+            true),
+        new GuidedOnboarding.GuidedStep(
+            "#building-v2-next",
+            "Sang bước dịch vụ",
+            "Tiếp theo là khai báo nhà trọ có dịch vụ kèm theo hay không.",
+            "Click nút Tiếp theo đang sáng.",
+            true),
+        new GuidedOnboarding.GuidedStep(
+            "#building-service-toggle",
+            "Dịch vụ kèm theo",
+            "Nếu có điện, nước, wifi, vệ sinh hoặc giữ xe tính phí, hãy bật phần này để giá mặc định được lưu cho lúc tạo phòng.",
+            "Click công tắc nếu nhà trọ có dịch vụ kèm theo. Nếu không có, bấm Tiếp tục trong hộp hướng dẫn."),
+        new GuidedOnboarding.GuidedStep(
+            "#building-v2-next",
+            "Sang bước thông tin nhà trọ",
+            "Bước cuối cùng là nhập thông tin thật của cơ sở và tải ảnh đại diện.",
+            "Click nút Tiếp theo đang sáng.",
+            true),
+        new GuidedOnboarding.GuidedStep(
+            "#building-name-input",
+            "Nhập tên nhà trọ",
+            "Tên này sẽ xuất hiện ở danh sách nhà trọ, dashboard và thanh điều hướng.",
+            "Click vào ô đang sáng và nhập tên dễ nhận diện."),
+        new GuidedOnboarding.GuidedStep(
+            "#address-input-v2",
+            "Nhập địa chỉ",
+            "Địa chỉ giúp phân biệt các cơ sở và hỗ trợ nhân viên, khách thuê tra cứu chính xác.",
+            "Click vào ô đang sáng và nhập địa chỉ nhà trọ."),
+        new GuidedOnboarding.GuidedStep(
+            "#building-floors-input",
+            "Nhập số tầng hoặc số dãy",
+            "Thông tin này giúp trang quản lý phòng chia phòng theo tầng hoặc theo dãy.",
+            "Click vào ô đang sáng và nhập số tầng/số dãy."),
+        new GuidedOnboarding.GuidedStep(
+            "#building-billing-day-picker",
+            "Chọn ngày lập hóa đơn",
+            "Đây là ngày hệ thống dùng để tạo hoặc gợi ý hóa đơn hàng tháng.",
+            "Chọn một ngày trong tháng, ví dụ ngày 1."),
+        new GuidedOnboarding.GuidedStep(
+            "#building-due-day-picker",
+            "Chọn hạn thanh toán",
+            "Hạn thanh toán phải sau ngày lập hóa đơn để hệ thống theo dõi trễ hạn đúng.",
+            "Chọn ngày hạn thanh toán sau ngày lập hóa đơn."),
+        new GuidedOnboarding.GuidedStep(
+            "#building-image-upload-target",
+            "Tải ảnh nhà trọ",
+            "Ảnh đầu tiên sẽ là ảnh đại diện, giúp bạn nhận ra cơ sở nhanh trong danh sách.",
+            "Click vùng đang sáng để chọn ít nhất một ảnh."),
+        new GuidedOnboarding.GuidedStep(
+            "#building-v2-submit",
+            "Tạo nhà trọ",
+            "Khi tạo thành công, hệ thống sẽ chuyển sang quản lý phòng để bạn tạo phòng đầu tiên.",
+            "Click nút Tạo nhà trọ sau khi đã nhập đủ thông tin.",
+            true)
+    };
 
     // ── Lookup data ──
     private List<BuildingTypeResponse> buildingTypes = new();
@@ -750,7 +833,38 @@
                     "address-input-v2", dotNetHelper, nameof(OnAddressSelected));
             }
             catch { /* autocomplete optional */ }
+
+            await StartBuildingTourIfNeeded();
         }
+    }
+
+    private async Task StartBuildingTourIfNeeded()
+    {
+        if (hasCheckedBuildingTour)
+        {
+            return;
+        }
+
+        hasCheckedBuildingTour = true;
+
+        try
+        {
+            var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_create_building_guided_seen");
+            if (string.IsNullOrWhiteSpace(dismissed))
+            {
+                showBuildingTour = true;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Create building guided tour error: {ex.Message}");
+        }
+    }
+
+    private void CloseBuildingTour()
+    {
+        showBuildingTour = false;
     }
 
     [JSInvokable]
@@ -922,6 +1036,12 @@
                 // Sync defaults to localStorage so TaoPhong can pre-fill room prices
                 try
                 {
+                    if (response.Data != null)
+                    {
+                        await JS.InvokeVoidAsync("localStorage.setItem", "active_building_id", response.Data.BuildingId.ToString());
+                        await JS.InvokeVoidAsync("localStorage.setItem", "active_building_name", response.Data.BuildingName);
+                    }
+                    await JS.InvokeVoidAsync("localStorage.setItem", "sotro_create_building_guided_seen", "true");
                     await JS.InvokeVoidAsync("localStorage.setItem", "shared_billing_day", model.BillingDay!.Value.ToString());
                     if (defaultElectricPrice.HasValue)
                         await JS.InvokeVoidAsync("localStorage.setItem", "shared_electric_price", defaultElectricPrice.Value.ToString());
@@ -934,7 +1054,7 @@
                 isSuccess = true;
                 StateHasChanged();
                 await Task.Delay(1800);
-                Navigation.NavigateTo("/nha-tro");
+                Navigation.NavigateTo("/quan-ly-phong");
             }
             else
             {
