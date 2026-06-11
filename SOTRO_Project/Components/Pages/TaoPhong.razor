@@ -89,7 +89,7 @@
     }
 </style>
 
-<HeaderDashboard />
+<HeaderDashboard OnHelpClicked="OpenCreateRoomTour" />
 <SideNavBar />
 
 <main class="min-h-[calc(100vh-64px)] ml-64 pb-10">
@@ -118,7 +118,7 @@
                 : "text-on-surface-variant hover:bg-surface-container";
         }
         <div class="mb-8 flex items-center gap-2 p-1 bg-surface-container-low rounded-full border border-outline-variant w-fit">
-            <button @onclick='() => SetMode("single")'
+            <button id="room-single-mode-tab" @onclick='() => SetMode("single")'
                     class="px-5 py-2.5 rounded-full text-label-md font-bold transition-all flex items-center gap-2 @singleTabClass">
                 <span class="material-symbols-outlined text-sm">meeting_room</span>
                 Thêm 1 phòng
@@ -174,7 +174,7 @@
                     <!-- Mã phòng -->
                     <div class="space-y-2">
                         <label class="font-label-md text-label-md text-on-surface-variant">Mã / Số phòng <span class="text-error">*</span></label>
-                        <input value="@request.RoomCode" @oninput="OnRoomCodeInput" class="form-input" placeholder="VD: P101" type="text" />
+                        <input id="room-code-input" value="@request.RoomCode" @oninput="OnRoomCodeInput" class="form-input" placeholder="VD: P101" type="text" />
                     </div>
                     <!-- Tên phòng -->
                     <div class="space-y-2">
@@ -184,7 +184,7 @@
                     <!-- Tầng / Dãy -->
                     <div class="space-y-2">
                         <label class="font-label-md text-label-md text-on-surface-variant">@(IsBasicLevel ? "Dãy" : "Tầng") <span class="text-error">*</span></label>
-                        <select value="@request.FloorNumber" @onchange="OnFloorChanged" class="form-input bg-white">
+                        <select id="room-floor-input" value="@request.FloorNumber" @onchange="OnFloorChanged" class="form-input bg-white">
                             @for (int f = 1; f <= totalFloors; f++)
                             {
                                 <option value="@f">@GetFloorLabel(f)</option>
@@ -199,7 +199,7 @@
                     <!-- Sức chứa -->
                     <div class="space-y-2">
                         <label class="font-label-md text-label-md text-on-surface-variant">Sức chứa (người)</label>
-                        <input value="@request.Capacity" @oninput="OnCapacityInput" class="form-input" placeholder="2" type="number" min="1" />
+                        <input id="room-capacity-input" value="@request.Capacity" @oninput="OnCapacityInput" class="form-input" placeholder="2" type="number" min="1" />
                     </div>
                     <!-- Trạng thái -->
                     <div class="space-y-2">
@@ -240,6 +240,7 @@
                     </div>
                     <div class="price-input-wrap">
                         <input value="@basePriceDisplay"
+                               id="room-base-price-input"
                                @oninput="OnBasePriceInput"
                                class="form-input"
                                type="text" inputmode="numeric" placeholder="0" />
@@ -288,6 +289,7 @@
                         </div>
                         <div class="price-input-wrap">
                             <input value="@electricPriceDisplay"
+                                   id="room-electric-price-input"
                                    @oninput="OnElectricPriceInput"
                                    @onblur="SaveSharedFees"
                                    class="form-input" type="text" inputmode="numeric" placeholder="0" />
@@ -302,6 +304,7 @@
                         </div>
                         <div class="price-input-wrap">
                             <input value="@waterPriceDisplay"
+                                   id="room-water-price-input"
                                    @oninput="OnWaterPriceInput"
                                    @onblur="SaveSharedFees"
                                    class="form-input" type="text" inputmode="numeric" placeholder="0" />
@@ -316,6 +319,7 @@
                         </div>
                         <div class="price-input-wrap">
                             <input value="@serviceFeeDisplay"
+                                   id="room-service-fee-input"
                                    @oninput="OnServiceFeeInput"
                                    @onblur="SaveSharedFees"
                                    class="form-input" type="text" inputmode="numeric" placeholder="0" />
@@ -329,7 +333,7 @@
                             <span class="material-symbols-outlined text-green-600">event</span>
                         </div>
                         <div class="relative flex items-center">
-                            <input value="@request.BillingDay" @oninput="OnBillingDayInput"
+                            <input id="room-billing-day-input" value="@request.BillingDay" @oninput="OnBillingDayInput"
                                    @onblur="SaveSharedFees"
                                    class="form-input pr-10" type="number" placeholder="1" min="1" max="15" />
                             <div class="absolute right-3 flex items-center justify-center w-6 h-6 pointer-events-none text-on-surface-variant">
@@ -358,7 +362,7 @@
                         disabled="@isSaving">
                     Hủy
                 </button>
-                <button @onclick="HandleSubmit"
+                <button id="save-room-submit" @onclick="HandleSubmit"
                         class="px-12 py-3 rounded-xl bg-primary text-white font-bold shadow-lg hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-60"
                         disabled="@isSaving">
                     @if (isSaving)
@@ -689,6 +693,13 @@
 <div class="fixed top-0 right-0 -z-10 w-[500px] h-[500px] bg-primary-fixed/20 rounded-full blur-[120px] pointer-events-none"></div>
 <div class="fixed bottom-0 left-72 -z-10 w-[300px] h-[300px] bg-secondary-fixed/30 rounded-full blur-[100px] pointer-events-none"></div>
 
+<GuidedOnboarding IsVisible="showCreateRoomTour"
+                  Steps="createRoomGuidedSteps"
+                  StorageKey="sotro_create_room_guided_seen"
+                  AllowSkip="true"
+                  OnCompleted="CloseCreateRoomTour"
+                  OnSkipped="CloseCreateRoomTour" />
+
 @code {
     [SupplyParameterFromQuery(Name = "floor")]
     public int? UrlFloorNumber { get; set; }
@@ -700,6 +711,62 @@
     private string? errorMessage;
     private int buildingId;
     private string buildingName = "—";
+    private bool showCreateRoomTour;
+    private bool hasCheckedCreateRoomTour;
+    private readonly IReadOnlyList<GuidedOnboarding.GuidedStep> createRoomGuidedSteps = new[]
+    {
+        new GuidedOnboarding.GuidedStep(
+            "#room-single-mode-tab",
+            "Tạo một phòng trước",
+            "Người mới nên tạo một phòng trước để hiểu cách hệ thống lưu mã phòng, giá thuê và phí dịch vụ.",
+            "Đảm bảo tab Thêm 1 phòng đang được chọn."),
+        new GuidedOnboarding.GuidedStep(
+            "#room-code-input",
+            "Nhập mã phòng",
+            "Mã phòng là thứ bạn dùng nhiều nhất khi tìm kiếm, lập hóa đơn và trao đổi với khách thuê.",
+            "Click vào ô đang sáng và nhập mã phòng, ví dụ P101."),
+        new GuidedOnboarding.GuidedStep(
+            "#room-floor-input",
+            "Chọn tầng hoặc dãy",
+            "Phòng sẽ được đặt vào đúng tầng/dãy để sơ đồ mặt bằng dễ quản lý.",
+            "Click vào ô đang sáng và chọn tầng/dãy phù hợp."),
+        new GuidedOnboarding.GuidedStep(
+            "#room-capacity-input",
+            "Nhập sức chứa",
+            "Sức chứa giúp kiểm soát số người ở tối đa và hỗ trợ bước thêm người thuê.",
+            "Click vào ô đang sáng và nhập số người tối đa."),
+        new GuidedOnboarding.GuidedStep(
+            "#room-base-price-input",
+            "Nhập tiền phòng",
+            "Đây là dữ liệu bắt buộc để hệ thống lập hóa đơn và tính doanh thu.",
+            "Click vào ô đang sáng và nhập giá thuê theo tháng."),
+        new GuidedOnboarding.GuidedStep(
+            "#room-electric-price-input",
+            "Nhập đơn giá điện",
+            "Nếu nhà trọ tính tiền điện, nhập đơn giá để hóa đơn sau này có dữ liệu sẵn.",
+            "Click vào ô đang sáng và nhập đơn giá điện."),
+        new GuidedOnboarding.GuidedStep(
+            "#room-water-price-input",
+            "Nhập đơn giá nước",
+            "Đơn giá nước sẽ được dùng khi tính tiền dịch vụ cho phòng.",
+            "Click vào ô đang sáng và nhập đơn giá nước."),
+        new GuidedOnboarding.GuidedStep(
+            "#room-service-fee-input",
+            "Nhập phí dịch vụ",
+            "Phí dịch vụ có thể là vệ sinh, rác, wifi hoặc các khoản cố định hàng tháng.",
+            "Click vào ô đang sáng và nhập phí dịch vụ nếu có."),
+        new GuidedOnboarding.GuidedStep(
+            "#room-billing-day-input",
+            "Chọn ngày thu tiền",
+            "Ngày thu tiền giúp hệ thống nhắc hóa đơn đúng lịch.",
+            "Click vào ô đang sáng và nhập ngày thu tiền từ 1 đến 15."),
+        new GuidedOnboarding.GuidedStep(
+            "#save-room-submit",
+            "Lưu phòng",
+            "Sau khi lưu, phòng sẽ xuất hiện trong sơ đồ mặt bằng và danh sách phòng để bạn thêm người thuê hoặc chỉnh sửa thông tin phòng.",
+            "Click nút Lưu thông tin sau khi đã nhập đủ mã phòng và tiền phòng.",
+            true)
+    };
     private int totalFloors = 1;
     private BuildingResponse? building;
     private bool IsBasicLevel => building?.Description?.Contains("[Level:Basic]", StringComparison.OrdinalIgnoreCase) ?? false;
@@ -803,8 +870,40 @@
                 request.FloorNumber = 1;
                 await AutoGenerateRoomCode(1);
             }
+            await StartCreateRoomTourIfNeeded();
             StateHasChanged();
         }
+    }
+
+    private async Task StartCreateRoomTourIfNeeded()
+    {
+        if (hasCheckedCreateRoomTour)
+        {
+            return;
+        }
+
+        hasCheckedCreateRoomTour = true;
+
+        try
+        {
+            var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_create_room_guided_seen");
+            showCreateRoomTour = string.IsNullOrWhiteSpace(dismissed) && createMode == "single";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Create room guided tour error: {ex.Message}");
+        }
+    }
+
+    private void CloseCreateRoomTour()
+    {
+        showCreateRoomTour = false;
+    }
+
+    private void OpenCreateRoomTour()
+    {
+        showCreateRoomTour = createMode == "single";
+        StateHasChanged();
     }
 
     private async Task OnFloorChanged(ChangeEventArgs e)
@@ -1097,6 +1196,7 @@
             var result = await RoomApiService.CreateRoomAsync(buildingId, request);
             if (result.Success)
             {
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_create_room_guided_seen", "true");
                 successMessage = true;
                 await Task.Delay(1500);
                 Navigation.NavigateTo("/quan-ly-phong");

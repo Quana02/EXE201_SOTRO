@@ -18,28 +18,28 @@
         </div>
     </div>
     <nav class="flex-1 space-y-1 @(_isCollapsed ? "px-1" : "px-2") transition-all duration-300">
-        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/dashboard" title="Tổng quan">
+        <a id="nav-dashboard" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/dashboard" title="Tổng quan">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="dashboard">dashboard</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Tổng quan</span>
             }
         </a>
-        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/quan-ly-phong" title="Phòng trọ">
+        <a id="nav-rooms" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/quan-ly-phong" title="Phòng trọ">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="home_work">home_work</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Phòng trọ</span>
             }
         </a>
-        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/nguoi-thue" title="Người thuê">
+        <a id="nav-tenants" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/nguoi-thue" title="Người thuê">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="group">group</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Người thuê</span>
             }
         </a>
-        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/hoa-don" title="Hóa đơn">
+        <a id="nav-invoices" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/hoa-don" title="Hóa đơn">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="description">description</span>
             @if (!_isCollapsed)
             {
@@ -58,21 +58,21 @@
                 <div class="w-6 h-px bg-outline-variant"></div>
             </div>
         }
-        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#" title="Marketing">
+        <a id="nav-marketing" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#" title="Marketing">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="campaign">campaign</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Marketing</span>
             }
         </a>
-        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="#" title="Nâng cấp dịch vụ">
+        <a id="nav-upgrade" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="#" title="Nâng cấp dịch vụ">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="workspace_premium">workspace_premium</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Nâng cấp dịch vụ</span>
             }
         </a>
-        <a class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/cai-dat" title="Cài đặt">
+        <a id="nav-settings" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/cai-dat" title="Cài đặt">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="settings">settings</span>
             @if (!_isCollapsed)
             {

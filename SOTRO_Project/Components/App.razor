@@ -261,6 +261,139 @@
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         };
+
+        window.sotroGuidedOnboarding = {
+            activeElement: null,
+            activeHandler: null,
+            activeDotNetRef: null,
+            activeScrollHandler: null,
+            animationFrame: null,
+            focusRequestId: 0,
+
+            getRect: function (element) {
+                const rect = element.getBoundingClientRect();
+
+                return {
+                    top: rect.top,
+                    left: rect.left,
+                    right: rect.right,
+                    bottom: rect.bottom,
+                    width: rect.width,
+                    height: rect.height,
+                    viewportWidth: window.innerWidth,
+                    viewportHeight: window.innerHeight
+                };
+            },
+
+            schedulePositionUpdate: function () {
+                if (!this.activeElement || !this.activeDotNetRef || this.animationFrame) {
+                    return;
+                }
+
+                this.animationFrame = requestAnimationFrame(() => {
+                    this.animationFrame = null;
+                    if (!this.activeElement || !this.activeDotNetRef) {
+                        return;
+                    }
+
+                    this.activeDotNetRef.invokeMethodAsync(
+                        'NotifyTargetPositionChanged',
+                        this.getRect(this.activeElement)
+                    );
+                });
+            },
+
+            focus: function (selector, dotNetRef, advanceOnTargetClick) {
+                this.clear();
+                const requestId = ++this.focusRequestId;
+
+                const element = document.querySelector(selector);
+                if (!element) {
+                    return null;
+                }
+
+                element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        if (requestId !== this.focusRequestId) {
+                            resolve(null);
+                            return;
+                        }
+
+                        const previousPosition = element.style.position;
+                        const previousZIndex = element.style.zIndex;
+                        const previousBoxShadow = element.style.boxShadow;
+                        const previousPointerEvents = element.style.pointerEvents;
+
+                        element.dataset.sotroTourPosition = previousPosition;
+                        element.dataset.sotroTourZIndex = previousZIndex;
+                        element.dataset.sotroTourBoxShadow = previousBoxShadow;
+                        element.dataset.sotroTourPointerEvents = previousPointerEvents;
+
+                        const computed = window.getComputedStyle(element);
+                        if (computed.position === 'static') {
+                            element.style.position = 'relative';
+                        }
+
+                        element.style.zIndex = '330';
+                        element.style.pointerEvents = 'auto';
+                        element.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.5), 0 18px 45px rgba(15, 23, 42, 0.28)';
+
+                        if (advanceOnTargetClick) {
+                            this.activeHandler = () => {
+                                setTimeout(() => dotNetRef.invokeMethodAsync('NotifyTargetClicked'), 80);
+                            };
+                            element.addEventListener('click', this.activeHandler, { once: true });
+                        }
+
+                        this.activeElement = element;
+                        this.activeDotNetRef = dotNetRef;
+                        this.activeScrollHandler = () => this.schedulePositionUpdate();
+                        window.addEventListener('scroll', this.activeScrollHandler, true);
+                        window.addEventListener('resize', this.activeScrollHandler);
+
+                        resolve(this.getRect(element));
+                    }, 260);
+                });
+            },
+
+            clear: function () {
+                this.focusRequestId++;
+                const element = this.activeElement;
+
+                if (this.activeScrollHandler) {
+                    window.removeEventListener('scroll', this.activeScrollHandler, true);
+                    window.removeEventListener('resize', this.activeScrollHandler);
+                }
+
+                if (this.animationFrame) {
+                    cancelAnimationFrame(this.animationFrame);
+                    this.animationFrame = null;
+                }
+
+                if (element && this.activeHandler) {
+                    element.removeEventListener('click', this.activeHandler);
+                }
+
+                if (element) {
+                    element.style.position = element.dataset.sotroTourPosition || '';
+                    element.style.zIndex = element.dataset.sotroTourZIndex || '';
+                    element.style.boxShadow = element.dataset.sotroTourBoxShadow || '';
+                    element.style.pointerEvents = element.dataset.sotroTourPointerEvents || '';
+
+                    delete element.dataset.sotroTourPosition;
+                    delete element.dataset.sotroTourZIndex;
+                    delete element.dataset.sotroTourBoxShadow;
+                    delete element.dataset.sotroTourPointerEvents;
+                }
+
+                this.activeElement = null;
+                this.activeHandler = null;
+                this.activeDotNetRef = null;
+                this.activeScrollHandler = null;
+            }
+        };
     </script>
 </body>
 

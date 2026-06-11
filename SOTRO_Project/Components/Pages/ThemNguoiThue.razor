@@ -34,7 +34,7 @@
     </style>
 }
 
-<HeaderDashboard />
+<HeaderDashboard OnHelpClicked="OpenTenantFormTour" />
 <SideNavBar />
 <!-- Main Content Area -->
 <main class="ml-64 p-gutter w-[calc(100%-16rem)]">
@@ -59,7 +59,7 @@
 </div>
 <div class="flex items-center gap-3">
 <button @onclick="Cancel" class="px-6 py-2.5 rounded-xl border border-outline text-on-surface font-label-md hover:bg-surface-container transition-all">Hủy</button>
-<button @onclick="SaveTenant" disabled="@isSaving" class="px-6 py-2.5 rounded-xl bg-primary-container text-on-primary font-label-md hover:opacity-90 shadow-lg shadow-primary-container/20 transition-all flex items-center gap-2">
+<button id="tenant-save-button" @onclick="SaveTenant" disabled="@isSaving" class="px-6 py-2.5 rounded-xl bg-primary-container text-on-primary font-label-md hover:opacity-90 shadow-lg shadow-primary-container/20 transition-all flex items-center gap-2">
 <span class="material-symbols-outlined text-[20px]" data-icon="save">save</span>
                                 @(isSaving ? "Đang lưu..." : IsEditMode ? "Cập nhật người thuê" : "Lưu người thuê")
                             </button>
@@ -85,7 +85,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Họ và tên *</label>
-<input @bind="tenant.FullName" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("FullName") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="Nguyễn Văn A" type="text">
+<input id="tenant-fullname-input" @bind="tenant.FullName" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("FullName") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="Nguyễn Văn A" type="text">
 @if (errors.ContainsKey("FullName"))
 {
     <span class="text-red-500 text-xs mt-1">@errors["FullName"]</span>
@@ -93,7 +93,7 @@
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Số điện thoại *</label>
-<input @bind="tenant.PhoneNumber" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("PhoneNumber") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="090x xxx xxx" type="tel">
+<input id="tenant-phone-input" @bind="tenant.PhoneNumber" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("PhoneNumber") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="090x xxx xxx" type="tel">
 @if (errors.ContainsKey("PhoneNumber"))
 {
     <span class="text-red-500 text-xs mt-1">@errors["PhoneNumber"]</span>
@@ -101,7 +101,7 @@
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Email</label>
-<input @bind="tenant.Email" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("Email") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="example@gmail.com" type="email">
+<input id="tenant-email-input" @bind="tenant.Email" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("Email") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="example@gmail.com" type="email">
 @if (errors.ContainsKey("Email"))
 {
     <span class="text-red-500 text-xs mt-1">@errors["Email"]</span>
@@ -109,7 +109,7 @@
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Số CCCD/Passport *</label>
-<input @bind="tenant.IdentityNumber" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("IdentityNumber") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="001xxxxxxxxx" type="text">
+<input id="tenant-identity-input" @bind="tenant.IdentityNumber" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("IdentityNumber") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="001xxxxxxxxx" type="text">
 @if (errors.ContainsKey("IdentityNumber"))
 {
     <span class="text-red-500 text-xs mt-1">@errors["IdentityNumber"]</span>
@@ -117,7 +117,7 @@
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Ngày sinh *</label>
-<input @bind="tenant.DateOfBirth" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("DateOfBirth") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" type="date">
+<input id="tenant-dob-input" @bind="tenant.DateOfBirth" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("DateOfBirth") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" type="date">
 @if (errors.ContainsKey("DateOfBirth"))
 {
     <span class="text-red-500 text-xs mt-1">@errors["DateOfBirth"]</span>
@@ -125,7 +125,7 @@
 </div>
 <div class="flex flex-col gap-2 relative">
 <label class="font-label-md text-label-md text-on-surface-variant">Quê quán</label>
-<input id="hometown-input"
+<input id="tenant-hometown-input"
        value="@tenant.PermanentAddress"
        @oninput="(e) => { tenant.PermanentAddress = e.Value?.ToString() ?? string.Empty; }"
        class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("PermanentAddress") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none"
@@ -147,7 +147,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Chọn phòng *</label>
-<select @bind="tenant.RoomId" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("RoomId") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none bg-white" id="room-select">
+<select @bind="tenant.RoomId" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("RoomId") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none bg-white" id="tenant-room-select">
 <option value="">Chọn phòng trống</option>
 @foreach (var room in availableRooms)
 {
@@ -161,7 +161,7 @@
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Ngày bắt đầu ở *</label>
-<input @bind="tenant.StartDate" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("StartDate") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" type="date">
+<input id="tenant-start-date-input" @bind="tenant.StartDate" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("StartDate") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" type="date">
 @if (errors.ContainsKey("StartDate"))
 {
     <span class="text-red-500 text-xs mt-1">@errors["StartDate"]</span>
@@ -169,7 +169,7 @@
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-md text-label-md text-on-surface-variant">Tiền đặt cọc (VNĐ)</label>
-<input @bind="tenant.DepositAmount" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("DepositAmount") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="Ví dụ: 3500000" type="number">
+<input id="tenant-deposit-input" @bind="tenant.DepositAmount" class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("DepositAmount") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none" placeholder="Ví dụ: 3500000" type="number">
 @if (errors.ContainsKey("DepositAmount"))
 {
     <span class="text-red-500 text-xs mt-1">@errors["DepositAmount"]</span>
@@ -196,7 +196,7 @@
 <!-- Portrait Photo -->
 <div class="flex flex-col gap-3">
 <label class="font-label-md text-label-md text-on-surface-variant">Ảnh chân dung</label>
-<label class="group relative w-full h-64 bg-surface-container rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center overflow-hidden hover:border-primary transition-all cursor-pointer">
+<label id="tenant-portrait-upload" class="group relative w-full h-64 bg-surface-container rounded-xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center overflow-hidden hover:border-primary transition-all cursor-pointer">
 <InputFile class="hidden" accept="image/*" OnChange="OnPortraitSelected" />
 @if (!string.IsNullOrWhiteSpace(portraitPreviewUrl))
 {
@@ -291,10 +291,10 @@ else
 }
 <script>
         // Simple micro-interaction for room selection
-        const roomSelect = document.getElementById('room-select');
+        const roomSelect = document.getElementById('tenant-room-select');
         const priceInput = document.getElementById('room-price');
 
-        roomSelect.addEventListener('change', function() {
+        roomSelect?.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const price = selectedOption.getAttribute('data-price');
             if (price) {
@@ -322,7 +322,14 @@ else
                 card.style.transform = 'translateY(0)';
             });
         });
-    </script>
+</script>
+
+<GuidedOnboarding IsVisible="showTenantFormTour"
+                  Steps="tenantFormGuidedSteps"
+                  StorageKey="sotro_tenant_form_guided_seen"
+                  AllowSkip="true"
+                  OnCompleted="CloseTenantFormTour"
+                  OnSkipped="CloseTenantFormTour" />
 
 
 @code {
@@ -350,6 +357,57 @@ else
     private int countdown = 3;
     private System.Threading.CancellationTokenSource? popupCts;
     private DotNetObjectReference<ThemNguoiThue>? dotNetHelper;
+    private bool showTenantFormTour;
+    private bool hasCheckedTenantFormTour;
+    private readonly IReadOnlyList<GuidedOnboarding.GuidedStep> tenantFormGuidedSteps = new[]
+    {
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-fullname-input",
+            "Nhập họ tên người thuê",
+            "Đây là thông tin chính để nhận diện người thuê trong danh sách, hợp đồng và hóa đơn.",
+            "Click vào ô đang sáng và nhập họ tên đầy đủ."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-phone-input",
+            "Nhập số điện thoại",
+            "Số điện thoại dùng để liên hệ, nhắc thanh toán và hỗ trợ các tính năng tự động sau này.",
+            "Click vào ô đang sáng và nhập số điện thoại chỉ gồm chữ số."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-identity-input",
+            "Nhập CCCD hoặc Passport",
+            "Thông tin giấy tờ giúp hồ sơ người thuê đầy đủ và dễ đối chiếu khi cần.",
+            "Click vào ô đang sáng và nhập số CCCD/Passport."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-dob-input",
+            "Chọn ngày sinh",
+            "Ngày sinh giúp hoàn thiện hồ sơ cá nhân. Hệ thống đang kiểm tra người thuê phải từ 16 tuổi trở lên.",
+            "Click vào ô đang sáng và chọn ngày sinh."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-room-select",
+            "Chọn phòng thuê",
+            "Người thuê phải được gắn vào đúng phòng để hệ thống cập nhật trạng thái phòng, số người đang ở và tỷ lệ lấp đầy.",
+            "Click vào ô đang sáng và chọn phòng trống hoặc phòng còn sức chứa."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-start-date-input",
+            "Chọn ngày bắt đầu ở",
+            "Ngày bắt đầu ở là mốc để theo dõi hợp đồng, tiền cọc và chu kỳ thu tiền.",
+            "Click vào ô đang sáng và chọn ngày bắt đầu thuê."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-deposit-input",
+            "Nhập tiền đặt cọc",
+            "Tiền cọc giúp bạn theo dõi khoản đang giữ của người thuê. Có thể để trống nếu chưa thu cọc.",
+            "Click vào ô đang sáng và nhập số tiền cọc nếu có."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-portrait-upload",
+            "Tải ảnh chân dung",
+            "Ảnh chân dung giúp hồ sơ người thuê dễ nhận diện hơn. Đây là bước khuyến nghị, không bắt buộc.",
+            "Click vùng đang sáng để tải ảnh, hoặc bấm Tiếp tục nếu chưa có ảnh."),
+        new GuidedOnboarding.GuidedStep(
+            "#tenant-save-button",
+            "Lưu người thuê",
+            "Sau khi lưu, người thuê sẽ xuất hiện trong danh sách và phòng được cập nhật trạng thái sử dụng.",
+            "Click nút Lưu người thuê sau khi đã nhập các thông tin bắt buộc.",
+            true)
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -401,8 +459,46 @@ else
         if (firstRender)
         {
             dotNetHelper = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("window.initAddressAutocomplete", "hometown-input", dotNetHelper, nameof(OnAddressSelected));
+            await JS.InvokeVoidAsync("window.initAddressAutocomplete", "tenant-hometown-input", dotNetHelper, nameof(OnAddressSelected));
+            await StartTenantFormTourIfNeeded();
         }
+    }
+
+    private async Task StartTenantFormTourIfNeeded()
+    {
+        if (hasCheckedTenantFormTour || IsEditMode)
+        {
+            return;
+        }
+
+        hasCheckedTenantFormTour = true;
+
+        try
+        {
+            var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_tenant_form_guided_seen");
+            showTenantFormTour = string.IsNullOrWhiteSpace(dismissed);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Tenant form guided tour error: {ex.Message}");
+        }
+    }
+
+    private void CloseTenantFormTour()
+    {
+        showTenantFormTour = false;
+    }
+
+    private void OpenTenantFormTour()
+    {
+        if (IsEditMode)
+        {
+            return;
+        }
+
+        showTenantFormTour = true;
+        StateHasChanged();
     }
 
     [JSInvokable]
@@ -522,6 +618,7 @@ else
 
         if (response.Success)
         {
+            await JS.InvokeVoidAsync("localStorage.setItem", "sotro_tenant_form_guided_seen", "true");
             errors.Clear();
             showSuccessPopup = true;
             StateHasChanged();
