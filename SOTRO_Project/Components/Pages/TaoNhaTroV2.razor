@@ -642,7 +642,7 @@
     // ── Wizard state ──
     private int currentStep = 1;
     private string selectedRoomModel = "";   // "Private" | "Shared"
-    private string selectedLevel = "";       // "Basic" | "MiniApartment" | "ServiceApartment"
+    private string selectedLevel = "";       // "Basic" | "MiniApartment"
     private bool hasService = false;
     private HashSet<string> selectedServices = new();
 
@@ -671,12 +671,10 @@
 
     private readonly List<LevelOption> levels = new()
     {
-        new("Basic", "Nhà trọ cơ bản", "Phòng trọ giá bình dân, tiện nghi cơ bản",
+        new("Basic", "Nhà trọ truyền thống", "Phòng trọ giá bình dân, tiện nghi cơ bản",
             "home", "Phổ biến", "bg-blue-50 text-blue-700", "bg-blue-100", "text-blue-600"),
         new("MiniApartment", "Chung cư mini", "Có phòng bếp riêng, tiện nghi đầy đủ hơn",
             "apartment", "", "", "bg-violet-100", "text-violet-600"),
-        new("ServiceApartment", "Căn hộ dịch vụ", "Cao cấp, đầy đủ nội thất & dịch vụ",
-            "hotel", "Cao cấp", "bg-amber-50 text-amber-700", "bg-amber-100", "text-amber-600"),
     };
 
     private record ServiceOption(string Key, string Label, string Icon);
@@ -734,7 +732,11 @@
     {
         var resp = await BuildingApiService.GetBuildingTypesAsync();
         if (resp.Success && resp.Data != null)
-            buildingTypes = resp.Data;
+        {
+            buildingTypes = resp.Data
+                .Where(t => t.BuildingTypeId == 1 || t.BuildingTypeId == 2)
+                .ToList();
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -960,7 +962,6 @@
         var keyword = selectedLevel switch
         {
             "MiniApartment"     => "mini",
-            "ServiceApartment"  => "dịch vụ",
             _                   => "nhà trọ"
         };
 
