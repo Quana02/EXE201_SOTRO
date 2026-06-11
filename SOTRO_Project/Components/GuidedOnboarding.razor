@@ -6,35 +6,29 @@
 {
     var step = Steps[CurrentStepIndex];
     var total = Steps.Count;
-    var panelTop = Math.Min(Math.Max(currentRect.Top + currentRect.Height + 16, 96), Math.Max(96, viewportHeight - 320));
+    var panelWidth = Math.Min(420, Math.Max(280, viewportWidth - 32));
     var panelLeft = currentRect.Left + currentRect.Width / 2 < viewportWidth / 2
-        ? Math.Min(currentRect.Right + 20, Math.Max(16, viewportWidth - 430))
-        : Math.Max(16, currentRect.Left - 420);
+        ? Math.Min(currentRect.Right + PanelGap, Math.Max(16, viewportWidth - panelWidth - 16))
+        : Math.Max(16, currentRect.Left - panelWidth - PanelGap);
+    var panelTop = GetPanelTop(currentRect, panelLeft, panelWidth);
 
-    <div class="fixed inset-0 z-[310]" role="dialog" aria-modal="true" aria-label="@step.Title">
-        <div class="absolute left-0 top-0 right-0 bg-slate-950/60 backdrop-blur-[1px]" style="height:@($"{Math.Max(0, currentRect.Top - Padding)}px")"></div>
-        <div class="absolute left-0 bg-slate-950/60 backdrop-blur-[1px]" style="top:@($"{Math.Max(0, currentRect.Top - Padding)}px"); width:@($"{Math.Max(0, currentRect.Left - Padding)}px"); height:@($"{currentRect.Height + Padding * 2}px")"></div>
-        <div class="absolute bg-slate-950/60 backdrop-blur-[1px]" style="top:@($"{Math.Max(0, currentRect.Top - Padding)}px"); left:@($"{currentRect.Right + Padding}px"); right:0; height:@($"{currentRect.Height + Padding * 2}px")"></div>
-        <div class="absolute left-0 right-0 bottom-0 bg-slate-950/60 backdrop-blur-[1px]" style="top:@($"{currentRect.Bottom + Padding}px")"></div>
+    <div class="fixed inset-0 z-[310] pointer-events-none" role="dialog" aria-modal="true" aria-label="@step.Title">
+        <div class="absolute pointer-events-auto left-0 top-0 right-0 bg-slate-950/60 backdrop-blur-[1px]" style="height:@($"{Math.Max(0, currentRect.Top - Padding)}px")"></div>
+        <div class="absolute pointer-events-auto left-0 bg-slate-950/60 backdrop-blur-[1px]" style="top:@($"{Math.Max(0, currentRect.Top - Padding)}px"); width:@($"{Math.Max(0, currentRect.Left - Padding)}px"); height:@($"{currentRect.Height + Padding * 2}px")"></div>
+        <div class="absolute pointer-events-auto bg-slate-950/60 backdrop-blur-[1px]" style="top:@($"{Math.Max(0, currentRect.Top - Padding)}px"); left:@($"{currentRect.Right + Padding}px"); right:0; height:@($"{currentRect.Height + Padding * 2}px")"></div>
+        <div class="absolute pointer-events-auto left-0 right-0 bottom-0 bg-slate-950/60 backdrop-blur-[1px]" style="top:@($"{currentRect.Bottom + Padding}px")"></div>
 
         <div class="absolute z-[340] pointer-events-none rounded-2xl border-4 border-blue-400 shadow-[0_0_0_6px_rgba(59,130,246,0.24),0_24px_60px_rgba(15,23,42,0.35)]"
              style="left:@($"{currentRect.Left - Padding}px"); top:@($"{currentRect.Top - Padding}px"); width:@($"{currentRect.Width + Padding * 2}px"); height:@($"{currentRect.Height + Padding * 2}px")">
         </div>
 
-        <div class="absolute z-[370] w-[min(400px,calc(100vw-32px))] bg-white rounded-2xl shadow-2xl border border-blue-100 p-5"
+        <div class="absolute z-[370] pointer-events-auto w-[min(420px,calc(100vw-32px))] max-h-[calc(100vh-32px)] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-blue-100 p-5"
              style="left:@($"{panelLeft}px"); top:@($"{panelTop}px")">
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <p class="text-xs font-bold uppercase tracking-wider text-blue-700">Bước @(CurrentStepIndex + 1)/@total</p>
                     <h3 class="text-xl font-bold text-gray-900 leading-tight">@step.Title</h3>
                 </div>
-                @if (AllowSkip)
-                {
-                    <button type="button" class="flex items-center gap-1 px-3 py-2 rounded-full text-sm font-bold text-gray-500 hover:bg-slate-100 transition-colors" @onclick="SkipAsync">
-                        <span>Bỏ qua</span>
-                        <span class="material-symbols-outlined text-gray-600">close</span>
-                    </button>
-                }
             </div>
 
             <p class="text-sm text-gray-600 leading-6 mb-4">@step.Description</p>
@@ -46,6 +40,18 @@
                     <p class="text-sm font-medium text-blue-900 leading-6">@step.ActionHint</p>
                 </div>
             }
+
+            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-blue-700 text-[20px]">checklist</span>
+                    <p class="text-sm font-bold text-slate-800">Cách thực hiện</p>
+                </div>
+                <ol class="list-decimal pl-5 space-y-1 text-sm text-slate-600 leading-6">
+                    <li>Quan sát vùng có viền xanh, đó là nơi cần thao tác ở bước này.</li>
+                    <li>@GetInteractionInstruction(step)</li>
+                    <li>Nếu đã hiểu bước này, dùng nút bên dưới để chuyển bước hoặc hoàn tất hướng dẫn.</li>
+                </ol>
+            </div>
 
             <div class="h-2 bg-slate-100 rounded-full overflow-hidden mb-4">
                 <div class="h-full bg-blue-700 rounded-full transition-all" style="width:@($"{(CurrentStepIndex + 1) * 100 / total}%")"></div>
@@ -59,24 +65,38 @@
                     Quay lại
                 </button>
 
-                @if (!string.IsNullOrWhiteSpace(step.ActionUrl))
-                {
-                    <button type="button" class="px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold hover:bg-blue-800 transition-colors" @onclick="CompleteAndNavigateAsync">
-                        @(string.IsNullOrWhiteSpace(step.ActionLabel) ? "Đi tiếp" : step.ActionLabel)
-                    </button>
-                }
-                else if (step.AdvanceOnTargetClick)
-                {
-                    <span class="text-xs text-gray-500 font-medium">Hãy click vùng đang sáng</span>
-                }
-                else
-                {
-                    <button type="button" class="px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold hover:bg-blue-800 transition-colors" @onclick="NextAsync">
-                        @(CurrentStepIndex == total - 1 ? "Hoàn tất" : "Tiếp tục")
-                    </button>
-                }
+                <div class="flex items-center justify-end gap-2">
+                    @if (!string.IsNullOrWhiteSpace(step.ActionUrl))
+                    {
+                        <button type="button" class="px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold hover:bg-blue-800 transition-colors" @onclick="CompleteAndNavigateAsync">
+                            @(string.IsNullOrWhiteSpace(step.ActionLabel) ? "Đi tiếp" : step.ActionLabel)
+                        </button>
+                    }
+                    else if (step.AdvanceOnTargetClick)
+                    {
+                        <button type="button" class="px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold hover:bg-blue-800 transition-colors" @onclick="NextAsync">
+                            Tiếp tục
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold hover:bg-blue-800 transition-colors" @onclick="NextAsync">
+                            @(CurrentStepIndex == total - 1 ? "Hoàn tất" : "Tiếp tục")
+                        </button>
+                    }
+                </div>
             </div>
         </div>
+
+        @if (AllowSkip)
+        {
+            <button type="button"
+                    class="fixed bottom-6 right-6 z-[390] pointer-events-auto flex items-center gap-2 px-5 py-3 rounded-full bg-white text-gray-700 font-bold shadow-2xl border border-slate-200 hover:bg-slate-50 hover:text-blue-700 transition-colors"
+                    @onclick="SkipAsync">
+                <span class="material-symbols-outlined text-[20px]">skip_next</span>
+                <span>Bỏ qua</span>
+            </button>
+        }
     </div>
 }
 
@@ -89,6 +109,8 @@
     [Parameter] public EventCallback OnSkipped { get; set; }
 
     private const int Padding = 8;
+    private const int PanelGap = 16;
+    private const int EstimatedPanelHeight = 620;
     private ElementRect? currentRect;
     private double viewportWidth = 1280;
     private double viewportHeight = 720;
@@ -96,6 +118,16 @@
     private int CurrentStepIndex;
     private int lastFocusedStepIndex = -1;
     private bool wasVisible;
+
+    protected override void OnParametersSet()
+    {
+        if (IsVisible && !wasVisible)
+        {
+            CurrentStepIndex = 0;
+            currentRect = null;
+            lastFocusedStepIndex = -1;
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -187,10 +219,9 @@
     private async Task SkipAsync()
     {
         await ClearFocusAsync();
-        if (!string.IsNullOrWhiteSpace(StorageKey))
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, "true");
-        }
+        CurrentStepIndex = 0;
+        currentRect = null;
+        lastFocusedStepIndex = -1;
         if (OnSkipped.HasDelegate)
         {
             await OnSkipped.InvokeAsync();
@@ -203,6 +234,15 @@
         await NextAsync();
     }
 
+    [JSInvokable]
+    public async Task NotifyTargetPositionChanged(ElementRect rect)
+    {
+        currentRect = rect;
+        viewportWidth = rect.ViewportWidth;
+        viewportHeight = rect.ViewportHeight;
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task ClearFocusAsync()
     {
         try
@@ -212,6 +252,50 @@
         catch
         {
         }
+    }
+
+    private static string GetInteractionInstruction(GuidedStep step)
+    {
+        if (!string.IsNullOrWhiteSpace(step.ActionUrl))
+        {
+            return string.IsNullOrWhiteSpace(step.ActionLabel)
+                ? "Bấm nút Đi tiếp trong hộp hướng dẫn để chuyển sang màn hình liên quan."
+                : $"Bấm nút {step.ActionLabel} trong hộp hướng dẫn để chuyển sang màn hình liên quan.";
+        }
+
+        return step.AdvanceOnTargetClick
+            ? "Click trực tiếp vào vùng đang sáng. Hướng dẫn sẽ tự chuyển sang bước kế tiếp sau khi thao tác."
+            : "Click hoặc nhập dữ liệu trực tiếp trong vùng đang sáng, rồi bấm Tiếp tục khi đã xong.";
+    }
+
+    private double GetPanelTop(ElementRect rect, double panelLeft, double panelWidth)
+    {
+        var panelRight = panelLeft + panelWidth;
+        var targetLeft = rect.Left - Padding;
+        var targetRight = rect.Right + Padding;
+        var horizontalOverlap = panelLeft < targetRight && panelRight > targetLeft;
+        var clampedTop = Math.Min(Math.Max(rect.Top - 96, 16), Math.Max(16, viewportHeight - EstimatedPanelHeight - 24));
+
+        if (!horizontalOverlap)
+        {
+            return clampedTop;
+        }
+
+        var belowTop = rect.Bottom + PanelGap;
+        if (belowTop + EstimatedPanelHeight <= viewportHeight - 16)
+        {
+            return belowTop;
+        }
+
+        var aboveTop = rect.Top - PanelGap - EstimatedPanelHeight;
+        if (aboveTop >= 16)
+        {
+            return aboveTop;
+        }
+
+        return rect.Top < viewportHeight / 2
+            ? Math.Min(belowTop, Math.Max(16, viewportHeight - EstimatedPanelHeight - 24))
+            : Math.Max(16, aboveTop);
     }
 
     public async ValueTask DisposeAsync()
@@ -229,7 +313,7 @@
         string? ActionLabel = null,
         string? ActionUrl = null);
 
-    private sealed class ElementRect
+    public sealed class ElementRect
     {
         public double Top { get; set; }
         public double Left { get; set; }

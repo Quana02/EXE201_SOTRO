@@ -7,7 +7,7 @@
 
 <main class="min-h-screen flex flex-col bg-gray-50">
 
-    <HeaderDashboard OnSearch="HandleSearch" SearchPlaceholder="Tìm kiếm nhà trọ (tên, địa chỉ, loại)..." SearchQuery="@searchQuery" />
+    <HeaderDashboard OnSearch="HandleSearch" SearchPlaceholder="Tìm kiếm nhà trọ (tên, địa chỉ, loại)..." SearchQuery="@searchQuery" OnHelpClicked="OpenOnboarding" />
 
     <div class="p-4 md:p-10 flex-1">
 
@@ -31,7 +31,7 @@
             </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div id="building-overview-stats" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
             <div class="bg-white p-6 rounded-2xl border shadow-sm flex items-center gap-4">
                 <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
@@ -65,7 +65,7 @@
 
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div id="building-list-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
             @if (isLoading)
             {
@@ -129,7 +129,9 @@
                             ? house.ImageUrl 
                             : "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80";
 
-                        <div class="group bg-white rounded-2xl border overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                        var isFirstHouse = filteredHouses.IndexOf(house) == 0;
+
+                        <div id="@(isFirstHouse ? "first-building-card" : null)" class="group bg-white rounded-2xl border overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                             <div class="relative h-48">
                                 <img alt="@house.BuildingName"
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -180,11 +182,11 @@
                                 </div>
 
                                 <div class="flex gap-2">
-                                    <button type="button" class="flex-grow flex-1 text-center py-2.5 border-2 border-blue-700 text-blue-700 font-bold rounded-xl hover:bg-blue-700 hover:text-white transition-all text-sm bg-transparent cursor-pointer"
+                                    <button id="@(isFirstHouse ? "first-building-manage" : null)" type="button" class="flex-grow flex-1 text-center py-2.5 border-2 border-blue-700 text-blue-700 font-bold rounded-xl hover:bg-blue-700 hover:text-white transition-all text-sm bg-transparent cursor-pointer"
                                             @onclick="() => GoToDetail(house)">
                                         Quản lý chi tiết
                                     </button>
-                                    <button type="button" @onclick="() => ConfirmDelete(house)" class="px-3 border border-red-200 hover:border-red-600 rounded-xl text-red-500 hover:bg-red-50 transition-all flex items-center justify-center cursor-pointer">
+                                    <button id="@(isFirstHouse ? "first-building-delete" : null)" type="button" @onclick="() => ConfirmDelete(house)" class="px-3 border border-red-200 hover:border-red-600 rounded-xl text-red-500 hover:bg-red-50 transition-all flex items-center justify-center cursor-pointer">
                                         <span class="material-symbols-outlined text-lg">delete</span>
                                     </button>
                                 </div>
@@ -192,7 +194,7 @@
                         </div>
                     }
 
-                    <button @onclick="GoToCreateHouse"
+                    <button id="create-house-secondary" @onclick="GoToCreateHouse"
                             class="flex flex-col items-center justify-center h-[430px] border-2 border-dashed border-gray-300 rounded-2xl hover:bg-gray-100 hover:border-blue-700 transition-all group bg-white cursor-pointer">
                         <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-blue-100 group-hover:scale-110 transition-all">
                             <span class="material-symbols-outlined text-4xl text-gray-500 group-hover:text-blue-700">add_home</span>
@@ -212,8 +214,8 @@
 
 </main>
 
-<GuidedOnboarding IsVisible="@(showOnboarding && Houses.Count == 0)"
-                  Steps="nhaTroGuidedSteps"
+<GuidedOnboarding IsVisible="showOnboarding"
+                  Steps="currentNhaTroGuidedSteps"
                   StorageKey="sotro_nha_tro_guided_seen"
                   AllowSkip="true"
                   OnCompleted="CloseOnboarding"
@@ -225,6 +227,29 @@
     private string searchQuery = string.Empty;
     private bool showOnboarding;
     private bool hasCheckedOnboardingStorage;
+    private bool includeHelpButtonIntro;
+    private bool showHelpButtonIntroInCurrentTour;
+    private string helpButtonIntroStorageKey = string.Empty;
+    private IReadOnlyList<GuidedOnboarding.GuidedStep> currentNhaTroGuidedSteps =>
+        Houses.Count == 0
+            ? (showHelpButtonIntroInCurrentTour ? nhaTroFirstTimeGuidedSteps : nhaTroGuidedSteps)
+            : nhaTroManagementGuidedSteps;
+
+    private readonly IReadOnlyList<GuidedOnboarding.GuidedStep> nhaTroFirstTimeGuidedSteps = new[]
+    {
+        new GuidedOnboarding.GuidedStep(
+            "#header-help-button",
+            "Đây là nút hướng dẫn",
+            "Dấu ? trên thanh header dùng để mở hướng dẫn cho trang hiện tại. Khi không nhớ thao tác tiếp theo, bạn có thể bấm vào đây để xem lại từng bước.",
+            "Hãy ghi nhớ vị trí dấu ?. Bước giới thiệu này chỉ hiển thị một lần cho tài khoản của bạn, sau đó hệ thống sẽ chuyển sang hướng dẫn tạo nhà trọ."),
+        new GuidedOnboarding.GuidedStep(
+            "#create-house-primary",
+            "Bắt đầu bằng nhà trọ đầu tiên",
+            "Tài khoản mới cần tạo một nhà trọ trước. Đây là dữ liệu gốc để hệ thống biết bạn đang quản lý cơ sở nào, sau đó mới tạo phòng, thêm người thuê, xem thống kê và bật các cài đặt nâng cao.",
+            "Click đúng nút đang sáng để tạo nhà trọ mới. Bạn cũng có thể bấm Bỏ qua nếu đã quen luồng.",
+            true)
+    };
+
     private readonly IReadOnlyList<GuidedOnboarding.GuidedStep> nhaTroGuidedSteps = new[]
     {
         new GuidedOnboarding.GuidedStep(
@@ -233,6 +258,35 @@
             "Tài khoản mới cần tạo một nhà trọ trước. Đây là dữ liệu gốc để hệ thống biết bạn đang quản lý cơ sở nào, sau đó mới tạo phòng, thêm người thuê, xem thống kê và bật các cài đặt nâng cao.",
             "Click đúng nút đang sáng để tạo nhà trọ mới. Bạn cũng có thể bấm Bỏ qua nếu đã quen luồng.",
             true)
+    };
+
+    private readonly IReadOnlyList<GuidedOnboarding.GuidedStep> nhaTroManagementGuidedSteps = new[]
+    {
+        new GuidedOnboarding.GuidedStep(
+            "#building-overview-stats",
+            "Theo dõi tổng quan nhà trọ",
+            "Ba ô này cho biết tổng số nhà trọ, tỷ lệ lấp đầy và số phòng trống trên toàn bộ cơ sở bạn đang quản lý.",
+            "Xem khu vực này trước để biết tình hình vận hành hiện tại."),
+        new GuidedOnboarding.GuidedStep(
+            "#first-building-card",
+            "Một thẻ nhà trọ",
+            "Mỗi thẻ đại diện cho một cơ sở, gồm ảnh, trạng thái hoạt động, loại nhà trọ, địa chỉ, số phòng và tỷ lệ lấp đầy.",
+            "Dùng thẻ này để nhận diện nhanh cơ sở cần quản lý."),
+        new GuidedOnboarding.GuidedStep(
+            "#first-building-manage",
+            "Quản lý chi tiết",
+            "Nút này mở cơ sở đang chọn để bạn vào dashboard, quản lý phòng, người thuê, hóa đơn và các cài đặt liên quan.",
+            "Click Quản lý chi tiết khi muốn làm việc với nhà trọ này."),
+        new GuidedOnboarding.GuidedStep(
+            "#first-building-delete",
+            "Xóa nhà trọ",
+            "Nút thùng rác dùng để xóa nhà trọ. Chỉ dùng khi bạn chắc chắn không còn cần dữ liệu của cơ sở này.",
+            "Khi bấm xóa, hệ thống sẽ hỏi xác nhận trước khi thực hiện."),
+        new GuidedOnboarding.GuidedStep(
+            "#create-house-primary",
+            "Thêm nhà trọ tiếp theo",
+            "Sau khi đã có một cơ sở, bạn vẫn có thể tạo thêm nhà trọ mới để quản lý nhiều địa điểm trong cùng tài khoản.",
+            "Click ô Thêm nhà trọ mới hoặc nút Tạo nhà trọ mới ở đầu trang để tạo cơ sở mới.")
     };
 
     private List<BuildingResponse> filteredHouses =>
@@ -271,10 +325,11 @@
 
         try
         {
-            var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_nha_tro_guided_seen");
-            if (string.IsNullOrWhiteSpace(dismissed) && !isLoading && Houses.Count == 0)
+            await LoadHelpButtonIntroStateAsync();
+
+            if (!isLoading && Houses.Count == 0)
             {
-                showOnboarding = true;
+                await StartOnboardingAsync();
                 StateHasChanged();
             }
         }
@@ -305,19 +360,83 @@
         }
     }
 
-    private void GoToCreateHouse()
+    private async Task GoToCreateHouse()
     {
+        if (Houses.Count == 0)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_force_create_building_tour", "true");
+                await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_create_building_guided_seen");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Prepare create building tour error: {ex.Message}");
+            }
+        }
+
         Navigation.NavigateTo("/tao-nha-tro-v2");
     }
 
-    private void OpenOnboarding()
+    private async Task OpenOnboarding()
     {
-        showOnboarding = true;
+        if (Houses.Count > 0)
+        {
+            searchQuery = string.Empty;
+        }
+
+        await LoadHelpButtonIntroStateAsync();
+        await StartOnboardingAsync();
+        StateHasChanged();
     }
 
     private void CloseOnboarding()
     {
         showOnboarding = false;
+        showHelpButtonIntroInCurrentTour = false;
+    }
+
+    private async Task LoadHelpButtonIntroStateAsync()
+    {
+        if (Houses.Count > 0)
+        {
+            includeHelpButtonIntro = false;
+            return;
+        }
+
+        try
+        {
+            var userEmail = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_email");
+            var accountKey = string.IsNullOrWhiteSpace(userEmail) ? "anonymous" : userEmail.Trim().ToLowerInvariant();
+            helpButtonIntroStorageKey = $"sotro_header_help_intro_seen_v3_{accountKey}";
+            var seen = await JS.InvokeAsync<string>("localStorage.getItem", helpButtonIntroStorageKey);
+            includeHelpButtonIntro = string.IsNullOrWhiteSpace(seen);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Help button intro state error: {ex.Message}");
+            includeHelpButtonIntro = false;
+        }
+    }
+
+    private async Task StartOnboardingAsync()
+    {
+        showHelpButtonIntroInCurrentTour = includeHelpButtonIntro;
+        showOnboarding = true;
+
+        if (showHelpButtonIntroInCurrentTour && !string.IsNullOrWhiteSpace(helpButtonIntroStorageKey))
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", helpButtonIntroStorageKey, "true");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Help button intro save error: {ex.Message}");
+            }
+
+            includeHelpButtonIntro = false;
+        }
     }
 
     private async Task GoToDetail(BuildingResponse house)

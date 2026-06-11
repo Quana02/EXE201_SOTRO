@@ -128,7 +128,7 @@
     .step-dot.done { background: #22c55e; }
 </style>
 
-<HeaderDashboard />
+<HeaderDashboard OnHelpClicked="OpenBuildingTour" />
 
 <main class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 pb-16">
     <!-- Background blobs -->
@@ -849,6 +849,15 @@
 
         try
         {
+            var forceTour = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_force_create_building_tour");
+            if (!string.IsNullOrWhiteSpace(forceTour))
+            {
+                await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_force_create_building_tour");
+                showBuildingTour = true;
+                StateHasChanged();
+                return;
+            }
+
             var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_create_building_guided_seen");
             if (string.IsNullOrWhiteSpace(dismissed))
             {
@@ -865,6 +874,12 @@
     private void CloseBuildingTour()
     {
         showBuildingTour = false;
+    }
+
+    private void OpenBuildingTour()
+    {
+        showBuildingTour = true;
+        StateHasChanged();
     }
 
     [JSInvokable]

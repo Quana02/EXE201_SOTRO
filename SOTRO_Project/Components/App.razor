@@ -265,9 +265,47 @@
         window.sotroGuidedOnboarding = {
             activeElement: null,
             activeHandler: null,
+            activeDotNetRef: null,
+            activeScrollHandler: null,
+            animationFrame: null,
+            focusRequestId: 0,
+
+            getRect: function (element) {
+                const rect = element.getBoundingClientRect();
+
+                return {
+                    top: rect.top,
+                    left: rect.left,
+                    right: rect.right,
+                    bottom: rect.bottom,
+                    width: rect.width,
+                    height: rect.height,
+                    viewportWidth: window.innerWidth,
+                    viewportHeight: window.innerHeight
+                };
+            },
+
+            schedulePositionUpdate: function () {
+                if (!this.activeElement || !this.activeDotNetRef || this.animationFrame) {
+                    return;
+                }
+
+                this.animationFrame = requestAnimationFrame(() => {
+                    this.animationFrame = null;
+                    if (!this.activeElement || !this.activeDotNetRef) {
+                        return;
+                    }
+
+                    this.activeDotNetRef.invokeMethodAsync(
+                        'NotifyTargetPositionChanged',
+                        this.getRect(this.activeElement)
+                    );
+                });
+            },
 
             focus: function (selector, dotNetRef, advanceOnTargetClick) {
                 this.clear();
+                const requestId = ++this.focusRequestId;
 
                 const element = document.querySelector(selector);
                 if (!element) {
@@ -278,7 +316,11 @@
 
                 return new Promise(resolve => {
                     setTimeout(() => {
-                        const rect = element.getBoundingClientRect();
+                        if (requestId !== this.focusRequestId) {
+                            resolve(null);
+                            return;
+                        }
+
                         const previousPosition = element.style.position;
                         const previousZIndex = element.style.zIndex;
                         const previousBoxShadow = element.style.boxShadow;
@@ -306,43 +348,50 @@
                         }
 
                         this.activeElement = element;
+                        this.activeDotNetRef = dotNetRef;
+                        this.activeScrollHandler = () => this.schedulePositionUpdate();
+                        window.addEventListener('scroll', this.activeScrollHandler, true);
+                        window.addEventListener('resize', this.activeScrollHandler);
 
-                        resolve({
-                            top: rect.top,
-                            left: rect.left,
-                            right: rect.right,
-                            bottom: rect.bottom,
-                            width: rect.width,
-                            height: rect.height,
-                            viewportWidth: window.innerWidth,
-                            viewportHeight: window.innerHeight
-                        });
+                        resolve(this.getRect(element));
                     }, 260);
                 });
             },
 
             clear: function () {
+                this.focusRequestId++;
                 const element = this.activeElement;
-                if (!element) {
-                    return;
+
+                if (this.activeScrollHandler) {
+                    window.removeEventListener('scroll', this.activeScrollHandler, true);
+                    window.removeEventListener('resize', this.activeScrollHandler);
                 }
 
-                if (this.activeHandler) {
+                if (this.animationFrame) {
+                    cancelAnimationFrame(this.animationFrame);
+                    this.animationFrame = null;
+                }
+
+                if (element && this.activeHandler) {
                     element.removeEventListener('click', this.activeHandler);
                 }
 
-                element.style.position = element.dataset.sotroTourPosition || '';
-                element.style.zIndex = element.dataset.sotroTourZIndex || '';
-                element.style.boxShadow = element.dataset.sotroTourBoxShadow || '';
-                element.style.pointerEvents = element.dataset.sotroTourPointerEvents || '';
+                if (element) {
+                    element.style.position = element.dataset.sotroTourPosition || '';
+                    element.style.zIndex = element.dataset.sotroTourZIndex || '';
+                    element.style.boxShadow = element.dataset.sotroTourBoxShadow || '';
+                    element.style.pointerEvents = element.dataset.sotroTourPointerEvents || '';
 
-                delete element.dataset.sotroTourPosition;
-                delete element.dataset.sotroTourZIndex;
-                delete element.dataset.sotroTourBoxShadow;
-                delete element.dataset.sotroTourPointerEvents;
+                    delete element.dataset.sotroTourPosition;
+                    delete element.dataset.sotroTourZIndex;
+                    delete element.dataset.sotroTourBoxShadow;
+                    delete element.dataset.sotroTourPointerEvents;
+                }
 
                 this.activeElement = null;
                 this.activeHandler = null;
+                this.activeDotNetRef = null;
+                this.activeScrollHandler = null;
             }
         };
     </script>

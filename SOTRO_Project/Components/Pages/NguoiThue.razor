@@ -22,7 +22,7 @@
 }
 
 
-<HeaderDashboard/>
+<HeaderDashboard OnHelpClicked="OpenTenantTour" />
 <SideNavBar />
 <!-- Main Content Area -->
 <main class="ml-64 h-[calc(100vh-64px)] overflow-y-auto bg-surface">
@@ -522,6 +522,12 @@ else
     private void CloseTenantTour()
     {
         showTenantTour = false;
+    }
+
+    private void OpenTenantTour()
+    {
+        showTenantTour = true;
+        StateHasChanged();
     }
 
     private async Task LoadTenants()

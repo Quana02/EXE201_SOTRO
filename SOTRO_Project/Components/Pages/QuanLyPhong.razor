@@ -53,7 +53,7 @@
 </style>
 
 <!-- TopNavBar Shell -->
-<HeaderDashboard />
+<HeaderDashboard OnHelpClicked="OpenRoomManagementTour" />
 <!-- SideNavBar Shell -->
 <SideNavBar />
 <!-- Main Content Canvas -->
@@ -79,7 +79,7 @@
         else
         {
             <!-- Header Summary & Quick Filters -->
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div id="room-management-summary" class="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h1 class="font-headline-sm text-headline-sm text-on-surface mb-2">Quản lý phòng</h1>
                     <div class="flex items-center gap-8">
@@ -105,12 +105,12 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
-                    <button @onclick="GoToCreateRoom"
+                    <button id="room-management-create-room" @onclick="GoToCreateRoom"
                             class="bg-primary text-on-primary px-6 py-2.5 rounded-full flex items-center gap-2 font-label-md shadow-md hover:opacity-90 transition-all">
                         <span class="material-symbols-outlined text-sm">add</span>
                         Thêm phòng
                     </button>
-                    <div class="flex bg-surface-container-low p-1 rounded-full border border-outline-variant">
+                    <div id="room-management-view-tabs" class="flex bg-surface-container-low p-1 rounded-full border border-outline-variant">
                         <button class="px-4 py-1.5 rounded-full text-label-md transition-all @(activeTab == "floor-plan" ? "bg-primary text-on-primary font-medium" : "text-on-surface-variant hover:text-primary")"
                                 @onclick='() => activeTab = "floor-plan"'>
                             Sơ đồ mặt bằng
@@ -124,7 +124,7 @@
             </div>
 
             <!-- Global Status Filter -->
-            <div class="flex items-center gap-4 overflow-x-auto scrollbar-hide pb-2">
+            <div id="room-management-status-filter" class="flex items-center gap-4 overflow-x-auto scrollbar-hide pb-2">
                 <button @onclick='() => filterStatus = ""'
                         class="flex items-center gap-2 px-4 py-1.5 rounded-full text-label-md whitespace-nowrap transition-all @(filterStatus == "" ? "bg-primary-fixed text-on-primary-fixed-variant" : "bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-container")">
                     Tất cả <span class="px-2 rounded-full @(filterStatus == "" ? "bg-white/20" : "")">@rooms.Count</span>
@@ -162,7 +162,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
 
                         <!-- Left Panel: KHU VỰC / TẦNG -->
-                        <div class="lg:col-span-1 bg-white p-5 rounded-2xl border border-outline-variant shadow-sm space-y-4">
+                        <div id="room-management-floor-panel" class="lg:col-span-1 bg-white p-5 rounded-2xl border border-outline-variant shadow-sm space-y-4">
                             <h3 class="font-label-md font-bold text-on-surface-variant uppercase tracking-wider text-xs">
                                 @(IsBasicLevel ? "Khu vực / Dãy" : "Khu vực / Tầng")
                             </h3>
@@ -193,7 +193,7 @@
                                 }
                             </div>
 
-                            <button type="button" @onclick="AddFloor" disabled="@isUpdatingFloors"
+                            <button id="room-management-add-floor" type="button" @onclick="AddFloor" disabled="@isUpdatingFloors"
                                     class="w-full py-3 border-2 border-dashed border-outline-variant hover:border-primary hover:text-primary rounded-xl flex items-center justify-center gap-2 text-label-md font-bold transition-all text-on-surface-variant bg-surface-container-lowest">
                                 @if (isUpdatingFloors)
                                 {
@@ -209,7 +209,7 @@
                         </div>
 
                         <!-- Right Panel: Room Grid of Selected Floor -->
-                        <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-outline-variant space-y-6">
+                        <div id="room-management-floor-grid" class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-outline-variant space-y-6">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-6">
                                     <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-primary"></div><span class="text-caption font-medium">Đã thuê</span></div>
@@ -304,7 +304,7 @@
                     }
                     else
                     {
-                    <div class="flex flex-col gap-4">
+                    <div id="room-management-list" class="flex flex-col gap-4">
                         @foreach (var room in filteredRooms)
                         {
                             <div class="bg-white p-5 rounded-2xl shadow-sm border @GetListCardBorderClass(room.Status) flex flex-col md:flex-row items-center justify-between gap-6 hover:shadow-md transition-shadow relative overflow-hidden">
@@ -395,7 +395,7 @@
                 <!-- Occupancy Stats -->
                 @if (stats != null && stats.TotalRooms > 0)
                 {
-                    <div class="bg-white p-8 rounded-2xl border border-outline-variant shadow-sm flex flex-col items-center text-center">
+                    <div id="room-management-occupancy-stats" class="bg-white p-8 rounded-2xl border border-outline-variant shadow-sm flex flex-col items-center text-center">
                         <div class="w-full max-w-2xl mx-auto">
                             <h3 class="text-label-md font-bold text-on-surface mb-6">Hiệu suất lấp đầy</h3>
                             <div class="flex items-center justify-center gap-3 mb-6">
@@ -416,6 +416,13 @@
     </div>
 </main>
 
+<GuidedOnboarding IsVisible="showRoomManagementTour"
+                  Steps="roomManagementGuidedSteps"
+                  StorageKey="sotro_room_management_guided_seen"
+                  AllowSkip="true"
+                  OnCompleted="CloseRoomManagementTour"
+                  OnSkipped="CloseRoomManagementTour" />
+
 @code {
     private List<RoomResponse> rooms = new();
     private RoomStatsModel? stats;
@@ -423,6 +430,7 @@
     private string filterStatus = "";
     private bool isLoading = true;
     private string? errorMessage;
+    private bool showRoomManagementTour;
     private int buildingId;
     private string buildingName = "—";
 
@@ -444,6 +452,85 @@
     // True when the building is Basic level (dãy trọ) — show flat grid instead of floor-tabbed layout
     private bool IsBasicLevel =>
         building?.Description?.Contains("[Level:Basic]", StringComparison.OrdinalIgnoreCase) ?? false;
+
+    private IReadOnlyList<GuidedOnboarding.GuidedStep> roomManagementGuidedSteps => BuildRoomManagementGuidedSteps();
+
+    private IReadOnlyList<GuidedOnboarding.GuidedStep> BuildRoomManagementGuidedSteps()
+    {
+        var floorLabel = IsBasicLevel ? "dãy" : "tầng";
+        var steps = new List<GuidedOnboarding.GuidedStep>
+        {
+            new(
+                "#room-management-summary",
+                "Tổng quan quản lý phòng",
+                "Khu vực này cho biết nhà trọ đang chọn, tổng số phòng, số phòng trống và số phòng đã thuê. Đây là nơi kiểm tra nhanh tình trạng vận hành trước khi thao tác.",
+                "Xem các chỉ số này để biết bạn cần thêm phòng, xử lý phòng trống hay kiểm tra phòng đang thuê."),
+            new(
+                "#room-management-create-room",
+                "Thêm phòng mới",
+                "Nút này đưa bạn sang form tạo phòng. Nếu đang ở tab sơ đồ mặt bằng, hệ thống sẽ tạo phòng theo tầng hoặc dãy đang chọn.",
+                "Click Thêm phòng khi cần tạo phòng mới cho nhà trọ."),
+            new(
+                "#room-management-view-tabs",
+                "Chọn cách xem phòng",
+                "Sơ đồ mặt bằng giúp xem phòng theo tầng/dãy. Danh sách phòng phù hợp khi cần xem nhiều thông tin chi tiết và thao tác sửa/xóa.",
+                "Chọn tab phù hợp với công việc hiện tại."),
+            new(
+                "#room-management-status-filter",
+                "Lọc theo trạng thái",
+                "Bộ lọc giúp xem nhanh tất cả phòng, phòng đã thuê, phòng trống hoặc phòng đang bảo trì.",
+                "Bấm một trạng thái để thu hẹp danh sách phòng cần theo dõi.")
+        };
+
+        if (activeTab == "room-list" && rooms.Count > 0)
+        {
+            steps.Add(new(
+                "#room-management-list",
+                "Danh sách phòng",
+                "Mỗi dòng hiển thị mã phòng, người đang thuê nếu có, trạng thái, tầng/dãy, giá thuê và các nút sửa/xóa.",
+                "Dùng danh sách này khi cần kiểm tra hoặc chỉnh sửa thông tin từng phòng."));
+        }
+        else
+        {
+            steps.Add(new(
+                "#room-management-floor-panel",
+                $"Chọn {floorLabel}",
+                $"Danh sách bên trái cho phép chuyển nhanh giữa các {floorLabel}. Mỗi mục cho biết số phòng hiện có trong {floorLabel} đó.",
+                $"Click một {floorLabel} để xem các phòng thuộc khu vực đó."));
+            steps.Add(new(
+                "#room-management-add-floor",
+                $"Thêm {floorLabel}",
+                $"Nút này dùng để mở rộng mặt bằng khi nhà trọ có thêm {floorLabel} mới.",
+                $"Click nút Thêm {floorLabel} nếu cần mở thêm khu vực quản lý."));
+            steps.Add(new(
+                "#room-management-floor-grid",
+                "Sơ đồ phòng",
+                "Khu vực này hiển thị các phòng của tầng/dãy đang chọn. Màu viền cho biết trạng thái: đã thuê, trống hoặc bảo trì.",
+                "Click một ô phòng để mở trang chỉnh sửa phòng đó."));
+        }
+
+        if (stats != null && stats.TotalRooms > 0)
+        {
+            steps.Add(new(
+                "#room-management-occupancy-stats",
+                "Hiệu suất lấp đầy",
+                "Biểu đồ này cho biết tỷ lệ phòng đang có người thuê so với tổng số phòng.",
+                "Theo dõi chỉ số này để đánh giá hiệu quả khai thác nhà trọ."));
+        }
+
+        return steps;
+    }
+
+    private void OpenRoomManagementTour()
+    {
+        showRoomManagementTour = !isLoading && string.IsNullOrEmpty(errorMessage);
+        StateHasChanged();
+    }
+
+    private void CloseRoomManagementTour()
+    {
+        showRoomManagementTour = false;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

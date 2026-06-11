@@ -89,7 +89,7 @@
     }
 </style>
 
-<HeaderDashboard />
+<HeaderDashboard OnHelpClicked="OpenCreateRoomTour" />
 <SideNavBar />
 
 <main class="min-h-[calc(100vh-64px)] ml-64 pb-10">
@@ -898,6 +898,12 @@
     private void CloseCreateRoomTour()
     {
         showCreateRoomTour = false;
+    }
+
+    private void OpenCreateRoomTour()
+    {
+        showCreateRoomTour = createMode == "single";
+        StateHasChanged();
     }
 
     private async Task OnFloorChanged(ChangeEventArgs e)

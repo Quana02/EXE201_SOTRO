@@ -34,7 +34,7 @@
     </style>
 }
 
-<HeaderDashboard />
+<HeaderDashboard OnHelpClicked="OpenTenantFormTour" />
 <SideNavBar />
 <!-- Main Content Area -->
 <main class="ml-64 p-gutter w-[calc(100%-16rem)]">
@@ -488,6 +488,17 @@ else
     private void CloseTenantFormTour()
     {
         showTenantFormTour = false;
+    }
+
+    private void OpenTenantFormTour()
+    {
+        if (IsEditMode)
+        {
+            return;
+        }
+
+        showTenantFormTour = true;
+        StateHasChanged();
     }
 
     [JSInvokable]

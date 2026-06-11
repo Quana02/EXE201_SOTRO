@@ -35,9 +35,16 @@
             <span class="material-symbols-outlined">notifications</span>
             <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
         </button>
-        <button class="hidden md:flex p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-full">
-            <span class="material-symbols-outlined">help_outline</span>
-        </button>
+        <div class="hidden md:block">
+            <button type="button"
+                    id="header-help-button"
+                    @onclick="HandleHelpClick"
+                    class="flex p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-full"
+                    title="Xem hướng dẫn trang này"
+                    aria-label="Xem hướng dẫn trang này">
+                <span class="material-symbols-outlined">help_outline</span>
+            </button>
+        </div>
         <div class="h-8 w-px bg-outline-variant mx-1 hidden md:block"></div>
 
         @* === Avatar + Dropdown === *@
@@ -206,6 +213,7 @@
 
 @code {
     [Parameter] public EventCallback<string> OnSearch { get; set; }
+    [Parameter] public EventCallback OnHelpClicked { get; set; }
     [Parameter] public string SearchPlaceholder { get; set; } = "Tìm kiếm...";
     [Parameter] public string SearchQuery { get; set; } = string.Empty;
 
@@ -298,6 +306,14 @@
     private void CloseDropdown()
     {
         _isDropdownOpen = false;
+    }
+
+    private async Task HandleHelpClick()
+    {
+        if (OnHelpClicked.HasDelegate)
+        {
+            await OnHelpClicked.InvokeAsync();
+        }
     }
 
     private void NavigateToProfile()
