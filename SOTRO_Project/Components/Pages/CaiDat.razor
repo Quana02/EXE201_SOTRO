@@ -136,6 +136,74 @@
                                     <label for="logo-upload" class="mt-2 inline-block text-xs font-bold text-primary hover:underline cursor-pointer">Thay đổi hình ảnh</label>
                                 </div>
                             </div>
+                            <div id="bank-qr-settings" class="grid grid-cols-1 lg:grid-cols-[180px,1fr] gap-5 p-4 bg-blue-50/70 border border-blue-100 rounded-lg">
+                                <InputFile OnChange="HandleBankQrSelected" id="bank-qr-upload" class="hidden" accept=".jpg,.jpeg,.png,.webp" />
+                                <label for="bank-qr-upload" class="w-44 h-44 rounded-xl bg-white border border-dashed border-blue-300 flex-shrink-0 relative group cursor-pointer overflow-hidden flex items-center justify-center">
+                                    @if (!string.IsNullOrWhiteSpace(EffectiveBankQrDataUrl))
+                                    {
+                                        <img alt="QR chuyển khoản ngân hàng" class="w-full h-full object-contain p-2" src="@EffectiveBankQrDataUrl">
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center px-4">
+                                            <span class="material-symbols-outlined text-blue-500 text-4xl">qr_code_2</span>
+                                            <p class="text-xs text-blue-700 font-bold mt-2">Thêm QR bank</p>
+                                        </div>
+                                    }
+                                    <div class="absolute inset-0 bg-blue-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-white">upload</span>
+                                    </div>
+                                </label>
+                                <div class="space-y-4">
+                                    <div>
+                                        <h5 class="text-sm font-bold text-on-surface">Thông tin chuyển khoản &amp; QR thanh toán</h5>
+                                        <p class="text-xs text-on-surface-variant mt-1">Chọn cách tạo QR thanh toán cho hóa đơn: hệ thống tự tạo từ số tài khoản hoặc bạn tự tải ảnh QR có sẵn.</p>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors @(bankQrMode == "auto" ? "border-primary bg-white shadow-sm" : "border-blue-100 bg-white/60")">
+                                            <input type="radio" class="mt-1 accent-blue-700" name="bankQrMode" checked="@(bankQrMode == "auto")" @onchange='() => bankQrMode = "auto"' />
+                                            <span>
+                                                <span class="block text-sm font-bold text-on-surface">Web tự tạo QR</span>
+                                                <span class="block text-xs text-on-surface-variant mt-1">Nhập ngân hàng, STK và họ tên chủ tài khoản.</span>
+                                            </span>
+                                        </label>
+                                        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors @(bankQrMode == "upload" ? "border-primary bg-white shadow-sm" : "border-blue-100 bg-white/60")">
+                                            <input type="radio" class="mt-1 accent-blue-700" name="bankQrMode" checked="@(bankQrMode == "upload")" @onchange='() => bankQrMode = "upload"' />
+                                            <span>
+                                                <span class="block text-sm font-bold text-on-surface">Tự upload ảnh QR</span>
+                                                <span class="block text-xs text-on-surface-variant mt-1">Dùng ảnh QR bank đã tạo sẵn từ ứng dụng ngân hàng.</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngân hàng / mã bank</label>
+                                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="VD: VCB, MB, TCB" type="text" @bind="bankName">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Số tài khoản</label>
+                                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="VD: 0123456789" type="text" @bind="bankAccountNumber">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Họ tên chủ STK</label>
+                                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="VD: NGUYEN VAN A" type="text" @bind="bankAccountHolder">
+                                        </div>
+                                    </div>
+                                    @if (bankQrMode == "auto")
+                                    {
+                                        <div class="text-xs text-on-surface-variant bg-white/70 border border-blue-100 rounded-lg p-3">
+                                            Hệ thống sẽ tự tạo QR từ thông tin trên. Mã ngân hàng nên dùng mã VietQR như VCB, MB, TCB, ACB, BIDV, VPB để ảnh QR hiển thị đúng.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <label for="bank-qr-upload" class="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline cursor-pointer">
+                                            <span class="material-symbols-outlined text-[16px]">add_photo_alternate</span>
+                                            <span>Chọn ảnh QR chuyển khoản</span>
+                                        </label>
+                                    }
+                                </div>
+                            </div>
                         </div>
                     </section>
 
@@ -301,6 +369,11 @@
     private string email = string.Empty;
     private string imageUrl = string.Empty;
     private string description = string.Empty;
+    private string bankQrMode = "auto";
+    private string bankName = string.Empty;
+    private string bankAccountNumber = string.Empty;
+    private string bankAccountHolder = string.Empty;
+    private string bankQrDataUrl = string.Empty;
     private bool isLoading = true;
     private bool isSaving = false;
     private string? errorMessage;
@@ -337,6 +410,11 @@
 
             hotline = userPhone ?? string.Empty;
             email = userEmail ?? string.Empty;
+            bankQrMode = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_mode") ?? "auto";
+            bankName = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_name") ?? string.Empty;
+            bankAccountNumber = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_number") ?? string.Empty;
+            bankAccountHolder = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_holder") ?? string.Empty;
+            bankQrDataUrl = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_data_url") ?? string.Empty;
 
             if (int.TryParse(idStr, out buildingId) && buildingId > 0)
             {
@@ -402,6 +480,43 @@
             {
                 errorMessage = $"Lỗi đọc file logo: {ex.Message}";
             }
+        }
+    }
+
+    private async Task HandleBankQrSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        successMessage = null;
+        var file = e.File;
+        if (file == null)
+        {
+            return;
+        }
+
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            errorMessage = "Ảnh QR bank không được vượt quá 5MB.";
+            return;
+        }
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType.ToLower()))
+        {
+            errorMessage = "Chỉ chấp nhận ảnh QR định dạng jpg, png hoặc webp.";
+            return;
+        }
+
+        try
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(5 * 1024 * 1024).ReadExactlyAsync(buffer);
+            bankQrDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            bankQrMode = "upload";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi đọc ảnh QR bank: {ex.Message}";
         }
     }
 
@@ -472,6 +587,15 @@
                 {
                     await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", email.Trim());
                 }
+
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_qr_mode", bankQrMode);
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_name", bankName.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_account_number", bankAccountNumber.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_account_holder", bankAccountHolder.Trim());
+                if (!string.IsNullOrWhiteSpace(bankQrDataUrl))
+                {
+                    await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_qr_data_url", bankQrDataUrl);
+                }
             }
             else
             {
@@ -500,5 +624,20 @@
             description = activeBuilding.Description ?? string.Empty;
             newLogoBytes = null;
         }
+    }
+
+    private string EffectiveBankQrDataUrl => bankQrMode == "auto" ? BuildGeneratedBankQrUrl() : bankQrDataUrl;
+
+    private string BuildGeneratedBankQrUrl()
+    {
+        if (string.IsNullOrWhiteSpace(bankName) || string.IsNullOrWhiteSpace(bankAccountNumber) || string.IsNullOrWhiteSpace(bankAccountHolder))
+        {
+            return string.Empty;
+        }
+
+        var bankCode = Uri.EscapeDataString(bankName.Trim().ToUpperInvariant());
+        var accountNumber = Uri.EscapeDataString(bankAccountNumber.Trim().Replace(" ", ""));
+        var accountName = Uri.EscapeDataString(bankAccountHolder.Trim().ToUpperInvariant());
+        return $"https://img.vietqr.io/image/{bankCode}-{accountNumber}-compact2.png?accountName={accountName}";
     }
 }

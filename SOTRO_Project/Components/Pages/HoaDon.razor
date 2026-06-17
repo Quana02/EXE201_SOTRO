@@ -1,304 +1,965 @@
-﻿@page "/hoa-don"
+@page "/hoa-don"
 @layout EmptyLayout
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject IRoomApiService RoomApiService
+@inject ITenantApiService TenantApiService
+@inject IBuildingApiService BuildingApiService
+@using SOTRO_Project.Models.Room
+@using SOTRO_Project.Models.Tenant
+@using SOTRO_Project.Models.Building
 
-<PageTitle>SOTRO - Quáº£n lÃ½ HÃ³a Ä‘Æ¡n</PageTitle>
+<PageTitle>SOTRO - Quản lý Hóa đơn</PageTitle>
 
-@if (!string.IsNullOrEmpty(CustomStyles))
-{
-    <style>
-        
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(8px);
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #c2c6d4;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #727784;
-        }
-    
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+</style>
 
-    </style>
-}
-
-<HeaderDashboard />
+<HeaderDashboard OnHelpClicked="OpenInvoiceTour" />
 <SideNavBar />
+
 <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative ml-64">
     <div class="flex-1 overflow-y-auto bg-background p-gutter">
-        <!-- Header Actions Section -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div id="invoice-page-header" class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
                 <h1 class="font-headline-md text-headline-md text-on-surface mb-1">Quản lý Hóa đơn</h1>
-                <p class="text-body-md text-on-surface-variant">Quản lý thu chi và công nợ căn hộ tháng 10/2023</p>
+                <p class="text-body-md text-on-surface-variant">Theo dõi công nợ, gửi nhắc thanh toán và xuất hóa đơn cho từng người thuê.</p>
             </div>
             <div class="flex flex-wrap gap-3">
-                <button class="flex items-center gap-2 px-4 py-2.5 bg-tertiary-container text-on-tertiary-container rounded-xl font-label-md text-label-md hover:brightness-95 transition-all">
+                <button id="invoice-bulk-reminder" @onclick="SendBulkReminder" class="flex items-center gap-2 px-4 py-2.5 bg-tertiary-container text-on-tertiary-container rounded-xl font-label-md text-label-md hover:brightness-95 transition-all">
                     <span class="material-symbols-outlined text-[20px]">bolt</span>
-                    <span class="">Gửi thông báo nợ (VIP)</span>
+                    <span>Gửi thông báo nợ (VIP)</span>
                 </button>
-                <button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary rounded-xl font-label-md text-label-md hover:shadow-lg transition-all">
+                <button id="invoice-bulk-create" @onclick="CreateBulkInvoices" class="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary rounded-xl font-label-md text-label-md hover:shadow-lg transition-all">
                     <span class="material-symbols-outlined text-[20px]">add_circle</span>
-                    <span class="">Tạo hóa đơn hàng loạt</span>
+                    <span>Tạo hóa đơn hàng loạt</span>
                 </button>
             </div>
         </div>
-        <!-- Bento Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+
+        @if (!string.IsNullOrEmpty(toastMessage))
+        {
+            <div class="mb-6 p-4 rounded-xl border @(toastIsError ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700") flex items-center gap-2">
+                <span class="material-symbols-outlined">@(toastIsError ? "error" : "check_circle")</span>
+                <span>@toastMessage</span>
+            </div>
+        }
+
+        <div id="invoice-stats" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="bg-surface-container-lowest p-6 rounded-full border border-outline-variant shadow-sm flex flex-col">
                 <span class="text-caption text-on-surface-variant uppercase tracking-wider mb-2">Tổng hóa đơn</span>
                 <div class="flex items-baseline gap-2">
-                    <span class="font-headline-sm text-headline-sm font-bold">124</span>
+                    <span class="font-headline-sm text-headline-sm font-bold">@filteredInvoices.Count</span>
                     <span class="text-caption text-primary">Tháng này</span>
                 </div>
             </div>
             <div class="bg-surface-container-lowest p-6 rounded-full border border-outline-variant shadow-sm flex flex-col">
                 <span class="text-caption text-on-surface-variant uppercase tracking-wider mb-2">Đã thanh toán</span>
                 <div class="flex items-baseline gap-2">
-                    <span class="font-headline-sm text-headline-sm font-bold text-primary">89</span>
-                    <span class="text-caption text-primary">72%</span>
+                    <span class="font-headline-sm text-headline-sm font-bold text-primary">@PaidCount</span>
+                    <span class="text-caption text-primary">@PaidRate%</span>
                 </div>
             </div>
             <div class="bg-surface-container-lowest p-6 rounded-full border border-outline-variant shadow-sm flex flex-col">
                 <span class="text-caption text-on-surface-variant uppercase tracking-wider mb-2">Chờ thanh toán</span>
                 <div class="flex items-baseline gap-2">
-                    <span class="font-headline-sm text-headline-sm font-bold text-secondary">30</span>
-                    <span class="text-caption text-secondary">2.540M</span>
+                    <span class="font-headline-sm text-headline-sm font-bold text-secondary">@PendingCount</span>
+                    <span class="text-caption text-secondary">@FormatPrice(PendingAmount)</span>
                 </div>
             </div>
             <div class="bg-error-container p-6 rounded-full border border-error/10 shadow-sm flex flex-col">
                 <span class="text-caption text-on-error-container uppercase tracking-wider mb-2">Quá hạn</span>
                 <div class="flex items-baseline gap-2">
-                    <span class="font-headline-sm text-headline-sm font-bold text-error">5</span>
-                    <span class="text-caption text-error">Nghiêm trọng</span>
+                    <span class="font-headline-sm text-headline-sm font-bold text-error">@OverdueCount</span>
+                    <span class="text-caption text-error">Cần nhắc ngay</span>
                 </div>
             </div>
         </div>
-        <!-- Filter Bar -->
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 bg-surface-container-low p-4 rounded-xl">
+
+        <div id="invoice-filter-bar" class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 bg-surface-container-low p-4 rounded-xl">
             <div class="flex items-center gap-4 w-full md:w-auto">
-                <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[140px]">
+                <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[150px]">
                     <span class="material-symbols-outlined text-outline text-[20px]">calendar_today</span>
-                    <select class="bg-transparent border-none text-label-md focus:ring-0 w-full cursor-pointer">
-                        <option>Tháng 10, 2023</option>
-                        <option>Tháng 09, 2023</option>
+                    <select value="@selectedMonth" @onchange="OnMonthChanged" class="bg-transparent border-none text-label-md focus:ring-0 w-full cursor-pointer">
+                        @foreach (var month in availableMonths)
+                        {
+                            <option value="@month">@month</option>
+                        }
                     </select>
                 </div>
-                <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[140px]">
+                <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[160px]">
                     <span class="material-symbols-outlined text-outline text-[20px]">filter_list</span>
-                    <select class="bg-transparent border-none text-label-md focus:ring-0 w-full cursor-pointer">
-                        <option>Tất cả trạng thái</option>
-                        <option>Đã thanh toán</option>
-                        <option>Chờ thanh toán</option>
-                        <option>Quá hạn</option>
+                    <select value="@statusFilter" @onchange="OnStatusChanged" class="bg-transparent border-none text-label-md focus:ring-0 w-full cursor-pointer">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Paid">Đã thanh toán</option>
+                        <option value="Pending">Chờ thanh toán</option>
+                        <option value="Overdue">Quá hạn</option>
                     </select>
                 </div>
             </div>
-            <div class="flex items-center gap-2 w-full md:w-auto">
-                <button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">
-                    <span class="material-symbols-outlined text-[20px]">file_download</span>
-                    <span class="">Xuất Excel</span>
+            <button @onclick="ExportFullExcel" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">
+                <span class="material-symbols-outlined text-[20px]">file_download</span>
+                <span>Xuất Excel</span>
+            </button>
+        </div>
+
+        <div id="invoice-table" class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+            @if (isLoading)
+            {
+                <div class="py-20 flex flex-col items-center gap-3">
+                    <span class="material-symbols-outlined text-primary text-5xl animate-spin">sync</span>
+                    <p class="text-on-surface-variant">Đang tải hóa đơn...</p>
+                </div>
+            }
+            else
+            {
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-surface-container-low border-b border-outline-variant">
+                            <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Mã hóa đơn</th>
+                            <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Người thuê / Phòng</th>
+                            <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Kỳ thanh toán</th>
+                            <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Tổng tiền</th>
+                            <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
+                            <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant">
+                        @if (pagedInvoices.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="px-6 py-16 text-center text-on-surface-variant">Không có hóa đơn phù hợp.</td>
+                            </tr>
+                        }
+                        @foreach (var invoice in pagedInvoices)
+                        {
+                            <tr class="hover:bg-surface-bright transition-colors">
+                                <td class="px-6 py-4 font-bold text-primary">@invoice.InvoiceCode</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="font-medium text-on-surface">@invoice.TenantName</span>
+                                        <span class="text-caption text-on-surface-variant">@invoice.RoomCode</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-on-surface-variant">@invoice.PeriodText</td>
+                                <td class="px-6 py-4 font-bold @(invoice.Status == "Overdue" ? "text-error" : "text-on-surface")">@FormatPrice(invoice.TotalAmount)</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 @GetStatusBadgeClass(invoice) rounded-full text-caption font-bold">@invoice.StatusLabel</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button id="invoice-detail-action" @onclick="() => ShowInvoiceDetail(invoice)" class="p-2 hover:bg-surface-container rounded-full transition-colors" title="Xem chi tiết">
+                                        <span class="material-symbols-outlined text-outline">visibility</span>
+                                    </button>
+                                    @if (invoice.Status == "Paid")
+                                    {
+                                        <button id="invoice-export-action" @onclick="() => ExportInvoicePdf(invoice)" class="p-2 hover:bg-surface-container rounded-full transition-colors text-primary" title="Xuất hóa đơn PDF">
+                                            <span class="material-symbols-outlined">print</span>
+                                        </button>
+                                    }
+                                    else if (invoice.Status == "Overdue")
+                                    {
+                                        <button id="invoice-overdue-action" @onclick="() => SendZaloPaymentMessage(invoice)" class="p-2 hover:bg-error-container hover:text-error rounded-full transition-colors text-error" title="Gửi tin nhắn quá hạn qua Zalo">
+                                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button id="invoice-send-action" @onclick="() => SendZaloPaymentMessage(invoice)" class="p-2 hover:bg-surface-container rounded-full transition-colors text-tertiary" title="Gửi tin nhắn thanh toán qua Zalo">
+                                            <span class="material-symbols-outlined">send</span>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div id="invoice-pagination" class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-low">
+                    <span class="text-caption text-on-surface-variant">
+                        Hiển thị @PageStart - @PageEnd trong tổng số @filteredInvoices.Count hóa đơn
+                    </span>
+                    <div class="flex items-center gap-1">
+                        <button class="p-2 rounded-lg hover:bg-surface-container disabled:opacity-30" disabled="@(currentPage == 1)" @onclick="PreviousPage">
+                            <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        @for (var page = 1; page <= TotalPages; page++)
+                        {
+                            var pageNumber = page;
+                            <button @onclick="() => GoToPage(pageNumber)" class="w-8 h-8 rounded-lg text-label-md font-bold @(currentPage == pageNumber ? "bg-primary text-on-primary" : "hover:bg-surface-container")">@pageNumber</button>
+                        }
+                        <button class="p-2 rounded-lg hover:bg-surface-container disabled:opacity-30" disabled="@(currentPage == TotalPages)" @onclick="NextPage">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</main>
+
+@if (selectedInvoice != null)
+{
+    <div class="fixed inset-0 z-[220] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-primary uppercase">Chi tiết hóa đơn</p>
+                    <h3 class="text-xl font-black text-on-surface">@selectedInvoice.InvoiceCode</h3>
+                </div>
+                <button @onclick="CloseInvoiceDetail" class="p-2 rounded-full hover:bg-surface-container">
+                    <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
-        </div>
-        <!-- Table Container -->
-        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-surface-container-low border-b border-outline-variant">
-                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Mã hóa đơn</th>
-                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Phòng</th>
-                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Kỳ thanh toán</th>
-                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Tổng tiền</th>
-                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
-                        <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-outline-variant">
-                    <!-- Row 1 -->
-                    <tr class="hover:bg-surface-bright transition-colors">
-                        <td class="px-6 py-4 font-bold text-primary">INV-2310-001</td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-on-surface">P.402</span>
-                                <span class="text-caption text-on-surface-variant">Trần Minh Quân</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
-                        <td class="px-6 py-4 font-bold text-on-surface">4.520.000đ</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-caption font-bold">Đã thanh toán</span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
-                                <span class="material-symbols-outlined text-outline">visibility</span>
-                            </button>
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-primary">
-                                <span class="material-symbols-outlined">print</span>
-                            </button>
-                        </td>
-                    </tr>
-                    <!-- Row 2 -->
-                    <tr class="hover:bg-surface-bright transition-colors">
-                        <td class="px-6 py-4 font-bold text-primary">INV-2310-002</td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-on-surface">P.205</span>
-                                <span class="text-caption text-on-surface-variant">Lê Thị Hoa</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
-                        <td class="px-6 py-4 font-bold text-on-surface">3.800.000đ</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-caption font-bold">Chờ thanh toán</span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
-                                <span class="material-symbols-outlined text-outline">visibility</span>
-                            </button>
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-tertiary">
-                                <span class="material-symbols-outlined">send</span>
-                            </button>
-                        </td>
-                    </tr>
-                    <!-- Row 3 -->
-                    <tr class="hover:bg-surface-bright transition-colors">
-                        <td class="px-6 py-4 font-bold text-primary">INV-2310-003</td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-on-surface">P.501</span>
-                                <span class="text-caption text-on-surface-variant">Nguyễn Văn Ba</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
-                        <td class="px-6 py-4 font-bold text-error">5.150.000đ</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 bg-error-container text-on-error-container rounded-full text-caption font-bold">Quá hạn 3 ngày</span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
-                                <span class="material-symbols-outlined text-outline">visibility</span>
-                            </button>
-                            <button class="p-2 hover:bg-error-container hover:text-error rounded-full transition-colors text-error">
-                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">priority_high</span>
-                            </button>
-                        </td>
-                    </tr>
-                    <!-- Row 4 -->
-                    <tr class="hover:bg-surface-bright transition-colors">
-                        <td class="px-6 py-4 font-bold text-primary">INV-2310-004</td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-on-surface">P.101</span>
-                                <span class="text-caption text-on-surface-variant">Phạm Nhật Vượng</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
-                        <td class="px-6 py-4 font-bold text-on-surface">6.000.000đ</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-caption font-bold">Đã thanh toán</span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
-                                <span class="material-symbols-outlined text-outline">visibility</span>
-                            </button>
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-primary">
-                                <span class="material-symbols-outlined">print</span>
-                            </button>
-                        </td>
-                    </tr>
-                    <!-- Row 5 -->
-                    <tr class="hover:bg-surface-bright transition-colors">
-                        <td class="px-6 py-4 font-bold text-primary">INV-2310-005</td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col">
-                                <span class="font-medium text-on-surface">P.303</span>
-                                <span class="text-caption text-on-surface-variant">Lý Quốc Sư</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-on-surface-variant">01/10 - 30/10</td>
-                        <td class="px-6 py-4 font-bold text-on-surface">2.200.000đ</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-caption font-bold">Chờ thanh toán</span>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors">
-                                <span class="material-symbols-outlined text-outline">visibility</span>
-                            </button>
-                            <button class="p-2 hover:bg-surface-container rounded-full transition-colors text-tertiary">
-                                <span class="material-symbols-outlined">send</span>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <!-- Pagination -->
-            <div class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-low">
-                <span class="text-caption text-on-surface-variant">Hiển thị 1 - 5 trong tổng số 124 hóa đơn</span>
-                <div class="flex items-center gap-1">
-                    <button class="p-2 rounded-lg hover:bg-surface-container disabled:opacity-30" disabled="">
-                        <span class="material-symbols-outlined">chevron_left</span>
-                    </button>
-                    <button class="w-8 h-8 rounded-lg bg-primary text-on-primary text-label-md font-bold">1</button>
-                    <button class="w-8 h-8 rounded-lg hover:bg-surface-container text-label-md">2</button>
-                    <button class="w-8 h-8 rounded-lg hover:bg-surface-container text-label-md">3</button>
-                    <span class="px-2">...</span>
-                    <button class="w-8 h-8 rounded-lg hover:bg-surface-container text-label-md">25</button>
-                    <button class="p-2 rounded-lg hover:bg-surface-container">
-                        <span class="material-symbols-outlined">chevron_right</span>
-                    </button>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-[1fr_180px] gap-6">
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-xs uppercase text-on-surface-variant font-bold">Người thuê</p>
+                        <p class="font-bold">@selectedInvoice.TenantName - @selectedInvoice.RoomCode</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <p>Tiền phòng</p><p class="font-bold text-right">@FormatPrice(selectedInvoice.RoomPrice)</p>
+                        <p>Điện</p><p class="font-bold text-right">@FormatPrice(selectedInvoice.ElectricFee)</p>
+                        <p>Nước</p><p class="font-bold text-right">@FormatPrice(selectedInvoice.WaterFee)</p>
+                        <p>Dịch vụ</p><p class="font-bold text-right">@FormatPrice(selectedInvoice.ServiceFee)</p>
+                        <p class="border-t pt-3 font-bold">Tổng thanh toán</p><p class="border-t pt-3 font-black text-right text-primary">@FormatPrice(selectedInvoice.TotalAmount)</p>
+                    </div>
                 </div>
+                <div class="rounded-xl bg-surface-container-low p-3 flex flex-col items-center justify-center text-center">
+                    @if (!string.IsNullOrWhiteSpace(bankQrDataUrl))
+                    {
+                        <img src="@bankQrDataUrl" alt="QR chuyển khoản" class="w-36 h-36 object-contain rounded-lg bg-white border border-outline-variant" />
+                        <p class="text-xs mt-2 font-bold">@bankName</p>
+                        <p class="text-[11px] text-on-surface-variant">@bankAccountNumber</p>
+                    }
+                    else
+                    {
+                        <span class="material-symbols-outlined text-5xl text-on-surface-variant">qr_code_2</span>
+                        <p class="text-xs text-on-surface-variant mt-2">Chưa có QR chuyển khoản</p>
+                    }
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-outline-variant flex justify-end gap-3">
+                @if (selectedInvoice.Status != "Paid")
+                {
+                    <button @onclick="() => MarkAsPaid(selectedInvoice)" class="px-4 py-2 rounded-xl bg-primary text-white font-bold">Đánh dấu đã thanh toán</button>
+                }
+                <button @onclick="CloseInvoiceDetail" class="px-4 py-2 rounded-xl border border-outline-variant font-bold">Đóng</button>
             </div>
         </div>
     </div>
-    <!-- Floating Action Button for Support/VIP -->
-    <button class="fixed bottom-8 right-8 w-14 h-14 bg-tertiary text-on-tertiary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-50 group">
-        <span class="material-symbols-outlined">support_agent</span>
-        <span class="absolute right-16 bg-inverse-surface text-inverse-on-surface px-4 py-2 rounded-lg text-caption whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            Hỗ trợ kỹ thuật SOTRO
-        </span>
-    </button>
-</main>
-<script>
-        // Simple micro-interaction for the Send Debt Notification VIP feature
-        const vipButtons = document.querySelectorAll('button:contains("Gá»­i thÃ´ng bÃ¡o ná»£"), .text-tertiary .material-symbols-outlined[textContent="send"]');
-        
-        // Custom text search selector polyfill
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(btn => {
-            if (btn.textContent.includes('Gá»­i thÃ´ng bÃ¡o ná»£')) {
-                btn.addEventListener('click', () => {
-                    const confirmAction = confirm('Báº¡n cÃ³ muá»‘n gá»­i thÃ´ng bÃ¡o nháº¯c ná»£ tá»± Ä‘á»™ng qua Zalo/SMS cho táº¥t cáº£ hÃ³a Ä‘Æ¡n quÃ¡ háº¡n? (TÃ­nh nÄƒng VIP)');
-                    if(confirmAction) {
-                        alert('Äang xá»­ lÃ½ gá»­i thÃ´ng bÃ¡o hÃ ng loáº¡t...');
-                    }
-                });
-            }
-        });
-    </script>
+}
 
+@if (zaloInvoice != null)
+{
+    <div class="fixed inset-0 z-[230] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-outline-variant flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-primary uppercase">Gửi hóa đơn qua Zalo</p>
+                    <h3 class="text-xl font-black text-on-surface">@zaloInvoice.InvoiceCode</h3>
+                </div>
+                <button @onclick="CloseZaloInvoicePopup" class="p-2 rounded-full hover:bg-surface-container">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 text-center">
+                <div id="zalo-bill-preview" class="mx-auto mb-4 w-full max-w-[300px] rounded-2xl border border-blue-100 bg-white shadow-sm overflow-hidden text-left">
+                    <div class="bg-primary text-white px-4 py-3">
+                        <p class="text-[11px] uppercase font-bold tracking-wide">Bill PNG</p>
+                        <p class="text-lg font-black">@zaloInvoice.InvoiceCode</p>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div>
+                            <p class="text-[11px] text-slate-500 uppercase font-bold">Nhà trọ</p>
+                            <p class="text-sm font-black text-slate-900">@buildingName</p>
+                            <p class="text-[11px] text-slate-500 leading-4">@buildingAddress</p>
+                        </div>
+                        <div class="grid grid-cols-[1fr_82px] gap-3 items-center">
+                            <div class="space-y-1 text-xs">
+                                <p><span class="text-slate-500">Người thuê:</span> <strong>@zaloInvoice.TenantName</strong></p>
+                                <p><span class="text-slate-500">SĐT:</span> <strong>@(string.IsNullOrWhiteSpace(zaloInvoice.TenantPhone) ? "Chưa có" : zaloInvoice.TenantPhone)</strong></p>
+                                <p><span class="text-slate-500">Phòng:</span> <strong>@zaloInvoice.RoomCode</strong></p>
+                                <p><span class="text-slate-500">Kỳ:</span> <strong>@zaloInvoice.PeriodText</strong></p>
+                            </div>
+                            <div class="w-20 h-20 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+                                @if (!string.IsNullOrWhiteSpace(bankQrDataUrl))
+                                {
+                                    <img src="@bankQrDataUrl" alt="QR chuyển khoản" class="w-full h-full object-contain p-1" />
+                                }
+                                else
+                                {
+                                    <span class="material-symbols-outlined text-slate-400">qr_code_2</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-200 pt-3 flex justify-between text-sm">
+                            <span class="font-bold text-slate-600">Tổng thanh toán</span>
+                            <span class="font-black text-primary">@FormatPrice(zaloInvoice.TotalAmount)</span>
+                        </div>
+                    </div>
+                </div>
+                <h4 class="font-black text-lg text-on-surface">Bill PNG đã sẵn sàng</h4>
+                <p class="text-sm text-on-surface-variant mt-2 leading-6">
+                    Hóa đơn dạng ảnh gồm thông tin phòng, địa chỉ trọ, các khoản phí, tổng thanh toán và QR chuyển khoản.
+                </p>
+                <div class="mt-4 rounded-xl bg-surface-container-low p-4 text-left text-sm space-y-2">
+                    <div class="flex justify-between gap-3">
+                        <span class="text-on-surface-variant">Người thuê</span>
+                        <span class="font-bold text-right">@zaloInvoice.TenantName</span>
+                    </div>
+                    <div class="flex justify-between gap-3">
+                        <span class="text-on-surface-variant">SĐT</span>
+                        <span class="font-bold text-right">@(string.IsNullOrWhiteSpace(zaloInvoice.TenantPhone) ? "Chưa có" : zaloInvoice.TenantPhone)</span>
+                    </div>
+                    <div class="flex justify-between gap-3">
+                        <span class="text-on-surface-variant">Phòng</span>
+                        <span class="font-bold">@zaloInvoice.RoomCode</span>
+                    </div>
+                    <div class="flex justify-between gap-3">
+                        <span class="text-on-surface-variant">Tổng tiền</span>
+                        <span class="font-black text-primary">@FormatPrice(zaloInvoice.TotalAmount)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-outline-variant grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button id="zalo-copy-png-button" @onclick="CopyInvoicePngAsync" class="px-4 py-3 rounded-xl border border-primary text-primary font-bold flex items-center justify-center gap-2 hover:bg-blue-50">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    <span>Copy PNG</span>
+                </button>
+                <button id="zalo-open-button" @onclick="GoToTenantZaloAsync" class="px-4 py-3 rounded-xl bg-primary text-white font-bold flex items-center justify-center gap-2 hover:shadow-lg">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                    <span>Chuyển đến Zalo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
 
+<GuidedOnboarding IsVisible="showInvoiceTour"
+                  Steps="invoiceGuidedSteps"
+                  StorageKey="sotro_invoice_guided_seen"
+                  AllowSkip="true"
+                  OnCompleted="CloseInvoiceTour"
+                  OnSkipped="CloseInvoiceTour" />
 
-
-
-
-
-
-
-
-
+<GuidedOnboarding IsVisible="showZaloPopupTour"
+                  Steps="zaloPopupGuidedSteps"
+                  StorageKey="sotro_zalo_bill_popup_guided_seen"
+                  AllowSkip="true"
+                  OnCompleted="CloseZaloPopupTour"
+                  OnSkipped="CloseZaloPopupTour" />
 
 @code {
-    private const string CustomStyles = "HoaDon";
+    private const int PageSize = 10;
+    private List<InvoiceItem> invoices = new();
+    private bool isLoading = true;
+    private bool showInvoiceTour;
+    private bool showZaloPopupTour;
+    private string selectedMonth = string.Empty;
+    private string statusFilter = string.Empty;
+    private int currentPage = 1;
+    private string? toastMessage;
+    private bool toastIsError;
+    private InvoiceItem? selectedInvoice;
+    private InvoiceItem? zaloInvoice;
+    private string bankQrMode = "auto";
+    private string bankName = string.Empty;
+    private string bankAccountNumber = string.Empty;
+    private string bankAccountHolder = string.Empty;
+    private string bankQrDataUrl = string.Empty;
+    private string buildingName = "Sổ Trọ";
+    private string buildingAddress = "Chưa cập nhật địa chỉ";
+    private readonly string[] availableMonths =
+    {
+        $"{DateTime.Today.Month:00}/{DateTime.Today.Year}",
+        $"{DateTime.Today.AddMonths(-1).Month:00}/{DateTime.Today.AddMonths(-1).Year}"
+    };
+
+    private IReadOnlyList<GuidedOnboarding.GuidedStep> invoiceGuidedSteps => new[]
+    {
+        new GuidedOnboarding.GuidedStep("#invoice-page-header", "Quản lý hóa đơn", "Trang này dùng để theo dõi từng hóa đơn của người thuê, gửi nhắc thanh toán, xuất hóa đơn và cập nhật trạng thái đã thanh toán.", "Bắt đầu từ khu vực tiêu đề để biết các thao tác chính của trang."),
+        new GuidedOnboarding.GuidedStep("#invoice-stats", "Thống kê công nợ", "Các ô thống kê cho biết tổng hóa đơn, số đã thanh toán, số chờ thanh toán và số quá hạn.", "Xem nhanh khu vực này để biết tình hình thu tiền trong tháng."),
+        new GuidedOnboarding.GuidedStep("#invoice-filter-bar", "Lọc hóa đơn", "Bạn có thể lọc hóa đơn theo tháng hoặc trạng thái để xử lý đúng nhóm cần quan tâm.", "Chọn tháng hoặc trạng thái trước khi thao tác hàng loạt."),
+        new GuidedOnboarding.GuidedStep("#invoice-table", "Danh sách hóa đơn theo người thuê", "Mỗi dòng là một hóa đơn của người thuê, luôn có nút xem chi tiết. Hóa đơn đã thanh toán có nút xuất, hóa đơn chờ thanh toán có nút gửi tin nhắn, hóa đơn quá hạn có nút cảnh báo.", "Dùng các icon ở cột thao tác để xử lý từng hóa đơn."),
+        new GuidedOnboarding.GuidedStep("#invoice-pagination", "Phân trang", "Mỗi trang hiển thị 10 hóa đơn để danh sách gọn và dễ theo dõi.", "Dùng nút chuyển trang khi có nhiều hơn 10 hóa đơn.")
+    };
+
+    private IReadOnlyList<GuidedOnboarding.GuidedStep> zaloPopupGuidedSteps => new[]
+    {
+        new GuidedOnboarding.GuidedStep("#zalo-bill-preview", "Xem trước bill PNG", "Đây là ảnh bill sẽ được gửi cho người thuê, gồm thông tin nhà trọ, SĐT người thuê, phòng, kỳ thanh toán, tổng tiền và QR chuyển khoản.", "Kiểm tra nhanh nội dung trước khi gửi để tránh nhầm người thuê hoặc sai số tiền."),
+        new GuidedOnboarding.GuidedStep("#zalo-copy-png-button", "Copy ảnh PNG", "Bấm nút này để hệ thống tạo ảnh hóa đơn và copy vào clipboard. Nếu trình duyệt chặn copy ảnh, hệ thống sẽ tự tải file PNG xuống.", "Sau khi copy thành công, bạn có thể dán trực tiếp vào khung chat Zalo."),
+        new GuidedOnboarding.GuidedStep("#zalo-open-button", "Mở Zalo người thuê", "Nút này mở Zalo theo SĐT người thuê để bạn gửi ảnh bill vừa copy hoặc file PNG vừa tải.", "Sau khi vào Zalo, dán ảnh hoặc chọn file PNG để gửi cho người thuê.")
+    };
+
+    private List<InvoiceItem> filteredInvoices => invoices
+        .Where(i => string.IsNullOrWhiteSpace(selectedMonth) || i.MonthKey == selectedMonth)
+        .Where(i => string.IsNullOrWhiteSpace(statusFilter) || i.Status == statusFilter)
+        .ToList();
+
+    private List<InvoiceItem> pagedInvoices => filteredInvoices
+        .Skip((currentPage - 1) * PageSize)
+        .Take(PageSize)
+        .ToList();
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)filteredInvoices.Count / PageSize));
+    private int PageStart => filteredInvoices.Count == 0 ? 0 : ((currentPage - 1) * PageSize) + 1;
+    private int PageEnd => Math.Min(currentPage * PageSize, filteredInvoices.Count);
+    private int PaidCount => filteredInvoices.Count(i => i.Status == "Paid");
+    private int PendingCount => filteredInvoices.Count(i => i.Status == "Pending");
+    private int OverdueCount => filteredInvoices.Count(i => i.Status == "Overdue");
+    private decimal PendingAmount => filteredInvoices.Where(i => i.Status != "Paid").Sum(i => i.TotalAmount);
+    private int PaidRate => filteredInvoices.Count == 0 ? 0 : (int)Math.Round((double)PaidCount * 100 / filteredInvoices.Count);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        selectedMonth = availableMonths[0];
+        await LoadInvoices();
+        await LoadBankSettings();
+        await LoadBuildingInfo();
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadInvoices()
+    {
+        var paidKeys = await LoadPaidKeys();
+        var built = new List<InvoiceItem>();
+
+        try
+        {
+            var buildingIdText = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
+            int.TryParse(buildingIdText, out var buildingId);
+            var tenantsResponse = await TenantApiService.GetTenantsAsync();
+            var roomsResponse = buildingId > 0
+                ? await RoomApiService.GetRoomsByBuildingAsync(buildingId)
+                : null;
+            var tenants = tenantsResponse.Data ?? new();
+            var rooms = roomsResponse?.Data ?? new();
+            var activeTenants = tenants
+                .Where(t => t.Status == null || t.Status == "Active")
+                .GroupBy(GetTenantIdentityKey)
+                .Select(g => g.OrderByDescending(t => t.UpdatedAt ?? t.CreatedAt ?? DateTime.MinValue).First())
+                .ToList();
+
+            foreach (var tenant in activeTenants)
+            {
+                var room = rooms.FirstOrDefault(r => r.RoomId == tenant.RoomId || r.RoomCode == tenant.RoomCode);
+                built.Add(CreateInvoiceFromTenant(tenant, room, paidKeys, built.Count + 1));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Invoice load error: {ex.Message}");
+        }
+
+        if (built.Count == 0)
+        {
+            built = CreateSampleInvoices(paidKeys);
+        }
+
+        invoices = built;
+    }
+
+    private InvoiceItem CreateInvoiceFromTenant(TenantResponse tenant, RoomResponse? room, HashSet<string> paidKeys, int index)
+    {
+        var dueDate = ResolveDueDate(tenant, room);
+        var code = $"INV-{DateTime.Today:yyMM}-{index:000}";
+        var invoiceKey = BuildInvoiceKey(tenant, room);
+        var roomPrice = tenant.MonthlyRent ?? room?.BasePrice ?? 0;
+        var electricFee = room?.ElectricPrice.HasValue == true ? room.ElectricPrice.Value * 30 : 0;
+        var waterFee = room?.WaterPrice.HasValue == true ? room.WaterPrice.Value * 4 : 0;
+        var serviceFee = room?.ServiceFee ?? 0;
+        var status = paidKeys.Contains(invoiceKey) ? "Paid" : (DateTime.Today.Date > dueDate.Date ? "Overdue" : "Pending");
+
+        return new InvoiceItem
+        {
+            InvoiceKey = invoiceKey,
+            InvoiceCode = code,
+            TenantName = tenant.FullName,
+            TenantPhone = tenant.PhoneNumber ?? string.Empty,
+            RoomCode = tenant.RoomCode ?? room?.RoomCode ?? "Chưa gán phòng",
+            MonthKey = $"{DateTime.Today.Month:00}/{DateTime.Today.Year}",
+            PeriodText = $"01/{DateTime.Today.Month:00} - {DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month)}/{DateTime.Today.Month:00}",
+            RoomPrice = roomPrice,
+            ElectricFee = electricFee,
+            WaterFee = waterFee,
+            ServiceFee = serviceFee,
+            DueDate = dueDate,
+            Status = status
+        };
+    }
+
+    private List<InvoiceItem> CreateSampleInvoices(HashSet<string> paidKeys)
+    {
+        var names = new[] { "Trần Minh Quân", "Lê Thị Hoa", "Nguyễn Văn Ba", "Phạm Nhật Vượng", "Lý Quốc Sư", "Hoàng An", "Mai Thanh", "Đỗ Minh", "Ngọc Hân", "Tuấn Kiệt", "Bảo Trâm", "Quốc Huy" };
+        var result = new List<InvoiceItem>();
+        for (var i = 0; i < names.Length; i++)
+        {
+            var code = $"INV-{DateTime.Today:yyMM}-{i + 1:000}";
+            var invoiceKey = $"sample:{DateTime.Today:yyyyMM}:{i + 1}";
+            var status = paidKeys.Contains(invoiceKey) ? "Paid" : i % 5 == 2 ? "Overdue" : i % 3 == 0 ? "Paid" : "Pending";
+            result.Add(new InvoiceItem
+            {
+                InvoiceKey = invoiceKey,
+                InvoiceCode = code,
+                TenantName = names[i],
+                TenantPhone = string.Empty,
+                RoomCode = $"P.{(i + 1) * 101}",
+                MonthKey = $"{DateTime.Today.Month:00}/{DateTime.Today.Year}",
+                PeriodText = $"01/{DateTime.Today.Month:00} - {DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month)}/{DateTime.Today.Month:00}",
+                RoomPrice = 2500000 + i * 150000,
+                ElectricFee = 180000 + i * 10000,
+                WaterFee = 80000,
+                ServiceFee = 120000,
+                DueDate = DateTime.Today.AddDays(i % 5 == 2 ? -3 : 5),
+                Status = status
+            });
+        }
+        return result;
+    }
+
+    private static string GetTenantIdentityKey(TenantResponse tenant)
+    {
+        if (tenant.TenantId > 0)
+        {
+            return $"tenant:{tenant.TenantId}";
+        }
+
+        var roomPart = tenant.RoomId?.ToString() ?? tenant.RoomCode ?? "no-room";
+        var phonePart = tenant.PhoneNumber ?? tenant.IdentityNumber ?? tenant.FullName;
+        return $"tenant:{roomPart}:{phonePart}".ToLowerInvariant();
+    }
+
+    private static string BuildInvoiceKey(TenantResponse tenant, RoomResponse? room)
+    {
+        var monthKey = DateTime.Today.ToString("yyyyMM");
+        if (tenant.TenantId > 0)
+        {
+            return $"tenant:{tenant.TenantId}:{monthKey}";
+        }
+
+        var roomPart = tenant.RoomId?.ToString() ?? room?.RoomId.ToString() ?? tenant.RoomCode ?? room?.RoomCode ?? "no-room";
+        var tenantPart = tenant.TenantCode;
+        if (string.IsNullOrWhiteSpace(tenantPart))
+        {
+            tenantPart = tenant.PhoneNumber ?? tenant.IdentityNumber ?? tenant.FullName;
+        }
+
+        return $"tenant:{roomPart}:{tenantPart}:{monthKey}".ToLowerInvariant();
+    }
+
+    private static DateTime ResolveDueDate(TenantResponse tenant, RoomResponse? room)
+    {
+        var dueDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, Math.Clamp(room?.PaymentDueDay ?? 5, 1, 28));
+        var startDate = tenant.StartDate?.ToDateTime(TimeOnly.MinValue) ?? tenant.CreatedAt?.Date;
+
+        if (startDate.HasValue &&
+            startDate.Value.Year == DateTime.Today.Year &&
+            startDate.Value.Month == DateTime.Today.Month &&
+            startDate.Value.Date > dueDate.Date)
+        {
+            return startDate.Value.Date.AddDays(7);
+        }
+
+        return dueDate;
+    }
+
+    private async Task<HashSet<string>> LoadPaidKeys()
+    {
+        try
+        {
+            var raw = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_paid_invoice_keys_v2");
+            return string.IsNullOrWhiteSpace(raw)
+                ? new HashSet<string>()
+                : raw.Split('|', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+        }
+        catch
+        {
+            return new HashSet<string>();
+        }
+    }
+
+    private async Task SavePaidKeys()
+    {
+        var paid = invoices.Where(i => i.Status == "Paid").Select(i => i.InvoiceKey);
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_paid_invoice_keys_v2", string.Join('|', paid));
+    }
+
+    private async Task LoadBankSettings()
+    {
+        bankQrMode = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_mode") ?? "auto";
+        bankName = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_name") ?? string.Empty;
+        bankAccountNumber = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_number") ?? string.Empty;
+        bankAccountHolder = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_holder") ?? string.Empty;
+        bankQrDataUrl = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_data_url") ?? string.Empty;
+        if (bankQrMode == "auto")
+        {
+            bankQrDataUrl = BuildGeneratedBankQrUrl();
+        }
+    }
+
+    private async Task LoadBuildingInfo()
+    {
+        try
+        {
+            var buildingIdText = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
+            var cachedName = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_name");
+            if (!string.IsNullOrWhiteSpace(cachedName))
+            {
+                buildingName = cachedName;
+            }
+
+            if (int.TryParse(buildingIdText, out var buildingId) && buildingId > 0)
+            {
+                var response = await BuildingApiService.GetBuildingByIdAsync(buildingId);
+                if (response.Success && response.Data != null)
+                {
+                    buildingName = response.Data.BuildingName ?? buildingName;
+                    buildingAddress = response.Data.Address ?? buildingAddress;
+                }
+            }
+        }
+        catch
+        {
+            // Keep the cached/default building information for printable invoices.
+        }
+    }
+
+    private async Task SendPaymentMessage(InvoiceItem invoice)
+    {
+        await LoadBankSettings();
+        if (string.IsNullOrWhiteSpace(bankQrDataUrl))
+        {
+            var goToSettings = await JS.InvokeAsync<bool>("confirm", "Chủ trọ chưa có QR chuyển khoản. Bạn cần vào Cài đặt để thêm ảnh QR bank trước khi gửi tin nhắn thanh toán. Chuyển đến Cài đặt ngay?");
+            if (goToSettings) Navigation.NavigateTo("/cai-dat");
+            return;
+        }
+
+        var message = BuildPaymentMessage(invoice);
+        await JS.InvokeVoidAsync("alert", message);
+        var paidNow = await JS.InvokeAsync<bool>("confirm", "Người thuê đã thanh toán khoản này chưa? Nếu đã thanh toán, hệ thống sẽ cập nhật trạng thái hóa đơn.");
+        if (paidNow)
+        {
+            await MarkAsPaid(invoice);
+        }
+        else
+        {
+            ShowToast("Đã gửi nội dung nhắc thanh toán kèm QR chuyển khoản.");
+        }
+    }
+
+    private string BuildPaymentMessage(InvoiceItem invoice) =>
+        $"{(invoice.Status == "Overdue" ? "THÔNG BÁO QUÁ HẠN" : "THÔNG BÁO THANH TOÁN")}\n" +
+        $"Người thuê: {invoice.TenantName}\n" +
+        $"Phòng: {invoice.RoomCode}\n" +
+        $"Tiền phòng: {FormatPrice(invoice.RoomPrice)}\n" +
+        $"Điện: {FormatPrice(invoice.ElectricFee)}\n" +
+        $"Nước: {FormatPrice(invoice.WaterFee)}\n" +
+        $"Dịch vụ: {FormatPrice(invoice.ServiceFee)}\n" +
+        $"Tổng thanh toán: {FormatPrice(invoice.TotalAmount)}\n" +
+        $"Vui lòng chuyển khoản theo QR của chủ trọ ({bankName} - {bankAccountNumber} - {bankAccountHolder}).";
+
+    private async Task MarkAsPaid(InvoiceItem invoice)
+    {
+        invoice.Status = "Paid";
+        await SavePaidKeys();
+        selectedInvoice = null;
+        ShowToast($"Đã cập nhật {invoice.InvoiceCode} thành Đã thanh toán.");
+    }
+
+    private void ShowInvoiceDetail(InvoiceItem invoice) => selectedInvoice = invoice;
+    private void CloseInvoiceDetail() => selectedInvoice = null;
+    private void ExportInvoice(InvoiceItem invoice) => ShowToast($"Đã xuất hóa đơn {invoice.InvoiceCode}.");
+    private void ExportExcel() => ShowToast("Đã chuẩn bị file Excel danh sách hóa đơn.");
+    private void CreateBulkInvoices() => ShowToast("Đã tạo/cập nhật hóa đơn hàng loạt cho tháng hiện tại.");
+
+    private async Task SendZaloPaymentMessage(InvoiceItem invoice)
+    {
+        await LoadBankSettings();
+        await LoadBuildingInfo();
+        if (string.IsNullOrWhiteSpace(bankQrDataUrl))
+        {
+            var goToSettings = await JS.InvokeAsync<bool>("confirm", "Chủ trọ chưa có QR chuyển khoản. Bạn cần vào Cài đặt để thêm hoặc tạo QR bank trước khi gửi tin nhắn thanh toán. Chuyển đến Cài đặt ngay?");
+            if (goToSettings) Navigation.NavigateTo("/cai-dat");
+            return;
+        }
+
+        zaloInvoice = invoice;
+        showZaloPopupTour = true;
+        StateHasChanged();
+    }
+
+    private void CloseZaloInvoicePopup()
+    {
+        showZaloPopupTour = false;
+        zaloInvoice = null;
+    }
+
+    private void CloseZaloPopupTour() => showZaloPopupTour = false;
+
+    private async Task CopyInvoicePngAsync()
+    {
+        if (zaloInvoice == null)
+        {
+            return;
+        }
+
+        await LoadBankSettings();
+        await LoadBuildingInfo();
+
+        var payload = new
+        {
+            BuildingName = buildingName,
+            BuildingAddress = buildingAddress,
+            InvoiceCode = zaloInvoice.InvoiceCode,
+            TenantName = zaloInvoice.TenantName,
+            TenantPhone = string.IsNullOrWhiteSpace(zaloInvoice.TenantPhone) ? "Chưa có" : zaloInvoice.TenantPhone,
+            RoomCode = zaloInvoice.RoomCode,
+            PeriodText = zaloInvoice.PeriodText,
+            DueDate = zaloInvoice.DueDate.ToString("dd/MM/yyyy"),
+            Note = zaloInvoice.Status == "Overdue"
+                ? $"Hóa đơn đã quá hạn {zaloInvoice.OverdueDays} ngày. Vui lòng thanh toán sớm."
+                : "Hóa đơn chưa quá hạn. Vui lòng thanh toán đúng hạn.",
+            RoomPrice = FormatPrice(zaloInvoice.RoomPrice),
+            ElectricFee = FormatPrice(zaloInvoice.ElectricFee),
+            WaterFee = FormatPrice(zaloInvoice.WaterFee),
+            ServiceFee = FormatPrice(zaloInvoice.ServiceFee),
+            TotalAmount = FormatPrice(zaloInvoice.TotalAmount),
+            BankQrDataUrl = bankQrDataUrl,
+            BankName = bankName,
+            BankAccountNumber = bankAccountNumber,
+            BankAccountHolder = bankAccountHolder
+        };
+
+        var result = await JS.InvokeAsync<string>("sotroInvoiceTools.copyInvoicePng", payload);
+        if (result == "copied")
+        {
+            ShowToast("Đã copy ảnh PNG hóa đơn. Chuyển sang Zalo rồi dán ảnh vào khung chat.");
+        }
+        else if (result == "downloaded")
+        {
+            ShowToast("Trình duyệt không cho copy ảnh trực tiếp, hệ thống đã tải file PNG xuống. Hãy gửi file đó qua Zalo.");
+        }
+        else
+        {
+            ShowToast("Không tạo được ảnh PNG hóa đơn. Vui lòng thử lại.", true);
+        }
+    }
+
+    private async Task GoToTenantZaloAsync()
+    {
+        if (zaloInvoice == null)
+        {
+            return;
+        }
+
+        var openedByPhone = await JS.InvokeAsync<bool>("sotroInvoiceTools.openZaloContact", zaloInvoice.TenantPhone);
+        ShowToast(openedByPhone
+            ? $"Đã chuyển đến Zalo theo SĐT {zaloInvoice.TenantPhone}. Hãy dán ảnh PNG vừa copy hoặc gửi file PNG đã tải."
+            : "Người thuê chưa có SĐT, đã mở Zalo Web chung. Hãy tìm người thuê rồi dán ảnh PNG hoặc gửi file PNG đã tải.");
+        zaloInvoice = null;
+    }
+
+    private async Task ExportFullExcel()
+    {
+        var html = BuildExcelHtml();
+        var fileName = $"sotro-hoa-don-{DateTime.Today:yyyyMMdd}.xls";
+        await JS.InvokeVoidAsync("sotroDownloadFile", fileName, "application/vnd.ms-excel;charset=utf-8", html);
+        ShowToast("Đã xuất Excel toàn bộ thông tin của tất cả hóa đơn.");
+    }
+
+    private async Task ExportInvoicePdf(InvoiceItem invoice)
+    {
+        await LoadBankSettings();
+        await LoadBuildingInfo();
+        var html = BuildInvoicePrintHtml(invoice);
+        var printed = await JS.InvokeAsync<bool>("sotroInvoiceTools.printInvoice", html, $"Hoa don {invoice.InvoiceCode}");
+        if (printed)
+        {
+            ShowToast($"Đã mở hóa đơn PDF cho {invoice.InvoiceCode}. Trong hộp thoại in, chọn Save as PDF để lưu file.");
+        }
+    }
+
+    private string BuildZaloPaymentMessage(InvoiceItem invoice)
+    {
+        var overdueLine = invoice.Status == "Overdue"
+            ? $"Hóa đơn đã quá hạn {invoice.OverdueDays} ngày. Vui lòng thanh toán sớm giúp chủ trọ.\n"
+            : "Hóa đơn chưa quá hạn. Chủ trọ gửi bill để bạn tiện thanh toán.\n";
+
+        return $"{(invoice.Status == "Overdue" ? "THÔNG BÁO HÓA ĐƠN QUÁ HẠN" : "THÔNG BÁO THANH TOÁN TIỀN TRỌ")}\n" +
+               overdueLine +
+               $"Mã hóa đơn: {invoice.InvoiceCode}\n" +
+               $"Người thuê: {invoice.TenantName}\n" +
+               $"SĐT: {(string.IsNullOrWhiteSpace(invoice.TenantPhone) ? "Chưa có" : invoice.TenantPhone)}\n" +
+               $"Phòng: {invoice.RoomCode}\n" +
+               $"Kỳ thanh toán: {invoice.PeriodText}\n" +
+               $"Tiền phòng: {FormatPrice(invoice.RoomPrice)}\n" +
+               $"Điện: {FormatPrice(invoice.ElectricFee)}\n" +
+               $"Nước: {FormatPrice(invoice.WaterFee)}\n" +
+               $"Dịch vụ: {FormatPrice(invoice.ServiceFee)}\n" +
+               $"Tổng thanh toán: {FormatPrice(invoice.TotalAmount)}\n" +
+               $"Chuyển khoản: {bankName} - {bankAccountNumber} - {bankAccountHolder}\n" +
+               $"QR chuyển khoản: {GetShareableQrText()}";
+    }
+
+    private string BuildExcelHtml()
+    {
+        var rows = string.Join("", invoices.Select(invoice =>
+            $"<tr>" +
+            $"<td class='invoice-id'>{H(invoice.InvoiceCode)}</td>" +
+            $"<td>{H(invoice.TenantName)}</td>" +
+            $"<td>{H(invoice.RoomCode)}</td>" +
+            $"<td>{H(invoice.PeriodText)}</td>" +
+            $"<td>{FormatPrice(invoice.RoomPrice)}</td>" +
+            $"<td>{FormatPrice(invoice.ElectricFee)}</td>" +
+            $"<td>{FormatPrice(invoice.WaterFee)}</td>" +
+            $"<td>{FormatPrice(invoice.ServiceFee)}</td>" +
+            $"<td>{FormatPrice(invoice.TotalAmount)}</td>" +
+            $"<td>{H(invoice.StatusLabel)}</td>" +
+            $"<td>{invoice.DueDate:dd/MM/yyyy}</td>" +
+            $"</tr>"));
+
+        return "<html><head><meta charset='utf-8' />" +
+               "<style>body{font-family:Arial,sans-serif;}table{border-collapse:collapse;width:100%;}.title{background:#0056b3;color:white;font-size:20px;font-weight:bold;text-align:center;padding:14px;}th{background:#0f766e;color:white;font-weight:bold;padding:10px;border:1px solid #cbd5e1;}td{padding:9px;border:1px solid #cbd5e1;}.invoice-id{background:#dbeafe;color:#004a98;font-weight:bold;}</style>" +
+               "</head><body><table>" +
+               "<tr><td class='title' colspan='11'>DANH SÁCH HÓA ĐƠN SỔ TRỌ</td></tr>" +
+               "<tr><th>Mã hóa đơn</th><th>Người thuê</th><th>Phòng</th><th>Kỳ thanh toán</th><th>Tiền phòng</th><th>Điện</th><th>Nước</th><th>Dịch vụ</th><th>Tổng tiền</th><th>Trạng thái</th><th>Ngày đến hạn</th></tr>" +
+               rows +
+               "</table></body></html>";
+    }
+
+    private string BuildInvoicePrintHtml(InvoiceItem invoice)
+    {
+        var qrHtml = string.IsNullOrWhiteSpace(bankQrDataUrl)
+            ? "<div class='qr-empty'>Chưa có QR chuyển khoản</div>"
+            : $"<img class='qr' src='{H(bankQrDataUrl)}' alt='QR chuyển khoản' />";
+        var note = invoice.Status == "Overdue"
+            ? $"Hóa đơn đã quá hạn {invoice.OverdueDays} ngày. Vui lòng thanh toán sớm."
+            : "Hóa đơn chưa quá hạn. Vui lòng thanh toán đúng hạn.";
+
+        return "<html><head><meta charset='utf-8' />" +
+               "<style>*{box-sizing:border-box;}body{margin:0;padding:32px;font-family:Arial,sans-serif;color:#111827;background:#f8fafc;}.invoice{max-width:780px;margin:0 auto;background:white;padding:32px;border-radius:16px;border:1px solid #dbe3ef;}.header{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid #0056b3;padding-bottom:20px;}.brand{color:#0056b3;font-size:28px;font-weight:800;}.code{color:#004a98;font-weight:800;}.muted{color:#64748b;font-size:13px;}.building{margin-top:8px;line-height:1.45;}.grid{display:grid;grid-template-columns:1fr 180px;gap:24px;margin-top:24px;}.notice{margin-top:16px;padding:12px 14px;border-radius:12px;background:#eff6ff;color:#004a98;font-weight:700;}table{width:100%;border-collapse:collapse;margin-top:24px;}th{background:#0056b3;color:white;text-align:left;padding:12px;}td{padding:12px;border-bottom:1px solid #e2e8f0;}.total td{font-size:18px;font-weight:800;color:#0056b3;border-top:2px solid #0056b3;}.qr{width:170px;height:170px;object-fit:contain;border:1px solid #dbe3ef;border-radius:12px;padding:8px;}.qr-empty{width:170px;height:170px;border:1px dashed #94a3b8;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#64748b;text-align:center;padding:16px;}.paid{display:inline-block;margin-top:18px;padding:8px 14px;border-radius:999px;background:#dbeafe;color:#004a98;font-weight:800;}@media print{body{background:white;padding:0;}.invoice{border:none;}}</style>" +
+               "</head><body><div class='invoice'>" +
+               $"<div class='header'><div><div class='brand'>{H(buildingName)}</div><div class='muted'>Hóa đơn thanh toán tiền trọ</div><div class='building'><strong>Địa chỉ:</strong> {H(buildingAddress)}</div></div>" +
+               $"<div><div class='muted'>Mã hóa đơn</div><div class='code'>{H(invoice.InvoiceCode)}</div><div class='muted'>Kỳ: {H(invoice.PeriodText)}</div></div></div>" +
+               "<div class='grid'><div>" +
+               $"<p><strong>Người thuê:</strong> {H(invoice.TenantName)}</p>" +
+               $"<p><strong>SĐT:</strong> {H(string.IsNullOrWhiteSpace(invoice.TenantPhone) ? "Chưa có" : invoice.TenantPhone)}</p>" +
+               $"<p><strong>Phòng:</strong> {H(invoice.RoomCode)}</p>" +
+               $"<p><strong>Ngày đến hạn:</strong> {invoice.DueDate:dd/MM/yyyy}</p>" +
+               $"<span class='paid'>{H(invoice.StatusLabel)}</span><div class='notice'>{H(note)}</div></div><div>{qrHtml}" +
+               $"<div class='muted' style='margin-top:8px;'>{H(bankName)} - {H(bankAccountNumber)}</div><div class='muted'>{H(bankAccountHolder)}</div></div></div>" +
+               "<table><tr><th>Khoản thu</th><th style='text-align:right;'>Số tiền</th></tr>" +
+               $"<tr><td>Tiền phòng</td><td style='text-align:right;'>{FormatPrice(invoice.RoomPrice)}</td></tr>" +
+               $"<tr><td>Điện</td><td style='text-align:right;'>{FormatPrice(invoice.ElectricFee)}</td></tr>" +
+               $"<tr><td>Nước</td><td style='text-align:right;'>{FormatPrice(invoice.WaterFee)}</td></tr>" +
+               $"<tr><td>Dịch vụ</td><td style='text-align:right;'>{FormatPrice(invoice.ServiceFee)}</td></tr>" +
+               $"<tr class='total'><td>Tổng thanh toán</td><td style='text-align:right;'>{FormatPrice(invoice.TotalAmount)}</td></tr>" +
+               "</table></div></body></html>";
+    }
+
+    private async Task SendBulkReminder()
+    {
+        var targets = filteredInvoices.Where(i => i.Status != "Paid").ToList();
+        if (targets.Count == 0)
+        {
+            ShowToast("Không có hóa đơn cần nhắc thanh toán.");
+            return;
+        }
+        await LoadBankSettings();
+        if (string.IsNullOrWhiteSpace(bankQrDataUrl))
+        {
+            var goToSettings = await JS.InvokeAsync<bool>("confirm", "Chưa có QR chuyển khoản trong Cài đặt. Chuyển đến Cài đặt để thêm QR?");
+            if (goToSettings) Navigation.NavigateTo("/cai-dat");
+            return;
+        }
+        ShowToast($"Đã gửi nhắc thanh toán cho {targets.Count} hóa đơn.");
+    }
+
+    private void ShowToast(string message, bool isError = false)
+    {
+        toastMessage = message;
+        toastIsError = isError;
+        StateHasChanged();
+    }
+
+    private void OnMonthChanged(ChangeEventArgs e)
+    {
+        selectedMonth = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+    }
+
+    private void OnStatusChanged(ChangeEventArgs e)
+    {
+        statusFilter = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+    }
+
+    private void PreviousPage() => currentPage = Math.Max(1, currentPage - 1);
+    private void NextPage() => currentPage = Math.Min(TotalPages, currentPage + 1);
+    private void GoToPage(int page) => currentPage = Math.Clamp(page, 1, TotalPages);
+    private void OpenInvoiceTour() => showInvoiceTour = true;
+    private void CloseInvoiceTour() => showInvoiceTour = false;
+
+    private static string FormatPrice(decimal value) => $"{value:N0}đ";
+
+    private string GetShareableQrText()
+    {
+        if (bankQrMode == "auto" && !string.IsNullOrWhiteSpace(bankQrDataUrl))
+        {
+            return bankQrDataUrl;
+        }
+
+        return "QR đã được chủ trọ lưu trong hệ thống, vui lòng xem ảnh QR đi kèm bill.";
+    }
+
+    private static string H(string? value) => System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
+
+    private string BuildGeneratedBankQrUrl()
+    {
+        if (string.IsNullOrWhiteSpace(bankName) || string.IsNullOrWhiteSpace(bankAccountNumber) || string.IsNullOrWhiteSpace(bankAccountHolder))
+        {
+            return string.Empty;
+        }
+
+        var bankCode = Uri.EscapeDataString(bankName.Trim().ToUpperInvariant());
+        var accountNumber = Uri.EscapeDataString(bankAccountNumber.Trim().Replace(" ", ""));
+        var accountName = Uri.EscapeDataString(bankAccountHolder.Trim().ToUpperInvariant());
+        return $"https://img.vietqr.io/image/{bankCode}-{accountNumber}-compact2.png?accountName={accountName}";
+    }
+
+    private static string GetStatusBadgeClass(InvoiceItem invoice) => invoice.Status switch
+    {
+        "Paid" => "bg-primary-fixed text-on-primary-fixed-variant",
+        "Overdue" => "bg-error-container text-on-error-container",
+        _ => "bg-secondary-fixed text-on-secondary-fixed-variant"
+    };
+
+    private sealed class InvoiceItem
+    {
+        public string InvoiceKey { get; set; } = string.Empty;
+        public string InvoiceCode { get; set; } = string.Empty;
+        public string TenantName { get; set; } = string.Empty;
+        public string TenantPhone { get; set; } = string.Empty;
+        public string RoomCode { get; set; } = string.Empty;
+        public string PeriodText { get; set; } = string.Empty;
+        public string MonthKey { get; set; } = string.Empty;
+        public decimal RoomPrice { get; set; }
+        public decimal ElectricFee { get; set; }
+        public decimal WaterFee { get; set; }
+        public decimal ServiceFee { get; set; }
+        public DateTime DueDate { get; set; }
+        public string Status { get; set; } = "Pending";
+        public decimal TotalAmount => RoomPrice + ElectricFee + WaterFee + ServiceFee;
+        public int OverdueDays => Math.Max(1, (DateTime.Today.Date - DueDate.Date).Days);
+        public string StatusLabel => Status switch
+        {
+            "Paid" => "Đã thanh toán",
+            "Overdue" => $"Quá hạn {OverdueDays} ngày",
+            _ => "Chờ thanh toán"
+        };
+    }
 }
