@@ -2,7 +2,9 @@
 @layout EmptyLayout
 @inject IJSRuntime JS
 @inject IBuildingApiService BuildingApiService
+@inject IRoomApiService RoomApiService
 @using System.IO
+@using SOTRO_Project.Models.Room
 
 <PageTitle>Cài đặt - SOTRO</PageTitle>
 
@@ -48,8 +50,8 @@
                         <span>Thông tin chung</span>
                         <span class="material-symbols-outlined text-sm" style="@(activeSection == "thong-tin-chung" ? "font-variation-settings: 'FILL' 1;" : "")">info</span>
                     </button>
-                    <button @onclick='() => ScrollToSection("cau-hinh-dich-vu")'
-                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "cau-hinh-dich-vu" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
+                    <button @onclick='() => ScrollToSection("cau-hinh-dich-vu-chung")'
+                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "cau-hinh-dich-vu-chung" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
                         <span>Cấu hình dịch vụ</span>
                         <span class="material-symbols-outlined text-sm" style="@(activeSection == "cau-hinh-dich-vu" ? "font-variation-settings: 'FILL' 1;" : "")">settings_input_component</span>
                     </button>
@@ -111,6 +113,16 @@
                                 <div class="col-span-1 md:col-span-2">
                                     <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Địa chỉ chính</label>
                                     <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" @bind="address">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngày khởi tạo hóa đơn</label>
+                                    <input min="1" max="28" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" @bind="invoiceCreationDay">
+                                    <p class="text-xs text-on-surface-variant mt-1">Ngày hệ thống tự tạo bill hằng tháng.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngày xuất/gửi hóa đơn</label>
+                                    <input min="1" max="28" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" @bind="invoiceSendDay">
+                                    <p class="text-xs text-on-surface-variant mt-1">Ngày chủ trọ gửi bill cho người thuê qua Zalo.</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg">
@@ -189,6 +201,13 @@
                                             <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="VD: NGUYEN VAN A" type="text" @bind="bankAccountHolder">
                                         </div>
                                     </div>
+                                    @if (!string.IsNullOrWhiteSpace(EffectiveBankQrDataUrl))
+                                    {
+                                        <button type="button" @onclick="() => showBankQrPreview = true" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:shadow-md transition-all">
+                                            <span class="material-symbols-outlined text-[16px]">qr_code_2</span>
+                                            <span>Xem QR chuyển khoản</span>
+                                        </button>
+                                    }
                                     @if (bankQrMode == "auto")
                                     {
                                         <div class="text-xs text-on-surface-variant bg-white/70 border border-blue-100 rounded-lg p-3">
@@ -208,7 +227,7 @@
                     </section>
 
                 <!-- Section 2: Cấu hình dịch vụ -->
-                <section id="cau-hinh-dich-vu" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
+                <section id="cau-hinh-dich-vu" class="hidden">
                     <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
                         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">settings_input_component</span>
                         <h3 class="font-headline-sm text-headline-sm text-primary">Cấu hình dịch vụ</h3>
@@ -237,6 +256,41 @@
                 </section>
 
                 <!-- Section 3: Tự động hóa VIP (đứng liền dưới Cấu hình dịch vụ) -->
+                <section id="cau-hinh-dich-vu-chung" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
+                    <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">payments</span>
+                        <h3 class="font-headline-sm text-headline-sm text-primary">Thông số dịch vụ chung</h3>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <p class="text-sm text-on-surface-variant leading-relaxed">Các khoản này áp dụng chung cho tất cả phòng và được cộng vào hóa đơn mới khi hệ thống tạo bill.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền rác chung</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="0" step="1000" @bind="commonTrashFee">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền internet chung</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="0" step="1000" @bind="commonInternetFee">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền vệ sinh chung</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="0" step="1000" @bind="commonCleaningFee">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Phí quản lý chung</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="0" step="1000" @bind="commonManagementFee">
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-primary/15 bg-primary/5 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                            <div>
+                                <p class="text-sm font-bold text-on-surface">Tổng phí dịch vụ chung áp dụng cho tất cả phòng</p>
+                                <p class="text-xs text-on-surface-variant">Giá trị thực tế sẽ được lưu và dùng cho hóa đơn tháng mới.</p>
+                            </div>
+                            <div class="text-2xl font-bold text-primary">@FormatCurrency(CommonServiceTotal)</div>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="tu-dong-hoa" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
                     <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
                         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
@@ -345,6 +399,30 @@
     </a>
 </nav>
 
+@if (showBankQrPreview)
+{
+    <div class="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4" @onclick="() => showBankQrPreview = false">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" @onclick:stopPropagation="true">
+            <div class="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-primary uppercase">QR bank</p>
+                    <h3 class="text-lg font-bold text-on-surface">QR chuyển khoản</h3>
+                </div>
+                <button type="button" @onclick="() => showBankQrPreview = false" class="w-9 h-9 rounded-full hover:bg-surface-variant flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 flex flex-col items-center gap-4">
+                <img alt="QR chuyển khoản" class="w-72 h-72 max-w-full object-contain rounded-xl border border-outline-variant p-3 bg-white" src="@EffectiveBankQrDataUrl" />
+                <div class="text-center text-sm text-on-surface-variant">
+                    <p class="font-bold text-on-surface">@bankName - @bankAccountNumber</p>
+                    <p>@bankAccountHolder</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <script>
     // Global function to scroll smoothly with offset for header
     window.sotroScrollTo = (elementId) => {
@@ -374,10 +452,19 @@
     private string bankAccountNumber = string.Empty;
     private string bankAccountHolder = string.Empty;
     private string bankQrDataUrl = string.Empty;
+    private int invoiceCreationDay = 1;
+    private int invoiceSendDay = 5;
+    private decimal commonTrashFee;
+    private decimal commonInternetFee;
+    private decimal commonCleaningFee;
+    private decimal commonManagementFee;
+    private bool showBankQrPreview;
     private bool isLoading = true;
     private bool isSaving = false;
     private string? errorMessage;
     private string? successMessage;
+
+    private decimal CommonServiceTotal => commonTrashFee + commonInternetFee + commonCleaningFee + commonManagementFee;
 
     // File upload state for new logo
     private byte[]? newLogoBytes;
@@ -415,6 +502,10 @@
             bankAccountNumber = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_number") ?? string.Empty;
             bankAccountHolder = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_holder") ?? string.Empty;
             bankQrDataUrl = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_data_url") ?? string.Empty;
+            commonTrashFee = await GetDecimalSetting("sotro_common_trash_fee");
+            commonInternetFee = await GetDecimalSetting("sotro_common_internet_fee");
+            commonCleaningFee = await GetDecimalSetting("sotro_common_cleaning_fee");
+            commonManagementFee = await GetDecimalSetting("sotro_common_management_fee");
 
             if (int.TryParse(idStr, out buildingId) && buildingId > 0)
             {
@@ -426,6 +517,8 @@
                     address = activeBuilding.Address ?? string.Empty;
                     imageUrl = activeBuilding.ImageUrl ?? string.Empty;
                     description = activeBuilding.Description ?? string.Empty;
+                    invoiceCreationDay = Math.Clamp(activeBuilding.BillingDay ?? 1, 1, 28);
+                    invoiceSendDay = Math.Clamp(activeBuilding.DueDay ?? 5, 1, 28);
                 }
                 else
                 {
@@ -554,8 +647,8 @@
                 Address = address.Trim(),
                 Description = string.IsNullOrWhiteSpace(description) ? (activeBuilding.Description ?? "Mô tả nhà trọ") : description.Trim(),
                 TotalFloors = activeBuilding.TotalFloors ?? 1,
-                BillingDay = activeBuilding.BillingDay ?? 30,
-                DueDay = activeBuilding.DueDay ?? 5
+                BillingDay = Math.Clamp(invoiceCreationDay, 1, 28),
+                DueDay = Math.Clamp(invoiceSendDay, 1, 28)
             };
 
             List<(Stream Stream, string FileName)>? imageFiles = null;
@@ -592,10 +685,17 @@
                 await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_name", bankName.Trim());
                 await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_account_number", bankAccountNumber.Trim());
                 await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_account_holder", bankAccountHolder.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_common_trash_fee", commonTrashFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_common_internet_fee", commonInternetFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_common_cleaning_fee", commonCleaningFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_common_management_fee", commonManagementFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 if (!string.IsNullOrWhiteSpace(bankQrDataUrl))
                 {
                     await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_qr_data_url", bankQrDataUrl);
                 }
+
+                var roomApplyResult = await ApplyCommonServiceFeeToRoomsAsync();
+                successMessage = roomApplyResult;
             }
             else
             {
@@ -622,9 +722,70 @@
             address = activeBuilding.Address ?? string.Empty;
             imageUrl = activeBuilding.ImageUrl ?? string.Empty;
             description = activeBuilding.Description ?? string.Empty;
+            invoiceCreationDay = Math.Clamp(activeBuilding.BillingDay ?? 1, 1, 28);
+            invoiceSendDay = Math.Clamp(activeBuilding.DueDay ?? 5, 1, 28);
             newLogoBytes = null;
         }
     }
+
+    private async Task<string> ApplyCommonServiceFeeToRoomsAsync()
+    {
+        var roomsResponse = await RoomApiService.GetRoomsByBuildingAsync(buildingId);
+        if (!roomsResponse.Success || roomsResponse.Data == null)
+        {
+            return "Đã lưu cài đặt, nhưng chưa áp dụng được phí dịch vụ chung cho phòng.";
+        }
+
+        var failedCount = 0;
+        foreach (var room in roomsResponse.Data)
+        {
+            var updateRequest = new UpdateRoomRequest
+            {
+                RoomCode = room.RoomCode,
+                RoomName = room.RoomName,
+                Zone = room.Zone,
+                FloorNumber = room.FloorNumber,
+                RoomTypeId = room.RoomTypeId,
+                Status = room.Status,
+                BasePrice = room.BasePrice,
+                ElectricPrice = room.ElectricPrice,
+                WaterPrice = room.WaterPrice,
+                ServiceFee = CommonServiceTotal,
+                IncidentFee = room.IncidentFee,
+                Capacity = room.Capacity,
+                CurrentTenantCount = room.CurrentTenantCount,
+                BillingDay = room.BillingDay,
+                PaymentDueDay = room.PaymentDueDay,
+                BankName = room.BankName,
+                BankAccountNumber = room.BankAccountNumber,
+                BankQrUrl = room.BankQrUrl,
+                Note = room.Note
+            };
+
+            var updateResponse = await RoomApiService.UpdateRoomAsync(room.RoomId, updateRequest);
+            if (!updateResponse.Success)
+            {
+                failedCount++;
+            }
+        }
+
+        return failedCount == 0
+            ? $"Đã lưu cài đặt và áp dụng {FormatCurrency(CommonServiceTotal)} phí dịch vụ chung cho tất cả phòng."
+            : $"Đã lưu cài đặt, nhưng có {failedCount} phòng chưa áp dụng được phí dịch vụ chung.";
+    }
+
+    private async Task<decimal> GetDecimalSetting(string key)
+    {
+        var rawValue = await JS.InvokeAsync<string>("localStorage.getItem", key);
+        if (decimal.TryParse(rawValue, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var value))
+        {
+            return value;
+        }
+
+        return decimal.TryParse(rawValue, out value) ? value : 0m;
+    }
+
+    private static string FormatCurrency(decimal value) => $"{value:N0}đ";
 
     private string EffectiveBankQrDataUrl => bankQrMode == "auto" ? BuildGeneratedBankQrUrl() : bankQrDataUrl;
 
