@@ -1,7 +1,7 @@
-﻿@page "/xac-minh-email"
+@page "/xac-minh-email"
 @layout EmptyLayout
 
-<PageTitle>XÃ¡c minh Email - Sá»• trá»</PageTitle>
+<PageTitle>Xác minh Email - Sổ trọ</PageTitle>
 
 @if (!string.IsNullOrEmpty(CustomStyles))
 {
@@ -28,17 +28,17 @@
 <header class="bg-surface-container-lowest dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline-variant w-full top-0 sticky z-50">
 <div class="flex justify-between items-center px-margin-desktop h-16 max-w-container-max-width mx-auto">
 <div class="flex items-center gap-3">
-<img alt="Logo Sá»• trá»" class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrTuGgO59RgNbmnmN-8Tx79guQ-CuJhGOK5McAwqa5cvSW0rg2oXxHxI6GyqUC1zzkch2qtcd8DooPxBJiKA0aKLeDp_CIv5n8eAAu3YI8qqZArbq9SPFwT8U57gtAWyKfHoqbes1P1c6qEq1O8d3MuMkrw9ef-ptJHzpBRMW2-29p6lC3odDRZeVNu_wkb1NuZQ5A8vCTFRQ8XD7FZ4TTB-uK9NcXz9tOZWSLzrWlIwp2OjhlpRi-W891mdf_CFemSXNjWjP9_c4r">
-<span class="text-headline-sm font-headline-sm text-primary dark:text-primary-fixed">Sá»• trá»</span>
+<img alt="Logo Sổ trọ" class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrTuGgO59RgNbmnmN-8Tx79guQ-CuJhGOK5McAwqa5cvSW0rg2oXxHxI6GyqUC1zzkch2qtcd8DooPxBJiKA0aKLeDp_CIv5n8eAAu3YI8qqZArbq9SPFwT8U57gtAWyKfHoqbes1P1c6qEq1O8d3MuMkrw9ef-ptJHzpBRMW2-29p6lC3odDRZeVNu_wkb1NuZQ5A8vCTFRQ8XD7FZ4TTB-uK9NcXz9tOZWSLzrWlIwp2OjhlpRi-W891mdf_CFemSXNjWjP9_c4r">
+<span class="text-headline-sm font-headline-sm text-primary dark:text-primary-fixed">Sổ trọ</span>
 </div>
 <nav class="hidden md:flex gap-8">
-<a class="text-on-secondary-container dark:text-on-secondary-container font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer transition-all duration-200" href="#">Trang chá»§</a>
-<a class="text-on-secondary-container dark:text-on-secondary-container font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer transition-all duration-200" href="#">TÃ­nh nÄƒng</a>
-<a class="text-on-secondary-container dark:text-on-secondary-container font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer transition-all duration-200" href="#">Báº£ng giÃ¡</a>
-<a class="text-on-secondary-container dark:text-on-secondary-container font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer transition-all duration-200" href="#">LiÃªn há»‡</a>
+<a class="text-on-secondary-container dark:text-on-secondary-container font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer transition-all duration-200" href="#">Trang chủ</a>
+<a class="text-on-secondary-container dark:text-on-secondary-container font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer transition-all duration-200" href="#">Tính năng</a>
+<a class="text-on-secondary-container dark:text-on-secondary-container font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer transition-all duration-200" href="#">Bảng giá</a>
+<a class="text-on-secondary-container dark:text-on-secondary-container font-label-md text-label-md hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer transition-all duration-200" href="#">Liên hệ</a>
 </nav>
 <button class="bg-primary-container text-on-primary font-label-md text-label-md px-6 py-2 rounded-xl cursor-pointer transition-all duration-200 hover:opacity-90">
-                ÄÄƒng nháº­p
+                Đăng nhập
             </button>
 </div>
 </header>
@@ -57,33 +57,33 @@
 </div>
 </div>
 <!-- Text Content -->
-<h1 class="font-headline-md text-headline-md text-primary mb-4">Kiá»ƒm tra email cá»§a báº¡n</h1>
+<h1 class="font-headline-md text-headline-md text-primary mb-4">Kiểm tra email của bạn</h1>
 <p class="font-body-md text-body-md text-on-secondary-container mb-8 leading-relaxed">
-                    ChÃºng tÃ´i vá»«a gá»­i mÃ£ xÃ¡c minh gá»“m 6 chá»¯ sá»‘ Ä‘áº¿n Ä‘á»‹a chá»‰ email <span class="font-semibold text-on-surface">user@@example.com</span>. Vui lÃ²ng nháº­p mÃ£ Ä‘á»ƒ hoÃ n táº¥t Ä‘Äƒng kÃ½.
+                    Chúng tôi vừa gửi mã xác minh gồm 6 chữ số đến địa chỉ email <span class="font-semibold text-on-surface">user@@example.com</span>. Vui lòng nhập mã để hoàn tất đăng ký.
                 </p>
 <!-- Actions -->
 <div class="flex flex-col gap-4">
 <a class="bg-primary-container text-on-primary py-4 px-6 rounded-xl font-label-md text-label-md hover:opacity-95 transition-all flex items-center justify-center gap-2 shadow-md" href="mailto:">
 <span class="material-symbols-outlined">open_in_new</span>
-                        Má»Ÿ á»©ng dá»¥ng Email
+                        Mở ứng dụng Email
                     </a>
 <button class="text-primary font-label-md text-label-md py-4 px-6 rounded-xl border border-primary/20 hover:bg-primary/5 transition-all" id="resendBtn">
-                        Gá»­i láº¡i mÃ£ xÃ¡c minh <span class="ml-1 text-on-secondary-container" id="timer">(59s)</span>
+                        Gửi lại mã xác minh <span class="ml-1 text-on-secondary-container" id="timer">(59s)</span>
 </button>
 </div>
 <!-- Secondary Instructions -->
 <div class="mt-10 pt-8 border-t border-outline-variant">
 <p class="font-caption text-caption text-on-secondary-container mb-2">
-                        KhÃ´ng nháº­n Ä‘Æ°á»£c email?
+                        Không nhận được email?
                     </p>
 <ul class="text-left inline-block font-caption text-caption text-on-secondary-container space-y-1">
 <li class="flex items-center gap-2">
 <span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
-                            Kiá»ƒm tra thÆ° má»¥c Spam hoáº·c Junk.
+                            Kiểm tra thư mục Spam hoặc Junk.
                         </li>
 <li class="flex items-center gap-2">
 <span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
-                            Äáº£m báº£o email nháº­p vÃ o lÃ  chÃ­nh xÃ¡c.
+                            Đảm bảo email nhập vào là chính xác.
                         </li>
 </ul>
 </div>
@@ -92,7 +92,7 @@
 <div class="mt-8 text-center">
 <a class="text-on-secondary-container font-label-md text-label-md flex items-center justify-center gap-1 hover:text-primary transition-colors" href="#">
 <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                    Quay láº¡i trang Ä‘Äƒng kÃ½
+                    Quay lại trang đăng ký
                 </a>
 </div>
 </div>
@@ -101,13 +101,13 @@
 <footer class="bg-surface-container-low dark:bg-surface-container-low border-t border-outline-variant dark:border-outline-variant w-full bottom-0">
 <div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop py-base max-w-container-max-width mx-auto">
 <div class="flex items-center gap-4 mb-4 md:mb-0">
-<span class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed">Sá»• trá»</span>
-<span class="font-caption text-caption text-on-secondary-container">Â© 2024 Sá»• trá». Táº¥t cáº£ quyá»n Ä‘Æ°á»£c báº£o lÆ°u.</span>
+<span class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed">Sổ trọ</span>
+<span class="font-caption text-caption text-on-secondary-container">© 2024 Sổ trọ. Tất cả quyền được bảo lưu.</span>
 </div>
 <div class="flex gap-6">
-<a class="font-caption text-caption text-on-secondary-container hover:underline transition-opacity hover:opacity-80" href="#">Äiá»u khoáº£n</a>
-<a class="font-caption text-caption text-on-secondary-container hover:underline transition-opacity hover:opacity-80" href="#">Báº£o máº­t</a>
-<a class="font-caption text-caption text-on-secondary-container hover:underline transition-opacity hover:opacity-80" href="#">Trá»£ giÃºp</a>
+<a class="font-caption text-caption text-on-secondary-container hover:underline transition-opacity hover:opacity-80" href="#">Điều khoản</a>
+<a class="font-caption text-caption text-on-secondary-container hover:underline transition-opacity hover:opacity-80" href="#">Bảo mật</a>
+<a class="font-caption text-caption text-on-secondary-container hover:underline transition-opacity hover:opacity-80" href="#">Trợ giúp</a>
 </div>
 </div>
 </footer>
@@ -134,7 +134,7 @@
                 timeLeft = 59;
                 timerElement.innerText = `(${timeLeft}s)`;
                 // Logic to call API would go here
-                alert('MÃ£ xÃ¡c minh má»›i Ä‘Ã£ Ä‘Æ°á»£c gá»­i!');
+                alert('Mã xác minh mới đã được gửi!');
                 // Restart timer logic omitted for brevity
             }
         });

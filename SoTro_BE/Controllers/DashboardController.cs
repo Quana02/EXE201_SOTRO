@@ -26,7 +26,7 @@ namespace SoTro_BE.Controllers
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
             if (buildingId is null or <= 0)
-                return BadRequest(ApiResponse<DashboardSummaryResponse>.Fail("Vui long chon nha tro truoc khi xem dashboard."));
+                return BadRequest(ApiResponse<DashboardSummaryResponse>.Fail("Vui lòng chọn nhà trọ trước khi xem dashboard."));
 
             var now = DateTime.UtcNow;
             var selectedMonth = month is >= 1 and <= 12 ? month.Value : now.Month;

@@ -61,7 +61,7 @@ namespace SoTro_BE.Controllers
                 };
             }).ToList();
 
-            return Ok(ApiResponse<List<AdminAccountResponse>>.Ok("Lay danh sach account thanh cong.", accounts));
+            return Ok(ApiResponse<List<AdminAccountResponse>>.Ok("Lấy danh sách tài khoản thành công.", accounts));
         }
 
         [HttpGet("plans")]
@@ -99,7 +99,7 @@ namespace SoTro_BE.Controllers
                 return (left.Price ?? 0).CompareTo(right.Price ?? 0);
             });
 
-            return Ok(ApiResponse<List<AdminSubscriptionPlanResponse>>.Ok("Lay danh sach goi dich vu thanh cong.", plans));
+            return Ok(ApiResponse<List<AdminSubscriptionPlanResponse>>.Ok("Lấy danh sách gói dịch vụ thành công.", plans));
         }
 
         [HttpPut("{userId:int}/status")]
@@ -112,26 +112,26 @@ namespace SoTro_BE.Controllers
 
             if (userId == GetCurrentUserId())
             {
-                return BadRequest(ApiResponse<bool>.Fail("Admin khong the tu khoa tai khoan dang dang nhap."));
+                return BadRequest(ApiResponse<bool>.Fail("Admin không thể tự khóa tài khoản đang đăng nhập."));
             }
 
             var normalizedStatus = NormalizeStatus(request.Status);
             if (normalizedStatus == null)
             {
-                return BadRequest(ApiResponse<bool>.Fail("Trang thai account khong hop le."));
+                return BadRequest(ApiResponse<bool>.Fail("Trạng thái tài khoản không hợp lệ."));
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(item => item.UserId == userId);
             if (user == null)
             {
-                return NotFound(ApiResponse<bool>.Fail("Khong tim thay account."));
+                return NotFound(ApiResponse<bool>.Fail("Không tìm thấy tài khoản."));
             }
 
             user.Status = normalizedStatus;
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return Ok(ApiResponse<bool>.Ok("Cap nhat trang thai account thanh cong.", true));
+            return Ok(ApiResponse<bool>.Ok("Cập nhật trạng thái tài khoản thành công.", true));
         }
 
         [HttpPut("{userId:int}/subscription")]
@@ -149,12 +149,12 @@ namespace SoTro_BE.Controllers
 
             if (user == null)
             {
-                return NotFound(ApiResponse<bool>.Fail("Khong tim thay account."));
+                return NotFound(ApiResponse<bool>.Fail("Không tìm thấy tài khoản."));
             }
 
             if (user.RoleId == 1)
             {
-                return BadRequest(ApiResponse<bool>.Fail("Khong the doi goi dich vu cho tai khoan admin."));
+                return BadRequest(ApiResponse<bool>.Fail("Không thể đổi gói dịch vụ cho tài khoản admin."));
             }
 
             if (user.Landlord == null)
@@ -186,7 +186,7 @@ namespace SoTro_BE.Controllers
                 var plan = await _context.SubscriptionPlans.FirstOrDefaultAsync(item => item.PlanId == request.PlanId.Value);
                 if (plan == null)
                 {
-                    return BadRequest(ApiResponse<bool>.Fail("Goi dich vu khong ton tai."));
+                    return BadRequest(ApiResponse<bool>.Fail("Gói dịch vụ không tồn tại."));
                 }
 
                 _context.LandlordSubscriptions.Add(new LandlordSubscription
@@ -205,7 +205,7 @@ namespace SoTro_BE.Controllers
             user.UpdatedAt = now;
             await _context.SaveChangesAsync();
 
-            return Ok(ApiResponse<bool>.Ok("Cap nhat goi dich vu thanh cong.", true));
+            return Ok(ApiResponse<bool>.Ok("Cập nhật gói dịch vụ thành công.", true));
         }
 
         private bool IsAdmin()
@@ -258,7 +258,7 @@ namespace SoTro_BE.Controllers
                     CanUseFacebookPosting = false,
                     CanUseOCR = false,
                     CanExportExcel = true,
-                    Description = "Goi co ban, khong bao gom tinh nang tu dong hoa VIP.",
+                    Description = "Gói cơ bản, không bao gồm tính năng tự động hóa VIP.",
                     IsActive = true,
                     CreatedAt = now,
                     UpdatedAt = now
@@ -278,7 +278,7 @@ namespace SoTro_BE.Controllers
                     CanUseFacebookPosting = true,
                     CanUseOCR = true,
                     CanExportExcel = true,
-                    Description = "Mo khoa ngay xuat/gui hoa don va tu dong hoa VIP.",
+                    Description = "Mở khóa ngày xuất/gửi hóa đơn và tự động hóa VIP.",
                     IsActive = true,
                     CreatedAt = now,
                     UpdatedAt = now

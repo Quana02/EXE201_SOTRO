@@ -110,8 +110,8 @@ namespace SoTro_BE.Services
                 {
                     await _emailService.SendEmailAsync(
                         email,
-                        "Xac thuc dang ky tai khoan So Tro",
-                        BuildOtpEmailBody("Xac thuc dang ky tai khoan So Tro", otpCode));
+                        "Xác thực đăng ký tài khoản Sổ Trọ",
+                        BuildOtpEmailBody("Xác thực đăng ký tài khoản Sổ Trọ", otpCode));
                 }
                 catch (Exception emailEx)
                 {
@@ -208,8 +208,8 @@ namespace SoTro_BE.Services
                 {
                     await _emailService.SendEmailAsync(
                         email,
-                        "Xac thuc dang ky tai khoan So Tro",
-                        BuildOtpEmailBody("Xac thuc dang ky tai khoan So Tro", otpCode));
+                        "Xác thực đăng ký tài khoản Sổ Trọ",
+                        BuildOtpEmailBody("Xác thực đăng ký tài khoản Sổ Trọ", otpCode));
                 }
                 catch (Exception emailEx)
                 {
@@ -275,8 +275,8 @@ namespace SoTro_BE.Services
                 {
                     await _emailService.SendEmailAsync(
                         email,
-                        "Xac thuc quen mat khau So Tro",
-                        BuildOtpEmailBody("Xac thuc quen mat khau So Tro", otpCode));
+                        "Xác thực quên mật khẩu Sổ Trọ",
+                        BuildOtpEmailBody("Xác thực quên mật khẩu Sổ Trọ", otpCode));
                 }
                 catch (Exception emailEx)
                 {
@@ -737,8 +737,8 @@ namespace SoTro_BE.Services
         {
             return $@"
                 <h3>{System.Net.WebUtility.HtmlEncode(title)}</h3>
-                <p>Ma OTP cua ban la: <b>{otpCode}</b></p>
-                <p>Ma nay co hieu luc trong 5 phut.</p>";
+                <p>Mã OTP của bạn là: <b>{otpCode}</b></p>
+                <p>Mã này có hiệu lực trong 5 phút.</p>";
         }
 
         private static bool IsStrongPassword(string password)

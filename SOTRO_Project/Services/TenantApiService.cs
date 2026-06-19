@@ -20,7 +20,7 @@ namespace SOTRO_Project.Services
         public async Task<ApiResponse<List<TenantResponse>>> GetTenantsAsync(int? buildingId = null)
         {
             if (buildingId is null or <= 0)
-                return Fail<List<TenantResponse>>("Chua chon nha tro.");
+                return Fail<List<TenantResponse>>("Chưa chọn nhà trọ.");
 
             await SetAuthorizationHeaderAsync();
             return await GetAsync<List<TenantResponse>>(BuildUrl("api/tenants", buildingId));
@@ -29,7 +29,7 @@ namespace SOTRO_Project.Services
         public async Task<ApiResponse<TenantStatsResponse>> GetTenantStatsAsync(int? buildingId = null)
         {
             if (buildingId is null or <= 0)
-                return Fail<TenantStatsResponse>("Chua chon nha tro.");
+                return Fail<TenantStatsResponse>("Chưa chọn nhà trọ.");
 
             await SetAuthorizationHeaderAsync();
             return await GetAsync<TenantStatsResponse>(BuildUrl("api/tenants/stats", buildingId));

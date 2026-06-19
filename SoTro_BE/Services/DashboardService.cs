@@ -22,7 +22,7 @@ namespace SoTro_BE.Services
 
             if (buildingId is null or <= 0)
             {
-                return ApiResponse<DashboardSummaryResponse>.Fail("Vui long chon nha tro truoc khi xem dashboard.");
+                return ApiResponse<DashboardSummaryResponse>.Fail("Vui lòng chọn nhà trọ trước khi xem dashboard.");
             }
 
             if (buildingId.HasValue)

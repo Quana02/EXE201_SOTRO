@@ -18,7 +18,7 @@ namespace SoTro_BE.Services
         {
             if (buildingId is null or <= 0)
             {
-                return ApiResponse<List<TenantResponse>>.Fail("Vui long chon nha tro truoc khi xem danh sach nguoi thue.");
+                return ApiResponse<List<TenantResponse>>.Fail("Vui lòng chọn nhà trọ trước khi xem danh sách người thuê.");
             }
 
             var tenants = await _tenantRepository.GetTenantsAsync(landlordId, buildingId);
@@ -37,7 +37,7 @@ namespace SoTro_BE.Services
         {
             if (buildingId is null or <= 0)
             {
-                return ApiResponse<TenantStatsResponse>.Fail("Vui long chon nha tro truoc khi xem thong ke nguoi thue.");
+                return ApiResponse<TenantStatsResponse>.Fail("Vui lòng chọn nhà trọ trước khi xem thống kê người thuê.");
             }
 
             var tenants = await _tenantRepository.GetTenantsAsync(landlordId, buildingId);

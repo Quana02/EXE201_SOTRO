@@ -181,7 +181,7 @@ namespace SoTro_BE.Controllers
         {
             var landlordId = GetLandlordId();
             if (landlordId == null)
-                return Unauthorized(ApiResponse<InvoiceResponse>.Fail("Khong tim thay thong tin chu tro."));
+                return Unauthorized(ApiResponse<InvoiceResponse>.Fail("Không tìm thấy thông tin chủ trọ."));
 
             var invoice = await _context.Invoices
                 .Include(i => i.Room)
@@ -191,7 +191,7 @@ namespace SoTro_BE.Controllers
                 .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId && i.LandlordId == landlordId.Value && i.IsDeleted != true);
 
             if (invoice == null)
-                return NotFound(ApiResponse<InvoiceResponse>.Fail("Khong tim thay hoa don."));
+                return NotFound(ApiResponse<InvoiceResponse>.Fail("Không tìm thấy hóa đơn."));
 
             var payments = await _context.Payments
                 .Where(payment => payment.InvoiceId == invoice.InvoiceId)
@@ -208,7 +208,7 @@ namespace SoTro_BE.Controllers
             invoice.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return Ok(ApiResponse<InvoiceResponse>.Ok("Da dat lai hoa don ve trang thai chua thanh toan.", MapInvoice(invoice)));
+            return Ok(ApiResponse<InvoiceResponse>.Ok("Đã đặt lại hóa đơn về trạng thái chưa thanh toán.", MapInvoice(invoice)));
         }
 
         [HttpDelete("{invoiceId:int}")]

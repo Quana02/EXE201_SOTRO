@@ -26,7 +26,7 @@ namespace SoTro_BE.Controllers
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
             if (buildingId is null or <= 0)
-                return BadRequest(ApiResponse<List<TenantResponse>>.Fail("Vui long chon nha tro truoc khi xem danh sach nguoi thue."));
+                return BadRequest(ApiResponse<List<TenantResponse>>.Fail("Vui lòng chọn nhà trọ trước khi xem danh sách người thuê."));
 
             var response = await _tenantService.GetTenantsAsync(landlordId.Value, buildingId);
             return Ok(response);
@@ -40,7 +40,7 @@ namespace SoTro_BE.Controllers
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
             if (buildingId is null or <= 0)
-                return BadRequest(ApiResponse<TenantStatsResponse>.Fail("Vui long chon nha tro truoc khi xem thong ke nguoi thue."));
+                return BadRequest(ApiResponse<TenantStatsResponse>.Fail("Vui lòng chọn nhà trọ trước khi xem thống kê người thuê."));
 
             var response = await _tenantService.GetTenantStatsAsync(landlordId.Value, buildingId);
             return Ok(response);

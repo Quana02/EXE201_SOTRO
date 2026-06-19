@@ -4,22 +4,22 @@ namespace SOTRO_Project.Models.Auth
 {
     public class RegisterRequest
     {
-        [Required(ErrorMessage = "Vui long nhap ho ten.")]
+        [Required(ErrorMessage = "Vui lòng nhập họ tên.")]
         public string FullName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Vui long nhap email.")]
-        [EmailAddress(ErrorMessage = "Email khong dung dinh dang.")]
+        [Required(ErrorMessage = "Vui lòng nhập email.")]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng.")]
         public string Email { get; set; } = string.Empty;
 
-        [Phone(ErrorMessage = "So dien thoai khong dung dinh dang.")]
+        [Phone(ErrorMessage = "Số điện thoại không đúng định dạng.")]
         public string? PhoneNumber { get; set; }
 
-        [Required(ErrorMessage = "Vui long nhap mat khau.")]
-        [MinLength(8, ErrorMessage = "Mat khau toi thieu 8 ky tu.")]
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu.")]
+        [MinLength(8, ErrorMessage = "Mật khẩu tối thiểu 8 ký tự.")]
         public string Password { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Vui long nhap lai mat khau.")]
-        [Compare(nameof(Password), ErrorMessage = "Mat khau xac nhan khong khop.")]
+        [Required(ErrorMessage = "Vui lòng nhập lại mật khẩu.")]
+        [Compare(nameof(Password), ErrorMessage = "Mật khẩu xác nhận không khớp.")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

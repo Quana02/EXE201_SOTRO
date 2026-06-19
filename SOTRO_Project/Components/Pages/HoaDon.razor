@@ -1,4 +1,4 @@
-﻿@page "/hoa-don"
+@page "/hoa-don"
 @layout EmptyLayout
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
@@ -586,7 +586,7 @@
              if (buildingId <= 0)
              {
                  invoices = new();
-                 ShowToast("Chua chon nha tro.", true);
+                 ShowToast("Chưa chọn nhà trọ.", true);
                  return;
              }
 
@@ -1167,7 +1167,7 @@
         await LoadBankSettings();
         await LoadBuildingInfo();
         var html = BuildInvoicePrintHtml(invoice);
-        var printed = await JS.InvokeAsync<bool>("sotroInvoiceTools.printInvoice", html, $"Hoa don {invoice.InvoiceCode}");
+        var printed = await JS.InvokeAsync<bool>("sotroInvoiceTools.printInvoice", html, $"Hóa đơn {invoice.InvoiceCode}");
         if (printed)
         {
             ShowToast($"Đã mở hóa đơn PDF cho {invoice.InvoiceCode}. Trong hộp thoại in, chọn Save as PDF để lưu file.");

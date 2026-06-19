@@ -4,8 +4,8 @@ namespace SOTRO_Project.Models.Auth
 {
     public class ForgotPasswordSendOtpRequest
     {
-        [Required(ErrorMessage = "Vui long nhap email.")]
-        [EmailAddress(ErrorMessage = "Email khong dung dinh dang.")]
+        [Required(ErrorMessage = "Vui lòng nhập email.")]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng.")]
         public string Email { get; set; } = string.Empty;
     }
 }
