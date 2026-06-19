@@ -33,7 +33,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5172",
-                "https://localhost:7126")
+                "https://localhost:7126",
+                "https://sotro.azurewebsites.net")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

@@ -58,6 +58,11 @@ namespace SoTro_BE.Data
             modelBuilder.Entity<Role>(entity =>
             {
                 entity.HasIndex(e => e.RoleName).IsUnique();
+
+                entity.HasData(
+                    new Role { RoleId = 1, RoleName = "Admin", Description = "Quản trị viên hệ thống", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                    new Role { RoleId = 2, RoleName = "Landlord", Description = "Chủ trọ", CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
+                );
             });
 
             // Users
