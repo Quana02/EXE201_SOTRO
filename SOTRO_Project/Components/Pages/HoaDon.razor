@@ -1,4 +1,4 @@
-@page "/hoa-don"
+﻿@page "/hoa-don"
 @layout EmptyLayout
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
@@ -6,10 +6,12 @@
 @inject ITenantApiService TenantApiService
 @inject IBuildingApiService BuildingApiService
 @inject IInvoiceApiService InvoiceApiService
+@inject ISubscriptionApiService SubscriptionApiService
 @using SOTRO_Project.Models.Room
 @using SOTRO_Project.Models.Tenant
 @using SOTRO_Project.Models.Building
 @using SOTRO_Project.Models.Invoice
+@implements IDisposable
 
 <PageTitle>SOTRO - Quản lý Hóa đơn</PageTitle>
 
@@ -32,7 +34,7 @@
             <div class="flex flex-wrap gap-3">
                 <button id="invoice-bulk-reminder" @onclick="SendBulkReminder" class="flex items-center gap-2 px-4 py-2.5 bg-tertiary-container text-on-tertiary-container rounded-xl font-label-md text-label-md hover:brightness-95 transition-all">
                     <span class="material-symbols-outlined text-[20px]">bolt</span>
-                    <span>Gửi thông báo nợ (VIP)</span>
+                    <span>Thông báo nợ</span>
                 </button>
                 <button id="invoice-bulk-create" @onclick="CreateBulkInvoices" class="hidden">
                     <span class="material-symbols-outlined text-[20px]">add_circle</span>
@@ -46,6 +48,58 @@
             <div class="mb-6 p-4 rounded-xl border @(toastIsError ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700") flex items-center gap-2">
                 <span class="material-symbols-outlined">@(toastIsError ? "error" : "check_circle")</span>
                 <span>@toastMessage</span>
+            </div>
+        }
+
+        @if (showQrSetupNotice)
+        {
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 shadow-sm overflow-hidden">
+                <div class="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-start gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined">qr_code_2</span>
+                        </div>
+                        <div>
+                            <p class="font-black text-on-surface">Nhà trọ này chưa có QR chuyển khoản</p>
+                            <p class="text-sm text-on-surface-variant mt-1 leading-6">
+                                Bạn cần tạo QR hoặc nhập thông tin tài khoản ngân hàng trước khi gửi bill thanh toán. Hệ thống sẽ chuyển sang phần cài đặt QR sau @qrRedirectCountdown giây.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button type="button" @onclick="GoToQrSettings" class="px-4 py-2 rounded-xl bg-primary text-white font-bold hover:shadow-md transition-all">
+                            Tạo QR ngay
+                        </button>
+                        <button type="button" @onclick="CloseQrSetupNotice" class="w-10 h-10 rounded-xl border border-amber-200 bg-white hover:bg-amber-100 transition-colors flex items-center justify-center" title="Đóng thông báo">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (showPremiumUpgradeDialog)
+        {
+            <div class="fixed inset-0 z-[140] bg-black/45 flex items-center justify-center p-4">
+                <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-outline-variant overflow-hidden">
+                    <div class="p-6">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined">workspace_premium</span>
+                        </div>
+                        <h2 class="text-xl font-black text-on-surface mb-2">Cần nâng cấp dịch vụ Premium</h2>
+                        <p class="text-sm text-on-surface-variant leading-6">
+                            Tính năng Thông báo nợ chỉ có thể mở khi nâng cấp dịch vụ "Premium".
+                        </p>
+                    </div>
+                    <div class="px-6 py-4 bg-surface-container-low flex items-center justify-end gap-3">
+                        <button type="button" @onclick="ClosePremiumUpgradeDialog" class="px-4 py-2 rounded-xl border border-outline-variant bg-white text-on-surface font-bold hover:bg-surface-container transition-colors">
+                            Cancel
+                        </button>
+                        <button type="button" @onclick="GoToUpgradeService" class="px-4 py-2 rounded-xl bg-primary text-white font-bold hover:shadow-md transition-all">
+                            Nâng cấp dịch vụ
+                        </button>
+                    </div>
+                </div>
             </div>
         }
 
@@ -80,19 +134,43 @@
             </div>
         </div>
 
-        <div id="invoice-filter-bar" class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 bg-surface-container-low p-4 rounded-xl">
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[260px]">
-                    <span class="material-symbols-outlined text-outline text-[20px]">calendar_today</span>
-                    <select value="@filterMonth" @onchange="OnFilterMonthChanged" class="bg-transparent border-none text-label-md focus:ring-0 cursor-pointer min-w-[105px]">
-                        @foreach (var month in VietnameseMonths)
-                        {
-                            <option value="@month.Number">@month.Label</option>
-                        }
-                    </select>
-                    <input type="number" min="2000" max="9999" value="@filterYear" @onchange="OnFilterYearChanged" class="bg-transparent border-none text-label-md focus:ring-0 w-20 cursor-pointer" />
+        <div id="invoice-filter-bar" class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6 bg-surface-container-low p-4 rounded-xl">
+            <div class="flex flex-wrap items-stretch gap-3 w-full md:w-auto">
+                <div class="relative flex">
+                    <button type="button" @onclick="ToggleMonthFilterPanel" class="h-11 flex items-center gap-2 px-4 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[210px] hover:bg-surface-variant transition-colors">
+                        <span class="material-symbols-outlined text-outline text-[20px]">calendar_today</span>
+                        <span class="text-label-md text-on-surface flex-1 text-left">@MonthFilterLabel</span>
+                        <span class="material-symbols-outlined text-outline text-[18px]">@(showMonthFilterPanel ? "expand_less" : "expand_more")</span>
+                    </button>
+                    @if (showMonthFilterPanel)
+                    {
+                        <div class="absolute left-0 top-full mt-2 z-40 w-[330px] bg-white rounded-xl border border-outline-variant shadow-xl p-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <button type="button" @onclick="PreviousFilterYear" class="w-9 h-9 rounded-lg hover:bg-surface-variant flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                                </button>
+                                <div class="font-bold text-on-surface">Năm @filterPanelYear</div>
+                                <button type="button" @onclick="NextFilterYear" class="w-9 h-9 rounded-lg hover:bg-surface-variant flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                @foreach (var month in VietnameseMonths)
+                                {
+                                    var monthKey = BuildMonthKey(month.Number, filterPanelYear);
+                                    var isSelected = selectedMonthKeys.Contains(monthKey);
+                                    <button type="button" @onclick="() => ToggleMonthSelection(month.Number)" class="px-3 py-2 rounded-lg border text-sm font-semibold transition-all @(isSelected ? "bg-primary text-white border-primary shadow-sm" : "bg-white text-on-surface border-outline-variant hover:bg-surface-variant")">
+                                        @month.Label
+                                    </button>
+                                }
+                            </div>
+                            <div class="mt-4 flex items-center justify-start gap-2 border-t border-outline-variant pt-3">
+                                <span class="text-xs text-on-surface-variant">@selectedMonthKeys.Count tháng đã chọn</span>
+                            </div>
+                        </div>
+                    }
                 </div>
-                <div class="flex items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[160px]">
+                <div class="h-11 flex items-center gap-2 px-4 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[210px]">
                     <span class="material-symbols-outlined text-outline text-[20px]">filter_list</span>
                     <select value="@statusFilter" @onchange="OnStatusChanged" class="bg-transparent border-none text-label-md focus:ring-0 w-full cursor-pointer">
                         <option value="">Tất cả trạng thái</option>
@@ -101,8 +179,12 @@
                         <option value="Overdue">Quá hạn</option>
                     </select>
                 </div>
+                <button type="button" @onclick="ResetAllFilters" class="h-11 inline-flex items-center justify-center gap-2 px-4 bg-surface-container-lowest rounded-lg border border-outline-variant min-w-[110px] font-label-md text-label-md hover:bg-surface-variant transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                    <span>Reset</span>
+                </button>
             </div>
-            <button @onclick="ExportFullExcel" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant rounded-lg font-label-md text-label-md hover:bg-surface-variant transition-colors">
+            <button @onclick="ExportFullExcel" class="h-11 flex-none flex items-center justify-center gap-2 px-4 border border-outline-variant rounded-lg min-w-[130px] font-label-md text-label-md hover:bg-surface-variant transition-colors">
                 <span class="material-symbols-outlined text-[20px]">file_download</span>
                 <span>Xuất Excel</span>
             </button>
@@ -173,6 +255,9 @@
                                             <span class="material-symbols-outlined">send</span>
                                         </button>
                                     }
+                                    <button @onclick="() => DeleteInvoice(invoice)" class="p-2 hover:bg-error-container hover:text-error rounded-full transition-colors text-error" title="Xóa hóa đơn">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -248,7 +333,38 @@
                 {
                     <button @onclick="() => MarkAsPaid(selectedInvoice)" class="px-4 py-2 rounded-xl bg-primary text-white font-bold">Đánh dấu đã thanh toán</button>
                 }
+                else
+                {
+                    <button @onclick="() => OpenMarkUnpaidDialog(selectedInvoice)" class="px-4 py-2 rounded-xl border border-error text-error font-bold hover:bg-error-container transition-colors">Đặt lại chưa thanh toán</button>
+                }
                 <button @onclick="CloseInvoiceDetail" class="px-4 py-2 rounded-xl border border-outline-variant font-bold">Đóng</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (markUnpaidInvoice != null)
+{
+    <div class="fixed inset-0 z-[240] bg-black/55 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-outline-variant w-full max-w-md overflow-hidden">
+            <div class="p-6">
+                <div class="w-12 h-12 rounded-2xl bg-red-50 text-error flex items-center justify-center mb-4">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+                </div>
+                <p class="text-xs font-bold text-error uppercase mb-2">Xác nhận đặt lại trạng thái</p>
+                <h3 class="text-xl font-black text-on-surface mb-3">Người thuê chưa thanh toán?</h3>
+                <p class="text-sm text-on-surface-variant leading-6">
+                    Bạn có chắc là người này <span class="font-bold text-on-surface">(@markUnpaidInvoice.TenantName)</span> chưa thanh toán không?
+                    Hóa đơn sẽ được đưa về trạng thái chờ thanh toán hoặc quá hạn.
+                </p>
+            </div>
+            <div class="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex justify-end gap-3">
+                <button @onclick="CloseMarkUnpaidDialog" class="px-4 py-2 rounded-xl border border-outline-variant bg-white font-bold hover:bg-surface-container transition-colors">
+                    Cancel
+                </button>
+                <button @onclick="ConfirmMarkAsUnpaid" class="px-4 py-2 rounded-xl bg-error text-white font-bold hover:brightness-95 transition-colors">
+                    Xác nhận
+                </button>
             </div>
         </div>
     </div>
@@ -360,20 +476,30 @@
     private bool isLoading = true;
     private bool showInvoiceTour;
     private bool showZaloPopupTour;
+    private bool showMonthFilterPanel;
     private string selectedMonth = string.Empty;
     private int filterMonth = DateTime.Today.Month;
     private int filterYear = DateTime.Today.Year;
+    private int filterPanelYear = DateTime.Today.Year;
+    private HashSet<string> selectedMonthKeys = new(StringComparer.Ordinal);
     private string statusFilter = string.Empty;
     private int currentPage = 1;
     private string? toastMessage;
     private bool toastIsError;
+    private bool showQrSetupNotice;
+    private bool showPremiumUpgradeDialog;
+    private bool hasPremiumAccess;
+    private int qrRedirectCountdown = 3;
+    private CancellationTokenSource? qrRedirectCts;
     private InvoiceItem? selectedInvoice;
+    private InvoiceItem? markUnpaidInvoice;
     private InvoiceItem? zaloInvoice;
     private string bankQrMode = "auto";
     private string bankName = string.Empty;
     private string bankAccountNumber = string.Empty;
     private string bankAccountHolder = string.Empty;
     private string bankQrDataUrl = string.Empty;
+    private int activeBuildingId;
     private string buildingName = "Sổ Trọ";
     private string buildingAddress = "Chưa cập nhật địa chỉ";
     private static readonly (int Number, string Label)[] VietnameseMonths =
@@ -390,6 +516,13 @@
         (10, "Tháng 10"),
         (11, "Tháng 11"),
         (12, "Tháng 12")
+    };
+
+    private string MonthFilterLabel => selectedMonthKeys.Count switch
+    {
+        0 => "Chọn tháng",
+        1 => FormatMonthKey(selectedMonthKeys.First()),
+        _ => $"{selectedMonthKeys.Count} tháng đã chọn"
     };
 
     private IReadOnlyList<GuidedOnboarding.GuidedStep> invoiceGuidedSteps => new[]
@@ -409,7 +542,7 @@
     };
 
     private List<InvoiceItem> filteredInvoices => invoices
-        .Where(i => string.IsNullOrWhiteSpace(selectedMonth) || i.MonthKey == selectedMonth)
+        .Where(i => selectedMonthKeys.Count == 0 || selectedMonthKeys.Contains(i.MonthKey))
         .Where(i => string.IsNullOrWhiteSpace(statusFilter) || i.Status == statusFilter)
         .ToList();
 
@@ -430,41 +563,69 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        filterMonth = DateTime.Today.Month;
-        filterYear = DateTime.Today.Year;
-        SyncSelectedMonthFromFilter();
+        SetDefaultMonthFilter();
         await LoadInvoices(generateMissing: true);
         await LoadBankSettings();
         await LoadBuildingInfo();
+        await LoadPremiumAccess();
+        await ShowMissingQrNoticeIfNeeded();
         isLoading = false;
         StateHasChanged();
     }
 
     private async Task LoadInvoices(bool generateMissing)
     {
-        var paidKeys = await LoadPaidKeys();
         var built = new List<InvoiceItem>();
+        var paidKeys = new HashSet<string>();
 
         try
         {
-            var buildingIdText = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
-            int.TryParse(buildingIdText, out var buildingId);
-            if (buildingId > 0 && TryParseMonth(selectedMonth, out var selectedMonthNumber, out var selectedYear))
-            {
-                var invoiceResponse = generateMissing
-                    ? await InvoiceApiService.GenerateMonthlyInvoicesAsync(await BuildGenerateInvoiceRequest(buildingId, selectedMonthNumber, selectedYear))
-                    : await InvoiceApiService.GetInvoicesAsync(buildingId, selectedMonthNumber, selectedYear);
+             var buildingIdText = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
+             int.TryParse(buildingIdText, out var buildingId);
+             activeBuildingId = buildingId;
+             if (buildingId <= 0)
+             {
+                 invoices = new();
+                 ShowToast("Chua chon nha tro.", true);
+                 return;
+             }
 
-                if (invoiceResponse.Success && invoiceResponse.Data != null)
+             paidKeys = await LoadPaidKeys();
+            if (buildingId > 0 && selectedMonthKeys.Count > 0)
+            {
+                var loadedInvoices = new List<InvoiceItem>();
+                var monthKeys = selectedMonthKeys
+                    .Select(ParseMonthKey)
+                    .Where(month => month.HasValue)
+                    .Select(month => month!.Value)
+                    .OrderByDescending(month => month.Year)
+                    .ThenByDescending(month => month.Month)
+                    .ToList();
+
+                foreach (var month in monthKeys)
                 {
-                    invoices = invoiceResponse.Data.Select(MapInvoiceResponse).ToList();
-                    return;
+                    var shouldGenerate = generateMissing && month.Month == DateTime.Today.Month && month.Year == DateTime.Today.Year;
+                    var invoiceResponse = shouldGenerate
+                        ? await InvoiceApiService.GenerateMonthlyInvoicesAsync(await BuildGenerateInvoiceRequest(buildingId, month.Month, month.Year))
+                        : await InvoiceApiService.GetInvoicesAsync(buildingId, month.Month, month.Year);
+
+                    if (invoiceResponse.Success && invoiceResponse.Data != null)
+                    {
+                        loadedInvoices.AddRange(invoiceResponse.Data.Select(MapInvoiceResponse));
+                        continue;
+                    }
+
+                    ShowToast(invoiceResponse.Message, true);
                 }
 
-                ShowToast(invoiceResponse.Message, true);
+                invoices = loadedInvoices
+                    .GroupBy(invoice => invoice.InvoiceId > 0 ? $"db:{invoice.InvoiceId}" : invoice.InvoiceKey)
+                    .Select(group => group.First())
+                    .ToList();
+                return;
             }
 
-            var tenantsResponse = await TenantApiService.GetTenantsAsync();
+            var tenantsResponse = await TenantApiService.GetTenantsAsync(buildingId);
             var roomsResponse = buildingId > 0
                 ? await RoomApiService.GetRoomsByBuildingAsync(buildingId)
                 : null;
@@ -610,6 +771,22 @@
                year is >= 2000 and <= 9999;
     }
 
+    private static string BuildMonthKey(int month, int year) => $"{month:00}/{year}";
+
+    private static (int Month, int Year)? ParseMonthKey(string value)
+    {
+        return TryParseMonth(value, out var month, out var year)
+            ? (month, year)
+            : null;
+    }
+
+    private static string FormatMonthKey(string value)
+    {
+        return TryParseMonth(value, out var month, out var year)
+            ? $"Tháng {month} {year}"
+            : "Chọn tháng";
+    }
+
     private static string BuildInvoiceKey(TenantResponse tenant, RoomResponse? room)
     {
         var monthKey = DateTime.Today.ToString("yyyyMM");
@@ -648,7 +825,8 @@
     {
         try
         {
-            var raw = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_paid_invoice_keys_v2");
+            await EnsureActiveBuildingIdAsync();
+            var raw = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_paid_invoice_keys_v2"));
             return string.IsNullOrWhiteSpace(raw)
                 ? new HashSet<string>()
                 : raw.Split('|', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
@@ -661,21 +839,75 @@
 
     private async Task SavePaidKeys()
     {
+        await EnsureActiveBuildingIdAsync();
         var paid = invoices.Where(i => i.Status == "Paid").Select(i => i.InvoiceKey);
-        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_paid_invoice_keys_v2", string.Join('|', paid));
+        await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_paid_invoice_keys_v2"), string.Join('|', paid));
     }
 
     private async Task LoadBankSettings()
     {
-        bankQrMode = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_mode") ?? "auto";
-        bankName = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_name") ?? string.Empty;
-        bankAccountNumber = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_number") ?? string.Empty;
-        bankAccountHolder = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_holder") ?? string.Empty;
-        bankQrDataUrl = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_data_url") ?? string.Empty;
+        await EnsureActiveBuildingIdAsync();
+        bankQrMode = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_qr_mode")) ?? "auto";
+        bankName = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_name")) ?? string.Empty;
+        bankAccountNumber = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_account_number")) ?? string.Empty;
+        bankAccountHolder = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_account_holder")) ?? string.Empty;
+        bankQrDataUrl = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_qr_data_url")) ?? string.Empty;
         if (bankQrMode == "auto")
         {
             bankQrDataUrl = BuildGeneratedBankQrUrl();
         }
+    }
+
+    private async Task ShowMissingQrNoticeIfNeeded()
+    {
+        if (string.IsNullOrWhiteSpace(bankQrDataUrl))
+        {
+            await ShowMissingQrNoticeAsync();
+        }
+    }
+
+    private async Task ShowMissingQrNoticeAsync()
+    {
+        qrRedirectCts?.Cancel();
+        qrRedirectCts?.Dispose();
+        qrRedirectCts = new CancellationTokenSource();
+        qrRedirectCountdown = 3;
+        showQrSetupNotice = true;
+        StateHasChanged();
+        _ = RunQrRedirectCountdownAsync(qrRedirectCts.Token);
+        await Task.CompletedTask;
+    }
+
+    private async Task RunQrRedirectCountdownAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (qrRedirectCountdown > 0)
+            {
+                await Task.Delay(1000, cancellationToken);
+                qrRedirectCountdown--;
+                await InvokeAsync(StateHasChanged);
+            }
+
+            GoToQrSettings();
+        }
+        catch (TaskCanceledException)
+        {
+            // User closed the notice or left the page.
+        }
+    }
+
+    private void CloseQrSetupNotice()
+    {
+        qrRedirectCts?.Cancel();
+        showQrSetupNotice = false;
+    }
+
+    private void GoToQrSettings()
+    {
+        qrRedirectCts?.Cancel();
+        var query = activeBuildingId > 0 ? $"?buildingId={activeBuildingId}" : string.Empty;
+        Navigation.NavigateTo($"/cai-dat{query}#bank-qr-settings");
     }
 
     private async Task LoadBuildingInfo()
@@ -691,6 +923,7 @@
 
             if (int.TryParse(buildingIdText, out var buildingId) && buildingId > 0)
             {
+                activeBuildingId = buildingId;
                 var response = await BuildingApiService.GetBuildingByIdAsync(buildingId);
                 if (response.Success && response.Data != null)
                 {
@@ -710,8 +943,7 @@
         await LoadBankSettings();
         if (string.IsNullOrWhiteSpace(bankQrDataUrl))
         {
-            var goToSettings = await JS.InvokeAsync<bool>("confirm", "Chủ trọ chưa có QR chuyển khoản. Bạn cần vào Cài đặt để thêm ảnh QR bank trước khi gửi tin nhắn thanh toán. Chuyển đến Cài đặt ngay?");
-            if (goToSettings) Navigation.NavigateTo("/cai-dat");
+            await ShowMissingQrNoticeAsync();
             return;
         }
 
@@ -763,10 +995,70 @@
         ShowToast($"Đã cập nhật {invoice.InvoiceCode} thành Đã thanh toán.");
     }
 
+    private void OpenMarkUnpaidDialog(InvoiceItem invoice)
+    {
+        markUnpaidInvoice = invoice;
+    }
+
+    private void CloseMarkUnpaidDialog()
+    {
+        markUnpaidInvoice = null;
+    }
+
+    private async Task ConfirmMarkAsUnpaid()
+    {
+        if (markUnpaidInvoice == null)
+        {
+            return;
+        }
+
+        var invoice = markUnpaidInvoice;
+        if (invoice.InvoiceId > 0)
+        {
+            var response = await InvoiceApiService.MarkUnpaidAsync(invoice.InvoiceId);
+            if (!response.Success)
+            {
+                ShowToast(response.Message, true);
+                return;
+            }
+        }
+
+        invoice.Status = invoice.DueDate.Date < DateTime.Today ? "Overdue" : "Pending";
+        await SavePaidKeys();
+        markUnpaidInvoice = null;
+        selectedInvoice = null;
+        ShowToast($"Đã đặt lại {invoice.InvoiceCode} về trạng thái chưa thanh toán.");
+    }
+
     private void ShowInvoiceDetail(InvoiceItem invoice) => selectedInvoice = invoice;
     private void CloseInvoiceDetail() => selectedInvoice = null;
     private void ExportInvoice(InvoiceItem invoice) => ShowToast($"Đã xuất hóa đơn {invoice.InvoiceCode}.");
     private void ExportExcel() => ShowToast("Đã chuẩn bị file Excel danh sách hóa đơn.");
+
+    private async Task DeleteInvoice(InvoiceItem invoice)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Bạn có chắc muốn xóa hóa đơn {invoice.InvoiceCode}? Thao tác này sẽ ẩn bill khỏi danh sách.");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        if (invoice.InvoiceId > 0)
+        {
+            var response = await InvoiceApiService.DeleteInvoiceAsync(invoice.InvoiceId);
+            if (!response.Success)
+            {
+                ShowToast(response.Message, true);
+                return;
+            }
+        }
+
+        invoices.RemoveAll(i => i.InvoiceId == invoice.InvoiceId && invoice.InvoiceId > 0 || i.InvoiceKey == invoice.InvoiceKey);
+        selectedInvoice = null;
+        currentPage = Math.Clamp(currentPage, 1, TotalPages);
+        ShowToast($"Đã xóa hóa đơn {invoice.InvoiceCode}.");
+    }
+
     private async Task CreateBulkInvoices()
     {
         isLoading = true;
@@ -782,8 +1074,7 @@
         await LoadBuildingInfo();
         if (string.IsNullOrWhiteSpace(bankQrDataUrl))
         {
-            var goToSettings = await JS.InvokeAsync<bool>("confirm", "Chủ trọ chưa có QR chuyển khoản. Bạn cần vào Cài đặt để thêm hoặc tạo QR bank trước khi gửi tin nhắn thanh toán. Chuyển đến Cài đặt ngay?");
-            if (goToSettings) Navigation.NavigateTo("/cai-dat");
+            await ShowMissingQrNoticeAsync();
             return;
         }
 
@@ -961,8 +1252,49 @@
                "</table></div></body></html>";
     }
 
+    private async Task LoadPremiumAccess()
+    {
+        try
+        {
+            var response = await SubscriptionApiService.GetCurrentSubscriptionAsync();
+            hasPremiumAccess = response.Success && response.Data?.IsPremium == true;
+        }
+        catch
+        {
+            hasPremiumAccess = false;
+        }
+    }
+
+    private async Task<bool> EnsurePremiumForDebtNotice()
+    {
+        await LoadPremiumAccess();
+        if (hasPremiumAccess)
+        {
+            return true;
+        }
+
+        showPremiumUpgradeDialog = true;
+        return false;
+    }
+
+    private void ClosePremiumUpgradeDialog()
+    {
+        showPremiumUpgradeDialog = false;
+    }
+
+    private void GoToUpgradeService()
+    {
+        showPremiumUpgradeDialog = false;
+        Navigation.NavigateTo("/#pricing");
+    }
+
     private async Task SendBulkReminder()
     {
+        if (!await EnsurePremiumForDebtNotice())
+        {
+            return;
+        }
+
         var targets = filteredInvoices.Where(i => i.Status != "Paid").ToList();
         if (targets.Count == 0)
         {
@@ -972,8 +1304,7 @@
         await LoadBankSettings();
         if (string.IsNullOrWhiteSpace(bankQrDataUrl))
         {
-            var goToSettings = await JS.InvokeAsync<bool>("confirm", "Chưa có QR chuyển khoản trong Cài đặt. Chuyển đến Cài đặt để thêm QR?");
-            if (goToSettings) Navigation.NavigateTo("/cai-dat");
+            await ShowMissingQrNoticeAsync();
             return;
         }
         ShowToast($"Đã gửi nhắc thanh toán cho {targets.Count} hóa đơn.");
@@ -986,49 +1317,80 @@
         StateHasChanged();
     }
 
-    private async Task OnMonthChanged(ChangeEventArgs e)
+    private void ToggleMonthFilterPanel()
     {
-        selectedMonth = e.Value?.ToString() ?? string.Empty;
+        showMonthFilterPanel = !showMonthFilterPanel;
+        filterPanelYear = filterYear;
+    }
+
+    private void PreviousFilterYear() => filterPanelYear--;
+
+    private void NextFilterYear() => filterPanelYear++;
+
+    private async Task ToggleMonthSelection(int month)
+    {
+        var monthKey = BuildMonthKey(month, filterPanelYear);
+        if (!selectedMonthKeys.Add(monthKey))
+        {
+            selectedMonthKeys.Remove(monthKey);
+        }
+
+        if (selectedMonthKeys.Count == 0)
+        {
+            SetDefaultMonthFilter();
+        }
+        else
+        {
+            SyncPrimaryMonthFromSelection();
+        }
+
+        await ReloadFilteredInvoicesAsync();
+    }
+
+    private async Task ResetAllFilters()
+    {
+        statusFilter = string.Empty;
+        SetDefaultMonthFilter();
+        showMonthFilterPanel = false;
+        await ReloadFilteredInvoicesAsync(generateMissing: true);
+    }
+
+    private async Task ReloadFilteredInvoicesAsync(bool generateMissing = false)
+    {
         currentPage = 1;
         isLoading = true;
         StateHasChanged();
-        await LoadInvoices(generateMissing: false);
+        await LoadInvoices(generateMissing);
         isLoading = false;
     }
 
-    private async Task OnFilterMonthChanged(ChangeEventArgs e)
+    private void SetDefaultMonthFilter()
     {
-        if (int.TryParse(e.Value?.ToString(), out var month))
+        filterMonth = DateTime.Today.Month;
+        filterYear = DateTime.Today.Year;
+        filterPanelYear = filterYear;
+        selectedMonth = BuildMonthKey(filterMonth, filterYear);
+        selectedMonthKeys = new HashSet<string>(StringComparer.Ordinal) { selectedMonth };
+    }
+
+    private void SyncPrimaryMonthFromSelection()
+    {
+        var primaryMonth = selectedMonthKeys
+            .Select(ParseMonthKey)
+            .Where(month => month.HasValue)
+            .Select(month => month!.Value)
+            .OrderByDescending(month => month.Year)
+            .ThenByDescending(month => month.Month)
+            .FirstOrDefault();
+
+        if (primaryMonth.Month <= 0)
         {
-            filterMonth = Math.Clamp(month, 1, 12);
+            return;
         }
 
-        await ApplyMonthFilterAsync();
-    }
-
-    private async Task OnFilterYearChanged(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out var year))
-        {
-            filterYear = Math.Clamp(year, 2000, 9999);
-        }
-
-        await ApplyMonthFilterAsync();
-    }
-
-    private async Task ApplyMonthFilterAsync()
-    {
-        SyncSelectedMonthFromFilter();
-        currentPage = 1;
-        isLoading = true;
-        StateHasChanged();
-        await LoadInvoices(generateMissing: false);
-        isLoading = false;
-    }
-
-    private void SyncSelectedMonthFromFilter()
-    {
-        selectedMonth = $"{filterMonth:00}/{filterYear}";
+        filterMonth = primaryMonth.Month;
+        filterYear = primaryMonth.Year;
+        selectedMonth = BuildMonthKey(filterMonth, filterYear);
     }
 
     private async Task<GenerateMonthlyInvoicesRequest> BuildGenerateInvoiceRequest(int buildingId, int month, int year)
@@ -1038,22 +1400,39 @@
             BuildingId = buildingId,
             Month = month,
             Year = year,
-            TrashFee = await GetDecimalSetting("sotro_common_trash_fee"),
-            InternetFee = await GetDecimalSetting("sotro_common_internet_fee"),
-            CleaningFee = await GetDecimalSetting("sotro_common_cleaning_fee"),
-            ManagementFee = await GetDecimalSetting("sotro_common_management_fee")
+            TrashFee = await GetDecimalSetting("sotro_common_trash_fee", buildingId),
+            InternetFee = await GetDecimalSetting("sotro_common_internet_fee", buildingId),
+            CleaningFee = await GetDecimalSetting("sotro_common_cleaning_fee", buildingId),
+            ManagementFee = await GetDecimalSetting("sotro_common_management_fee", buildingId)
         };
     }
 
-    private async Task<decimal> GetDecimalSetting(string key)
+    private async Task<decimal> GetDecimalSetting(string key, int? buildingId = null)
     {
-        var rawValue = await JS.InvokeAsync<string>("localStorage.getItem", key);
+        var rawValue = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey(key, buildingId));
         if (decimal.TryParse(rawValue, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var value))
         {
             return value;
         }
 
         return decimal.TryParse(rawValue, out value) ? value : 0m;
+    }
+
+    private async Task EnsureActiveBuildingIdAsync()
+    {
+        if (activeBuildingId > 0)
+        {
+            return;
+        }
+
+        var buildingIdText = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
+        int.TryParse(buildingIdText, out activeBuildingId);
+    }
+
+    private string ScopedSettingKey(string key, int? buildingId = null)
+    {
+        var scopedBuildingId = buildingId.GetValueOrDefault(activeBuildingId);
+        return scopedBuildingId > 0 ? $"{key}_b{scopedBuildingId}" : key;
     }
 
     private void OnStatusChanged(ChangeEventArgs e)
@@ -1101,6 +1480,12 @@
         "Overdue" => "bg-error-container text-on-error-container",
         _ => "bg-secondary-fixed text-on-secondary-fixed-variant"
     };
+
+    public void Dispose()
+    {
+        qrRedirectCts?.Cancel();
+        qrRedirectCts?.Dispose();
+    }
 
     private sealed class InvoiceItem
     {

@@ -6,6 +6,9 @@ namespace SoTro_BE.DTOs.Auth
         public string? FullName { get; set; }
         public string Email { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
+        public int? RoleId { get; set; }
+        public string? Role { get; set; }
+        public string? Status { get; set; }
         public bool IsProfileCompleted { get; set; }
         public string? AvatarUrl { get; set; }
         public string? Provider { get; set; }

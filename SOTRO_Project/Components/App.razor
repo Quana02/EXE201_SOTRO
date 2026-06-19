@@ -11,6 +11,11 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
     <!-- Tailwind Config cho design system Sổ trọ -->
     <script id="tailwind-config">
         tailwind.config = {
@@ -674,6 +679,26 @@
                 this.activeHandler = null;
                 this.activeDotNetRef = null;
                 this.activeScrollHandler = null;
+            }
+        };
+
+        window.sotroLanding = {
+            scrollToSection: function (sectionId) {
+                const element = document.getElementById(sectionId);
+                if (!element) {
+                    return;
+                }
+
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            },
+
+            scrollToCurrentHash: function () {
+                const sectionId = window.location.hash?.replace('#', '');
+                if (!sectionId) {
+                    return;
+                }
+
+                setTimeout(() => this.scrollToSection(sectionId), 80);
             }
         };
     </script>

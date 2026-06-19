@@ -8,5 +8,7 @@ namespace SOTRO_Project.Services
         Task<ApiResponse<List<InvoiceResponse>>> GetInvoicesAsync(int buildingId, int month, int year);
         Task<ApiResponse<List<InvoiceResponse>>> GenerateMonthlyInvoicesAsync(GenerateMonthlyInvoicesRequest request);
         Task<ApiResponse<InvoiceResponse>> MarkPaidAsync(int invoiceId, MarkInvoicePaidRequest request);
+        Task<ApiResponse<InvoiceResponse>> MarkUnpaidAsync(int invoiceId);
+        Task<ApiResponse<bool>> DeleteInvoiceAsync(int invoiceId);
     }
 }

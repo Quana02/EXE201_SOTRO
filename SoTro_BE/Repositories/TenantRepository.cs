@@ -13,12 +13,24 @@ namespace SoTro_BE.Repositories
             _context = context;
         }
 
-        public async Task<List<Tenant>> GetTenantsAsync(int landlordId)
+        public async Task<List<Tenant>> GetTenantsAsync(int landlordId, int? buildingId = null)
         {
-            return await _context.Tenants
-                .Include(t => t.RentalRecords.Where(r => r.IsDeleted != true))
-                    .ThenInclude(r => r.Room)
-                .Where(t => t.LandlordId == landlordId && t.IsDeleted != true)
+            var query = _context.Tenants
+                .Include(t => t.RentalRecords.Where(r =>
+                    r.IsDeleted != true &&
+                    (!buildingId.HasValue || (r.Room != null && r.Room.BuildingId == buildingId.Value))))
+                .ThenInclude(r => r.Room)
+                .Where(t => t.LandlordId == landlordId && t.IsDeleted != true);
+
+            if (buildingId.HasValue)
+            {
+                query = query.Where(t => t.RentalRecords.Any(r =>
+                    r.IsDeleted != true &&
+                    r.Room != null &&
+                    r.Room.BuildingId == buildingId.Value));
+            }
+
+            return await query
                 .OrderByDescending(t => t.CreatedAt)
                 .AsNoTracking()
                 .ToListAsync();

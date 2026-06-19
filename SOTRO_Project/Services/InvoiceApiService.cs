@@ -38,6 +38,20 @@ namespace SOTRO_Project.Services
             return await ReadResponseAsync<InvoiceResponse>(response);
         }
 
+        public async Task<ApiResponse<InvoiceResponse>> MarkUnpaidAsync(int invoiceId)
+        {
+            await SetAuthorizationHeaderAsync();
+            var response = await _httpClient.PostAsync($"api/invoices/{invoiceId}/mark-unpaid", null);
+            return await ReadResponseAsync<InvoiceResponse>(response);
+        }
+
+        public async Task<ApiResponse<bool>> DeleteInvoiceAsync(int invoiceId)
+        {
+            await SetAuthorizationHeaderAsync();
+            var response = await _httpClient.DeleteAsync($"api/invoices/{invoiceId}");
+            return await ReadResponseAsync<bool>(response);
+        }
+
         private async Task<ApiResponse<T>> GetAsync<T>(string url)
         {
             try

@@ -7,10 +7,9 @@
     var step = Steps[CurrentStepIndex];
     var total = Steps.Count;
     var panelWidth = Math.Min(420, Math.Max(280, viewportWidth - 32));
-    var panelLeft = currentRect.Left + currentRect.Width / 2 < viewportWidth / 2
-        ? Math.Min(currentRect.Right + PanelGap, Math.Max(16, viewportWidth - panelWidth - 16))
-        : Math.Max(16, currentRect.Left - panelWidth - PanelGap);
+    var panelLeft = GetPanelLeft(currentRect, panelWidth);
     var panelTop = GetPanelTop(currentRect, panelLeft, panelWidth);
+    var panelMaxHeight = GetPanelMaxHeight(currentRect, panelTop, panelLeft, panelWidth);
 
     <div class="fixed inset-0 z-[310] pointer-events-none" role="dialog" aria-modal="true" aria-label="@step.Title">
         <div class="absolute pointer-events-auto left-0 top-0 right-0 bg-slate-950/60 backdrop-blur-[1px]" style="height:@($"{Math.Max(0, currentRect.Top - Padding)}px")"></div>
@@ -22,8 +21,9 @@
              style="left:@($"{currentRect.Left - Padding}px"); top:@($"{currentRect.Top - Padding}px"); width:@($"{currentRect.Width + Padding * 2}px"); height:@($"{currentRect.Height + Padding * 2}px")">
         </div>
 
-        <div class="absolute z-[370] pointer-events-auto w-[min(420px,calc(100vw-32px))] max-h-[calc(100vh-32px)] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-blue-100 p-5"
-             style="left:@($"{panelLeft}px"); top:@($"{panelTop}px")">
+        <div @key="panelRenderKey"
+             class="absolute z-[370] pointer-events-auto w-[min(420px,calc(100vw-32px))] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-blue-100 p-5"
+             style="left:@($"{panelLeft}px"); top:@($"{panelTop}px"); max-height:@($"{panelMaxHeight}px")">
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <p class="text-xs font-bold uppercase tracking-wider text-blue-700">Bước @(CurrentStepIndex + 1)/@total</p>
@@ -121,12 +121,14 @@
     private const int Padding = 8;
     private const int PanelGap = 16;
     private const int EstimatedPanelHeight = 620;
+    private const int MinPanelHeight = 260;
     private ElementRect? currentRect;
     private double viewportWidth = 1280;
     private double viewportHeight = 720;
     private DotNetObjectReference<GuidedOnboarding>? dotNetRef;
     private int CurrentStepIndex;
     private int lastFocusedStepIndex = -1;
+    private int panelRenderKey;
     private bool wasVisible;
 
     protected override void OnParametersSet()
@@ -173,6 +175,7 @@
                 lastFocusedStepIndex = CurrentStepIndex;
                 viewportWidth = rect.ViewportWidth;
                 viewportHeight = rect.ViewportHeight;
+                panelRenderKey++;
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -278,6 +281,36 @@
             : "Click hoặc nhập dữ liệu trực tiếp trong vùng đang sáng, rồi bấm Tiếp tục khi đã xong.";
     }
 
+    private double GetPanelLeft(ElementRect rect, double panelWidth)
+    {
+        var minLeft = 16d;
+        var maxLeft = Math.Max(minLeft, viewportWidth - panelWidth - 16);
+        var leftSpace = rect.Left - PanelGap - minLeft;
+        var rightSpace = viewportWidth - rect.Right - PanelGap - 16;
+
+        if (rightSpace >= panelWidth)
+        {
+            return Clamp(rect.Right + PanelGap, minLeft, maxLeft);
+        }
+
+        if (leftSpace >= panelWidth)
+        {
+            return Clamp(rect.Left - panelWidth - PanelGap, minLeft, maxLeft);
+        }
+
+        var targetCenter = rect.Left + rect.Width / 2;
+        var preferredLeft = targetCenter < viewportWidth / 2
+            ? rect.Right + PanelGap
+            : rect.Left - panelWidth - PanelGap;
+
+        if (rect.Width + Padding * 2 > viewportWidth - panelWidth - PanelGap * 2)
+        {
+            preferredLeft = targetCenter - panelWidth / 2;
+        }
+
+        return Clamp(preferredLeft, minLeft, maxLeft);
+    }
+
     private double GetPanelTop(ElementRect rect, double panelLeft, double panelWidth)
     {
         var panelRight = panelLeft + panelWidth;
@@ -292,20 +325,51 @@
         }
 
         var belowTop = rect.Bottom + PanelGap;
-        if (belowTop + EstimatedPanelHeight <= viewportHeight - 16)
+        var belowSpace = viewportHeight - belowTop - 16;
+        if (belowSpace >= MinPanelHeight)
         {
             return belowTop;
         }
 
-        var aboveTop = rect.Top - PanelGap - EstimatedPanelHeight;
-        if (aboveTop >= 16)
+        var aboveSpace = rect.Top - PanelGap - 16;
+        if (aboveSpace >= MinPanelHeight)
         {
-            return aboveTop;
+            return Math.Max(16, rect.Top - PanelGap - Math.Min(EstimatedPanelHeight, aboveSpace));
         }
 
-        return rect.Top < viewportHeight / 2
-            ? Math.Min(belowTop, Math.Max(16, viewportHeight - EstimatedPanelHeight - 24))
-            : Math.Max(16, aboveTop);
+        return belowSpace >= aboveSpace
+            ? belowTop
+            : 16;
+    }
+
+    private double GetPanelMaxHeight(ElementRect rect, double panelTop, double panelLeft, double panelWidth)
+    {
+        var panelRight = panelLeft + panelWidth;
+        var targetLeft = rect.Left - Padding;
+        var targetRight = rect.Right + Padding;
+        var horizontalOverlap = panelLeft < targetRight && panelRight > targetLeft;
+
+        if (!horizontalOverlap)
+        {
+            return Math.Max(MinPanelHeight, viewportHeight - panelTop - 16);
+        }
+
+        if (panelTop >= rect.Bottom)
+        {
+            return Math.Max(MinPanelHeight, viewportHeight - panelTop - 16);
+        }
+
+        if (panelTop < rect.Top)
+        {
+            return Math.Max(MinPanelHeight, rect.Top - PanelGap - panelTop);
+        }
+
+        return Math.Max(MinPanelHeight, viewportHeight - panelTop - 16);
+    }
+
+    private static double Clamp(double value, double min, double max)
+    {
+        return Math.Min(Math.Max(value, min), max);
     }
 
     public async ValueTask DisposeAsync()

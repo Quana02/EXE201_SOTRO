@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SoTro_BE.DTOs.Auth;
 using SoTro_BE.DTOs.Tenant;
 using SoTro_BE.Services;
 
@@ -18,24 +19,30 @@ namespace SoTro_BE.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTenants()
+        public async Task<IActionResult> GetTenants([FromQuery] int? buildingId)
         {
             var landlordId = GetLandlordId();
             if (landlordId == null)
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
-            var response = await _tenantService.GetTenantsAsync(landlordId.Value);
+            if (buildingId is null or <= 0)
+                return BadRequest(ApiResponse<List<TenantResponse>>.Fail("Vui long chon nha tro truoc khi xem danh sach nguoi thue."));
+
+            var response = await _tenantService.GetTenantsAsync(landlordId.Value, buildingId);
             return Ok(response);
         }
 
         [HttpGet("stats")]
-        public async Task<IActionResult> GetStats()
+        public async Task<IActionResult> GetStats([FromQuery] int? buildingId)
         {
             var landlordId = GetLandlordId();
             if (landlordId == null)
                 return Unauthorized(new { Success = false, Message = "Không tìm thấy thông tin chủ trọ." });
 
-            var response = await _tenantService.GetTenantStatsAsync(landlordId.Value);
+            if (buildingId is null or <= 0)
+                return BadRequest(ApiResponse<TenantStatsResponse>.Fail("Vui long chon nha tro truoc khi xem thong ke nguoi thue."));
+
+            var response = await _tenantService.GetTenantStatsAsync(landlordId.Value, buildingId);
             return Ok(response);
         }
 
@@ -61,7 +68,7 @@ namespace SoTro_BE.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>()
                 );
                 return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = errors });
             }
@@ -81,7 +88,7 @@ namespace SoTro_BE.Controllers
             {
                 var errors = ModelState.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                    kvp => kvp.Value?.Errors.Select(e => e.ErrorMessage).ToArray() ?? Array.Empty<string>()
                 );
                 return BadRequest(new { Success = false, Message = "Dữ liệu không hợp lệ.", Errors = errors });
             }

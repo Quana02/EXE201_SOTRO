@@ -2,6 +2,7 @@
 @layout EmptyLayout
 @inject IDashboardApiService DashboardApi
 @inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
 
 <PageTitle>SOTRO - Tá»•ng quan quáº£n lÃ½ trá»</PageTitle>
 
@@ -22,47 +23,125 @@
         .chart-bar {
             transition: height 1s ease-out;
         }
+
+        .dashboard-period-picker {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 0.5rem);
+            width: 320px;
+            max-width: calc(100vw - 2rem);
+            z-index: 80;
+            background: #fff;
+            border: 1px solid #d1d9e6;
+            border-radius: 12px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+            padding: 14px;
+        }
+
+        .dashboard-period-months {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .dashboard-period-month {
+            min-height: 42px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #fff;
+            font-weight: 700;
+            color: #0f172a;
+            transition: 0.18s ease;
+        }
+
+        .dashboard-period-month:hover {
+            border-color: #004a98;
+            color: #004a98;
+            background: #eff6ff;
+        }
+
+        .dashboard-period-month.active {
+            background: #004a98;
+            border-color: #004a98;
+            color: #fff;
+        }
     
 
     </style>
 }
 
-<HeaderDashboard/>
+<HeaderDashboard OnHelpClicked="OpenDashboardTour" />
 <SideNavBar/>
 
 <main class="flex-1 flex flex-col min-w-0 overflow-y-auto sotro-main-content">
     <!-- TopAppBar Component -->
     <div class="p-gutter max-w-container-max-width mx-auto w-full">
-        <div class="flex justify-between items-end mb-8">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8">
             <div>
                 <h3 class="font-headline-sm text-headline-sm text-on-surface">@GreetingText</h3>
                 <p class="text-body-md text-on-surface-variant">Hôm nay là @TodayText. Đây là những gì đang diễn ra.</p>
             </div>
-            <button class="bg-primary text-on-primary px-6 py-2.5 rounded-xl font-label-md flex items-center gap-2 hover:opacity-90 transition-opacity">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
-                Tạo hóa đơn mới
-            </button>
+            <div id="dashboard-period-filter" class="relative w-full md:w-[220px]">
+                <button type="button"
+                        class="w-full bg-white border border-outline-variant text-label-md rounded-lg focus:ring-primary py-2.5 pl-11 pr-4 font-semibold text-on-surface text-left"
+                        @onclick="TogglePeriodPicker">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px] pointer-events-none">calendar_month</span>
+                    @PeriodDisplayText
+                </button>
+
+                @if (isPeriodPickerOpen)
+                {
+                    <div class="dashboard-period-picker">
+                        <div class="flex items-center justify-between mb-3">
+                            <button type="button"
+                                    class="w-9 h-9 rounded-lg border border-outline-variant bg-white hover:bg-surface-container-low transition-colors"
+                                    @onclick="PreviousPickerYear"
+                                    aria-label="Năm trước">
+                                <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                            </button>
+                            <strong class="text-label-lg text-on-surface">năm @pickerYear</strong>
+                            <button type="button"
+                                    class="w-9 h-9 rounded-lg border border-outline-variant bg-white hover:bg-surface-container-low transition-colors"
+                                    @onclick="NextPickerYear"
+                                    aria-label="Năm sau">
+                                <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                            </button>
+                        </div>
+                        <div class="dashboard-period-months">
+                            @for (var month = 1; month <= 12; month++)
+                            {
+                                var currentMonth = month;
+                                <button type="button"
+                                        class="@GetPeriodMonthClass(currentMonth)"
+                                        @onclick="() => SelectPeriodAsync(currentMonth)">
+                                    tháng @currentMonth
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
         <!-- Dashboard Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <!-- Stat Card 1: Revenue -->
-            <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div id="dashboard-revenue-card" class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <div class="p-3 bg-primary-fixed text-on-primary-fixed-variant rounded-xl">
                         <span class="material-symbols-outlined text-2xl">payments</span>
                     </div>
-                    <div class="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-full text-caption font-bold">
-                        <span class="material-symbols-outlined text-sm">trending_up</span> +12%
+                    <div class="@RevenueGrowthBadgeClass">
+                        <span class="material-symbols-outlined text-sm">@RevenueGrowthIcon</span> @RevenueGrowthText
                     </div>
                 </div>
                 <div class="flex flex-col gap-1">
-                    <p class="text-caption text-on-surface-variant uppercase tracking-wider font-bold">Doanh thu tháng này</p>
+                    <p class="text-caption text-on-surface-variant uppercase tracking-wider font-bold">Doanh thu tháng @selectedMonth/@selectedYear</p>
                     <h4 class="text-2xl font-extrabold text-on-surface">@FormatRevenue(summary.MonthlyRevenue) <span class="text-label-md font-medium text-outline">VND</span></h4>
                 </div>
             </div>
 
             <!-- Stat Card 2: Occupancy -->
-            <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div id="dashboard-occupancy-card" class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <div class="p-3 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-xl">
                         <span class="material-symbols-outlined text-2xl">home_work</span>
@@ -78,7 +157,7 @@
             </div>
 
             <!-- Stat Card 3: Pending Invoices -->
-            <div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div id="dashboard-pending-card" class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-shadow flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <div class="p-3 bg-error-container text-on-error-container rounded-xl">
                         <span class="material-symbols-outlined text-2xl">pending_actions</span>
@@ -96,13 +175,10 @@
         <!-- Main Layout Grid -->
         <div class="bento-grid">
             <!-- Revenue Chart Container -->
-            <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+            <div id="dashboard-revenue-chart" class="col-span-12 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
                 <div class="flex justify-between items-center mb-8">
-                    <h5 class="font-headline-sm text-[20px] text-on-surface">Biểu đồ doanh thu 6 tháng</h5>
-                    <select class="bg-surface-container border-none text-label-md rounded-lg focus:ring-primary py-1 px-3">
-                        <option>2024</option>
-                        <option>2023</option>
-                    </select>
+                    <h5 class="font-headline-sm text-[20px] text-on-surface">Biểu đồ doanh thu 6 tháng gần nhất</h5>
+                    <span class="bg-surface-container text-label-md rounded-lg py-1 px-3">@selectedYear</span>
                 </div>
                 <div class="h-64 flex items-end justify-between gap-4 px-4 border-b border-outline-variant">
                     @foreach (var item in summary.RevenueLastSixMonths)
@@ -114,54 +190,9 @@
                     }
                 </div>
             </div>
-            <!-- Todo List Container -->
-            <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm flex flex-col">
-                <h5 class="font-headline-sm text-[20px] text-on-surface mb-6">Việc cần làm hôm nay</h5>
-                <div class="space-y-4 flex-1">
-                    <div class="flex items-start gap-4 p-3 rounded-lg border border-transparent hover:border-outline-variant hover:bg-surface transition-all cursor-pointer">
-                        <div class="mt-1">
-                            <input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox">
-                        </div>
-                        <div>
-                            <p class="text-body-md font-semibold text-on-surface">Kiểm tra vòi nước Phòng 204</p>
-                            <p class="text-caption text-on-surface-variant">Yêu cầu bảo trì từ chị Linh</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4 p-3 rounded-lg border border-transparent hover:border-outline-variant hover:bg-surface transition-all cursor-pointer">
-                        <div class="mt-1">
-                            <input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox">
-                        </div>
-                        <div>
-                            <p class="text-body-md font-semibold text-on-surface">Xác nhận thanh toán P.305</p>
-                            <p class="text-caption text-on-surface-variant">Khách vừa chuyển khoản đặt cọc</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4 p-3 rounded-lg border border-transparent hover:border-outline-variant hover:bg-surface transition-all cursor-pointer">
-                        <div class="mt-1">
-                            <input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox">
-                        </div>
-                        <div>
-                            <p class="text-body-md font-semibold text-on-surface">Gia hạn hợp đồng anh Nam</p>
-                            <p class="text-caption text-on-surface-variant">Hết hạn vào ngày mai (25/05)</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4 p-3 rounded-lg border border-transparent hover:border-outline-variant hover:bg-surface transition-all cursor-pointer">
-                        <div class="mt-1">
-                            <input class="w-5 h-5 rounded border-outline text-primary focus:ring-primary" type="checkbox">
-                        </div>
-                        <div>
-                            <p class="text-body-md font-semibold text-on-surface">Đăng tin trống phòng 401</p>
-                            <p class="text-caption text-on-surface-variant">Facebook &amp; Chợ tốt</p>
-                        </div>
-                    </div>
-                </div>
-                <button class="mt-6 w-full text-center py-2 text-primary font-label-md border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors">
-                    Xem tất cả công việc
-                </button>
-            </div>
         </div>
         <!-- Recent Activity / High Priority -->
-        <div class="mt-8 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+        <div id="dashboard-recent-activity" class="mt-8 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm overflow-hidden">
             <div class="flex justify-between items-center mb-6 px-2">
                 <h5 class="font-headline-sm text-[20px] text-on-surface">Hoạt động gần đây</h5>
                 <button class="text-primary text-label-md hover:underline">Xuất báo cáo</button>
@@ -210,11 +241,14 @@
             </div>
         </div>
     </div>
-    <!-- FAB for Mobile Quick Action -->
-    <button class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-50">
-        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
-    </button>
 </main>
+
+<GuidedOnboarding IsVisible="showDashboardTour"
+                  Steps="dashboardGuidedSteps"
+                  StorageKey="sotro_dashboard_guided_seen"
+                  AllowSkip="true"
+                  OnCompleted="CloseDashboardTour"
+                  OnSkipped="CloseDashboardTour" />
 <script>
         // Simple micro-interaction for chart bars on load
         window.addEventListener('DOMContentLoaded', () => {
@@ -246,9 +280,58 @@
     private const string CustomStyles = "Dashboard";
     private SOTRO_Project.Models.Dashboard.DashboardSummaryResponse summary = new();
     private string userFullName = "bạn";
+    private int selectedMonth = DateTime.Today.Month;
+    private int selectedYear = DateTime.Today.Year;
+    private int pickerYear = DateTime.Today.Year;
+    private int? activeBuildingId;
+    private bool isPeriodPickerOpen;
+    private bool showDashboardTour;
+
+    [SupplyParameterFromQuery(Name = "buildingId")]
+    public int? BuildingId { get; set; }
 
     private string GreetingText => $"{GetGreetingByTime()}, {userFullName}!";
     private string TodayText => FormatVietnameseDate(DateTime.Today);
+    private string PeriodDisplayText => $"Tháng {selectedMonth} {selectedYear}";
+    private bool IsRevenueGrowthUp => summary.RevenueGrowthPercent >= 0;
+    private string RevenueGrowthIcon => IsRevenueGrowthUp ? "trending_up" : "trending_down";
+    private string RevenueGrowthText => $"{(IsRevenueGrowthUp ? "+" : "")}{summary.RevenueGrowthPercent:N1}%";
+    private string RevenueGrowthBadgeClass => IsRevenueGrowthUp
+        ? "flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-full text-caption font-bold"
+        : "flex items-center gap-1 px-2 py-1 bg-red-50 text-error rounded-full text-caption font-bold";
+    private readonly IReadOnlyList<GuidedOnboarding.GuidedStep> dashboardGuidedSteps = new[]
+    {
+        new GuidedOnboarding.GuidedStep(
+            "#dashboard-period-filter",
+            "Lọc dashboard theo tháng",
+            "Chọn tháng và năm cần xem. Toàn bộ doanh thu, hóa đơn chưa thu và biểu đồ sẽ cập nhật theo kỳ được chọn.",
+            "Mở bộ lọc này khi muốn kiểm tra doanh thu của một tháng khác."),
+        new GuidedOnboarding.GuidedStep(
+            "#dashboard-revenue-card",
+            "Doanh thu đã thu",
+            "Ô này chỉ cộng tiền từ hóa đơn đã thanh toán hoặc thanh toán một phần. Phần trăm bên phải so sánh doanh thu tháng đang chọn với tháng liền trước.",
+            "Xem nhanh số tiền đã thu và xu hướng tăng giảm."),
+        new GuidedOnboarding.GuidedStep(
+            "#dashboard-occupancy-card",
+            "Tỷ lệ lấp đầy",
+            "Chỉ số này cho biết số phòng đang có người thuê trên tổng số phòng của nhà trọ đang chọn.",
+            "Dùng chỉ số này để biết tình hình khai thác phòng."),
+        new GuidedOnboarding.GuidedStep(
+            "#dashboard-pending-card",
+            "Hóa đơn chưa thu",
+            "Ô này cho biết số hóa đơn trong tháng đang chọn còn chờ thanh toán, thanh toán một phần hoặc quá hạn.",
+            "Ưu tiên xử lý nhóm này để dòng tiền không bị trễ."),
+        new GuidedOnboarding.GuidedStep(
+            "#dashboard-revenue-chart",
+            "Biểu đồ doanh thu",
+            "Biểu đồ hiển thị doanh thu đã thu trong 6 tháng gần nhất tính từ tháng đang chọn.",
+            "So sánh các cột để thấy tháng nào tăng hoặc giảm mạnh."),
+        new GuidedOnboarding.GuidedStep(
+            "#dashboard-recent-activity",
+            "Hoạt động gần đây",
+            "Khu vực này liệt kê các hóa đơn mới nhất để bạn kiểm tra nhanh phòng, trạng thái và giá trị.",
+            "Dùng bảng này để rà lại các hoạt động vừa phát sinh.")
+    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -256,9 +339,108 @@
             return;
 
         userFullName = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "sotro_user_name") ?? "bạn";
-        var response = await DashboardApi.GetSummaryAsync();
-        summary = response.Data ?? new();
+        if (!await ResolveActiveBuildingAsync())
+            return;
+
+        await LoadDashboardAsync();
+        await LoadDashboardTourStateAsync();
         StateHasChanged();
+    }
+
+    private async Task LoadDashboardTourStateAsync()
+    {
+        try
+        {
+            var dismissed = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "sotro_dashboard_guided_seen");
+            showDashboardTour = string.IsNullOrWhiteSpace(dismissed);
+        }
+        catch
+        {
+            showDashboardTour = false;
+        }
+    }
+
+    private Task OpenDashboardTour()
+    {
+        showDashboardTour = true;
+        return Task.CompletedTask;
+    }
+
+    private void CloseDashboardTour()
+    {
+        showDashboardTour = false;
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        if (activeBuildingId is null or <= 0)
+        {
+            summary = new();
+            return;
+        }
+
+        var response = await DashboardApi.GetSummaryAsync(activeBuildingId, selectedMonth, selectedYear);
+        summary = response.Data ?? new();
+    }
+
+    private async Task<bool> ResolveActiveBuildingAsync()
+    {
+        if (BuildingId is > 0)
+        {
+            activeBuildingId = BuildingId.Value;
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "active_building_id", BuildingId.Value.ToString());
+            return true;
+        }
+
+        activeBuildingId = await GetActiveBuildingIdAsync();
+        if (activeBuildingId is > 0)
+            return true;
+
+        Navigation.NavigateTo("/nha-tro", replace: true);
+        return false;
+    }
+
+    private async Task<int?> GetActiveBuildingIdAsync()
+    {
+        try
+        {
+            var idText = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "active_building_id");
+            return int.TryParse(idText, out var id) && id > 0 ? id : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void TogglePeriodPicker()
+    {
+        pickerYear = selectedYear;
+        isPeriodPickerOpen = !isPeriodPickerOpen;
+    }
+
+    private void PreviousPickerYear()
+    {
+        pickerYear--;
+    }
+
+    private void NextPickerYear()
+    {
+        pickerYear++;
+    }
+
+    private async Task SelectPeriodAsync(int month)
+    {
+        selectedYear = pickerYear;
+        selectedMonth = month;
+        isPeriodPickerOpen = false;
+        await LoadDashboardAsync();
+    }
+
+    private string GetPeriodMonthClass(int month)
+    {
+        var isActive = month == selectedMonth && pickerYear == selectedYear;
+        return isActive ? "dashboard-period-month active" : "dashboard-period-month";
     }
 
     private static string FormatRevenue(decimal value)
@@ -279,17 +461,17 @@
         return $"{height}%";
     }
 
-    private static string GetBarClass(SOTRO_Project.Models.Dashboard.DashboardRevenuePoint item)
+    private string GetBarClass(SOTRO_Project.Models.Dashboard.DashboardRevenuePoint item)
     {
-        var isCurrentMonth = item.Month == DateTime.Today.Month && item.Year == DateTime.Today.Year;
+        var isCurrentMonth = item.Month == selectedMonth && item.Year == selectedYear;
         return isCurrentMonth
             ? "w-full bg-primary rounded-t-lg chart-bar hover:bg-primary-container"
             : "w-full bg-primary-fixed-dim rounded-t-lg chart-bar hover:bg-primary-container";
     }
 
-    private static string GetMonthLabelClass(SOTRO_Project.Models.Dashboard.DashboardRevenuePoint item)
+    private string GetMonthLabelClass(SOTRO_Project.Models.Dashboard.DashboardRevenuePoint item)
     {
-        var isCurrentMonth = item.Month == DateTime.Today.Month && item.Year == DateTime.Today.Year;
+        var isCurrentMonth = item.Month == selectedMonth && item.Year == selectedYear;
         return isCurrentMonth
             ? "text-caption font-bold text-primary mt-4"
             : "text-caption text-on-surface-variant mt-4";
@@ -334,4 +516,5 @@
 
         return $"{dayOfWeek}, ngày {date:dd} tháng {date:MM}, {date:yyyy}";
     }
+
 }

@@ -407,8 +407,12 @@ else
     private bool showSampleTenants => false;
     private List<SOTRO_Project.Models.Tenant.TenantResponse> tenants = new();
     private SOTRO_Project.Models.Tenant.TenantStatsResponse tenantStats = new();
+    private int? activeBuildingId;
     private bool showTenantTour;
     private bool hasCheckedTenantTour;
+
+    [SupplyParameterFromQuery(Name = "buildingId")]
+    public int? BuildingId { get; set; }
     private int? firstTenantId => tenants.FirstOrDefault()?.TenantId;
     private IReadOnlyList<GuidedOnboarding.GuidedStep> tenantGuidedSteps => tenants.Any()
         ? TenantGuidedStepsWithRows
@@ -495,7 +499,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadTenants();
+        await Task.CompletedTask;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -506,6 +510,12 @@ else
         }
 
         hasCheckedTenantTour = true;
+        if (!await ResolveActiveBuildingAsync())
+        {
+            return;
+        }
+
+        await LoadTenants();
 
         try
         {
@@ -532,11 +542,41 @@ else
 
     private async Task LoadTenants()
     {
-        var tenantResponse = await TenantApi.GetTenantsAsync();
+        var tenantResponse = await TenantApi.GetTenantsAsync(activeBuildingId);
         tenants = tenantResponse.Data ?? new();
 
-        var statsResponse = await TenantApi.GetTenantStatsAsync();
+        var statsResponse = await TenantApi.GetTenantStatsAsync(activeBuildingId);
         tenantStats = statsResponse.Data ?? new();
+    }
+
+    private async Task<int?> GetActiveBuildingIdAsync()
+    {
+        try
+        {
+            var idText = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "active_building_id");
+            return int.TryParse(idText, out var id) && id > 0 ? id : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<bool> ResolveActiveBuildingAsync()
+    {
+        if (BuildingId is > 0)
+        {
+            activeBuildingId = BuildingId.Value;
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "active_building_id", BuildingId.Value.ToString());
+            return true;
+        }
+
+        activeBuildingId = await GetActiveBuildingIdAsync();
+        if (activeBuildingId is > 0)
+            return true;
+
+        Navigation.NavigateTo("/nha-tro", replace: true);
+        return false;
     }
 
     private async Task DeleteTenant(int tenantId)
@@ -654,7 +694,10 @@ else
 
     private void GoToAddTenant()
     {
-        Navigation.NavigateTo("/them-nguoi-thue");
+        var href = activeBuildingId is > 0
+            ? $"/them-nguoi-thue?buildingId={activeBuildingId.Value}"
+            : "/them-nguoi-thue";
+        Navigation.NavigateTo(href);
     }
 
     private void GoToSettings()

@@ -1055,15 +1055,16 @@
                     {
                         await JS.InvokeVoidAsync("localStorage.setItem", "active_building_id", response.Data.BuildingId.ToString());
                         await JS.InvokeVoidAsync("localStorage.setItem", "active_building_name", response.Data.BuildingName);
+                        var buildingScope = response.Data.BuildingId.ToString();
+                        await JS.InvokeVoidAsync("localStorage.setItem", $"shared_billing_day_b{buildingScope}", model.BillingDay!.Value.ToString());
+                        if (defaultElectricPrice.HasValue)
+                            await JS.InvokeVoidAsync("localStorage.setItem", $"shared_electric_price_b{buildingScope}", defaultElectricPrice.Value.ToString());
+                        if (defaultWaterPrice.HasValue)
+                            await JS.InvokeVoidAsync("localStorage.setItem", $"shared_water_price_b{buildingScope}", defaultWaterPrice.Value.ToString());
+                        if (defaultServiceFee.HasValue)
+                            await JS.InvokeVoidAsync("localStorage.setItem", $"shared_service_fee_b{buildingScope}", defaultServiceFee.Value.ToString());
                     }
                     await JS.InvokeVoidAsync("localStorage.setItem", "sotro_create_building_guided_seen", "true");
-                    await JS.InvokeVoidAsync("localStorage.setItem", "shared_billing_day", model.BillingDay!.Value.ToString());
-                    if (defaultElectricPrice.HasValue)
-                        await JS.InvokeVoidAsync("localStorage.setItem", "shared_electric_price", defaultElectricPrice.Value.ToString());
-                    if (defaultWaterPrice.HasValue)
-                        await JS.InvokeVoidAsync("localStorage.setItem", "shared_water_price", defaultWaterPrice.Value.ToString());
-                    if (defaultServiceFee.HasValue)
-                        await JS.InvokeVoidAsync("localStorage.setItem", "shared_service_fee", defaultServiceFee.Value.ToString());
                 }
                 catch { }
                 isSuccess = true;

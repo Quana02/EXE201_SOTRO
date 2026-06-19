@@ -17,16 +17,22 @@ namespace SOTRO_Project.Services
             _jsRuntime = jsRuntime;
         }
 
-        public async Task<ApiResponse<List<TenantResponse>>> GetTenantsAsync()
+        public async Task<ApiResponse<List<TenantResponse>>> GetTenantsAsync(int? buildingId = null)
         {
+            if (buildingId is null or <= 0)
+                return Fail<List<TenantResponse>>("Chua chon nha tro.");
+
             await SetAuthorizationHeaderAsync();
-            return await GetAsync<List<TenantResponse>>("api/tenants");
+            return await GetAsync<List<TenantResponse>>(BuildUrl("api/tenants", buildingId));
         }
 
-        public async Task<ApiResponse<TenantStatsResponse>> GetTenantStatsAsync()
+        public async Task<ApiResponse<TenantStatsResponse>> GetTenantStatsAsync(int? buildingId = null)
         {
+            if (buildingId is null or <= 0)
+                return Fail<TenantStatsResponse>("Chua chon nha tro.");
+
             await SetAuthorizationHeaderAsync();
-            return await GetAsync<TenantStatsResponse>("api/tenants/stats");
+            return await GetAsync<TenantStatsResponse>(BuildUrl("api/tenants/stats", buildingId));
         }
 
         public async Task<ApiResponse<TenantResponse>> GetTenantByIdAsync(int tenantId)
@@ -101,5 +107,12 @@ namespace SOTRO_Project.Services
         }
 
         private static ApiResponse<T> Fail<T>(string message) => new() { Success = false, Message = message };
+
+        private static string BuildUrl(string baseUrl, int? buildingId)
+        {
+            return buildingId.HasValue && buildingId.Value > 0
+                ? $"{baseUrl}?buildingId={buildingId.Value}"
+                : baseUrl;
+        }
     }
 }

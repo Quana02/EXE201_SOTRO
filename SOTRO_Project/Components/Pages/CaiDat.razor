@@ -3,6 +3,7 @@
 @inject IJSRuntime JS
 @inject IBuildingApiService BuildingApiService
 @inject IRoomApiService RoomApiService
+@inject ISubscriptionApiService SubscriptionApiService
 @using System.IO
 @using SOTRO_Project.Models.Room
 
@@ -115,14 +116,29 @@
                                     <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" @bind="address">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngày khởi tạo hóa đơn</label>
+                                    <div class="flex items-center gap-2 mb-2 h-6">
+                                        <label class="block text-xs font-bold text-on-surface-variant uppercase">Ngày khởi tạo hóa đơn</label>
+                                    </div>
                                     <input min="1" max="28" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" @bind="invoiceCreationDay">
                                     <p class="text-xs text-on-surface-variant mt-1">Ngày hệ thống tự tạo bill hằng tháng.</p>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngày xuất/gửi hóa đơn</label>
-                                    <input min="1" max="28" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" @bind="invoiceSendDay">
-                                    <p class="text-xs text-on-surface-variant mt-1">Ngày chủ trọ gửi bill cho người thuê qua Zalo.</p>
+                                    <div class="flex items-center gap-2 mb-2 h-6">
+                                        <label class="block text-xs font-bold text-on-surface-variant uppercase">Ngày xuất/gửi hóa đơn</label>
+                                        @if (!hasPremiumAccess)
+                                        {
+                                            <span class="inline-flex items-center h-5 text-[10px] leading-none font-bold px-2 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Premium</span>
+                                        }
+                                    </div>
+                                    <input min="1" max="28" disabled="@(!hasPremiumAccess)" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:bg-surface-container disabled:text-on-surface-variant disabled:cursor-not-allowed" type="number" @bind="invoiceSendDay">
+                                    @if (!hasPremiumAccess)
+                                    {
+                                        <p class="text-xs text-amber-700 mt-1">Tài khoản Free chỉ được dùng ngày khởi tạo hóa đơn. Nâng cấp Premium để dùng ngày xuất/gửi hóa đơn tự động.</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-xs text-on-surface-variant mt-1">Ngày chủ trọ gửi bill cho người thuê qua Zalo.</p>
+                                    }
                                 </div>
                             </div>
                             <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg">
@@ -295,22 +311,35 @@
                     <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
                         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
                         <h3 class="font-headline-sm text-headline-sm text-primary">Tự động hóa VIP</h3>
+                        @if (!hasPremiumAccess)
+                        {
+                            <span class="inline-flex items-center h-6 text-[11px] leading-none font-bold px-2 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Premium</span>
+                        }
                     </div>
                     <div class="p-6 space-y-8">
                         <!-- Zalo/SMS Reminder -->
+                        @if (!hasPremiumAccess)
+                        {
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
+                                <span class="material-symbols-outlined text-amber-700">lock</span>
+                                <div>
+                                    <p class="text-sm font-bold text-on-surface">Chỉ có thể mở khi nâng cấp dịch vụ "Premium"</p>
+                                </div>
+                            </div>
+                        }
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1">
                                 <h4 class="font-label-md text-label-md font-bold text-on-surface">Tự động nhắc nợ qua Zalo</h4>
                                 <p class="text-sm text-on-surface-variant mt-1 leading-relaxed">Hệ thống sẽ tự động gửi tin nhắn thông báo tiền phòng định kỳ đến khách thuê qua tài khoản Zalo Official. Giảm thiểu việc chậm thanh toán.</p>
                                 <div class="mt-3 flex gap-4">
                                     <label class="flex items-center gap-2 cursor-pointer">
-                                        <input checked="" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary-container" type="checkbox">
+                                        <input checked="@hasPremiumAccess" disabled="@(!hasPremiumAccess)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary-container disabled:cursor-not-allowed" type="checkbox">
                                         <span class="text-sm font-medium">Zalo Official Account</span>
                                     </label>
                                 </div>
                             </div>
                             <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-                                <input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300" id="toggle-debt" name="toggle" type="checkbox">
+                                <input checked="@hasPremiumAccess" disabled="@(!hasPremiumAccess)" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60" id="toggle-debt" name="toggle" type="checkbox">
                                 <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-300" for="toggle-debt"></label>
                             </div>
                         </div>
@@ -322,7 +351,7 @@
                                 <p class="text-sm text-on-surface-variant mt-1 leading-relaxed">Hệ thống sẽ tự động gửi tin nhắn thông báo tiền phòng định kỳ đến khách thuê qua tài khoản Zalo Official. Giảm thiểu việc chậm thanh toán.</p>
                             </div>
                             <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-                                <input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300" id="toggle-post" name="toggle" type="checkbox">
+                                <input disabled="@(!hasPremiumAccess)" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60" id="toggle-post" name="toggle" type="checkbox">
                                 <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-300" for="toggle-post"></label>
                             </div>
                         </div>
@@ -336,7 +365,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngày chốt số hàng tháng</label>
-                                    <select class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                    <select disabled="@(!hasPremiumAccess)" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:bg-surface-container disabled:text-on-surface-variant disabled:cursor-not-allowed">
                                         <option>Ngày 25 hàng tháng</option>
                                         <option selected="">Ngày 30 hàng tháng</option>
                                         <option>Ngày 01 hàng tháng</option>
@@ -345,7 +374,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Thông báo cho khách trước</label>
-                                    <select class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                    <select disabled="@(!hasPremiumAccess)" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:bg-surface-container disabled:text-on-surface-variant disabled:cursor-not-allowed">
                                         <option>Không thông báo</option>
                                         <option selected="">1 ngày</option>
                                         <option>2 ngày</option>
@@ -459,6 +488,8 @@
     private decimal commonCleaningFee;
     private decimal commonManagementFee;
     private bool showBankQrPreview;
+    private bool hasPremiumAccess;
+    private string currentPlanName = "Free";
     private bool isLoading = true;
     private bool isSaving = false;
     private string? errorMessage;
@@ -494,20 +525,23 @@
             var idStr = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
             var userPhone = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_phone_number");
             var userEmail = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_email");
+            int.TryParse(idStr, out buildingId);
+
+            await LoadSubscriptionStatus();
 
             hotline = userPhone ?? string.Empty;
             email = userEmail ?? string.Empty;
-            bankQrMode = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_mode") ?? "auto";
-            bankName = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_name") ?? string.Empty;
-            bankAccountNumber = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_number") ?? string.Empty;
-            bankAccountHolder = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_account_holder") ?? string.Empty;
-            bankQrDataUrl = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_bank_qr_data_url") ?? string.Empty;
+            bankQrMode = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_qr_mode")) ?? "auto";
+            bankName = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_name")) ?? string.Empty;
+            bankAccountNumber = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_account_number")) ?? string.Empty;
+            bankAccountHolder = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_account_holder")) ?? string.Empty;
+            bankQrDataUrl = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_qr_data_url")) ?? string.Empty;
             commonTrashFee = await GetDecimalSetting("sotro_common_trash_fee");
             commonInternetFee = await GetDecimalSetting("sotro_common_internet_fee");
             commonCleaningFee = await GetDecimalSetting("sotro_common_cleaning_fee");
             commonManagementFee = await GetDecimalSetting("sotro_common_management_fee");
 
-            if (int.TryParse(idStr, out buildingId) && buildingId > 0)
+            if (buildingId > 0)
             {
                 var response = await BuildingApiService.GetBuildingByIdAsync(buildingId);
                 if (response.Success && response.Data != null)
@@ -573,6 +607,21 @@
             {
                 errorMessage = $"Lỗi đọc file logo: {ex.Message}";
             }
+        }
+    }
+
+    private async Task LoadSubscriptionStatus()
+    {
+        try
+        {
+            var response = await SubscriptionApiService.GetCurrentSubscriptionAsync();
+            hasPremiumAccess = response.Success && response.Data?.IsPremium == true;
+            currentPlanName = response.Data?.PlanName ?? "Free";
+        }
+        catch
+        {
+            hasPremiumAccess = false;
+            currentPlanName = "Free";
         }
     }
 
@@ -648,7 +697,7 @@
                 Description = string.IsNullOrWhiteSpace(description) ? (activeBuilding.Description ?? "Mô tả nhà trọ") : description.Trim(),
                 TotalFloors = activeBuilding.TotalFloors ?? 1,
                 BillingDay = Math.Clamp(invoiceCreationDay, 1, 28),
-                DueDay = Math.Clamp(invoiceSendDay, 1, 28)
+                DueDay = hasPremiumAccess ? Math.Clamp(invoiceSendDay, 1, 28) : (activeBuilding.DueDay ?? 5)
             };
 
             List<(Stream Stream, string FileName)>? imageFiles = null;
@@ -681,17 +730,17 @@
                     await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", email.Trim());
                 }
 
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_qr_mode", bankQrMode);
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_name", bankName.Trim());
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_account_number", bankAccountNumber.Trim());
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_account_holder", bankAccountHolder.Trim());
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_common_trash_fee", commonTrashFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_common_internet_fee", commonInternetFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_common_cleaning_fee", commonCleaningFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_common_management_fee", commonManagementFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_qr_mode"), bankQrMode);
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_name"), bankName.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_account_number"), bankAccountNumber.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_account_holder"), bankAccountHolder.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_common_trash_fee"), commonTrashFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_common_internet_fee"), commonInternetFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_common_cleaning_fee"), commonCleaningFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_common_management_fee"), commonManagementFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 if (!string.IsNullOrWhiteSpace(bankQrDataUrl))
                 {
-                    await JS.InvokeVoidAsync("localStorage.setItem", "sotro_bank_qr_data_url", bankQrDataUrl);
+                    await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_qr_data_url"), bankQrDataUrl);
                 }
 
                 var roomApplyResult = await ApplyCommonServiceFeeToRoomsAsync();
@@ -776,7 +825,7 @@
 
     private async Task<decimal> GetDecimalSetting(string key)
     {
-        var rawValue = await JS.InvokeAsync<string>("localStorage.getItem", key);
+        var rawValue = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey(key));
         if (decimal.TryParse(rawValue, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var value))
         {
             return value;
@@ -784,6 +833,8 @@
 
         return decimal.TryParse(rawValue, out value) ? value : 0m;
     }
+
+    private string ScopedSettingKey(string key) => buildingId > 0 ? $"{key}_b{buildingId}" : key;
 
     private static string FormatCurrency(decimal value) => $"{value:N0}đ";
 

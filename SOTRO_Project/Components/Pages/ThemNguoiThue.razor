@@ -342,6 +342,7 @@ else
         Status = "Active"
     };
     private List<SOTRO_Project.Models.Room.RoomResponse> availableRooms = new();
+    private int? activeBuildingId;
     private bool isSaving;
     private string? portraitPreviewUrl;
     private string? identityFrontPreviewUrl;
@@ -350,6 +351,9 @@ else
     private bool IsEditMode => TenantId.HasValue;
     private string PageTitleText => IsEditMode ? "Chỉnh sửa người thuê" : "Thêm người thuê mới";
     private string SelectedRoomPrice => availableRooms.FirstOrDefault(r => r.RoomId == tenant.RoomId)?.BasePrice?.ToString("N0") ?? "0";
+
+    [SupplyParameterFromQuery(Name = "buildingId")]
+    public int? BuildingId { get; set; }
 
     // Validation and popup state
     private Dictionary<string, string> errors = new();
@@ -411,12 +415,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var buildings = await BuildingApi.GetBuildingsAsync();
-        var buildingId = buildings.Data?.FirstOrDefault()?.BuildingId;
-        if (buildingId == null)
+        activeBuildingId = await ResolveActiveBuildingIdAsync();
+        if (activeBuildingId is null or <= 0)
+        {
+            Navigation.NavigateTo("/nha-tro", replace: true);
             return;
+        }
 
-        var rooms = await RoomApi.GetRoomsByBuildingAsync(buildingId.Value);
+        var rooms = await RoomApi.GetRoomsByBuildingAsync(activeBuildingId.Value);
         availableRooms = rooms.Data?.Where(IsRoomAvailableForNewTenant).ToList() ?? new();
 
         if (IsEditMode)
@@ -500,6 +506,29 @@ else
         showTenantFormTour = true;
         StateHasChanged();
     }
+
+    private async Task<int?> ResolveActiveBuildingIdAsync()
+    {
+        if (BuildingId is > 0)
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "active_building_id", BuildingId.Value.ToString());
+            return BuildingId.Value;
+        }
+
+        try
+        {
+            var idText = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
+            return int.TryParse(idText, out var id) && id > 0 ? id : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private string TenantListHref => activeBuildingId is > 0
+        ? $"/nguoi-thue?buildingId={activeBuildingId.Value}"
+        : "/nguoi-thue";
 
     [JSInvokable]
     public void OnAddressSelected(string address)
@@ -649,12 +678,12 @@ else
     private void RedirectToTenants()
     {
         popupCts?.Cancel();
-        Navigation.NavigateTo("/nguoi-thue");
+        Navigation.NavigateTo(TenantListHref);
     }
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/nguoi-thue");
+        Navigation.NavigateTo(TenantListHref);
     }
 
     private static bool IsRoomAvailableForNewTenant(SOTRO_Project.Models.Room.RoomResponse room)

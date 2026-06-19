@@ -17,12 +17,24 @@ namespace SOTRO_Project.Services
             _jsRuntime = jsRuntime;
         }
 
-        public async Task<ApiResponse<DashboardSummaryResponse>> GetSummaryAsync()
+        public async Task<ApiResponse<DashboardSummaryResponse>> GetSummaryAsync(int? buildingId = null, int? month = null, int? year = null)
         {
             await SetAuthorizationHeaderAsync();
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<ApiResponse<DashboardSummaryResponse>>("api/dashboard/summary");
+                var query = new List<string>();
+                if (buildingId.HasValue && buildingId.Value > 0)
+                    query.Add($"buildingId={buildingId.Value}");
+                if (month.HasValue && year.HasValue)
+                {
+                    query.Add($"month={month.Value}");
+                    query.Add($"year={year.Value}");
+                }
+
+                var url = query.Count > 0
+                    ? $"api/dashboard/summary?{string.Join("&", query)}"
+                    : "api/dashboard/summary";
+                var response = await _httpClient.GetFromJsonAsync<ApiResponse<DashboardSummaryResponse>>(url);
                 return response ?? new ApiResponse<DashboardSummaryResponse> { Success = false, Message = "Không nhận được phản hồi từ máy chủ." };
             }
             catch (Exception ex)

@@ -176,6 +176,62 @@ namespace SoTro_BE.Controllers
             return Ok(ApiResponse<InvoiceResponse>.Ok("Đã cập nhật hóa đơn thành đã thanh toán.", MapInvoice(invoice)));
         }
 
+        [HttpPost("{invoiceId:int}/mark-unpaid")]
+        public async Task<ActionResult<ApiResponse<InvoiceResponse>>> MarkUnpaid(int invoiceId)
+        {
+            var landlordId = GetLandlordId();
+            if (landlordId == null)
+                return Unauthorized(ApiResponse<InvoiceResponse>.Fail("Khong tim thay thong tin chu tro."));
+
+            var invoice = await _context.Invoices
+                .Include(i => i.Room)
+                .ThenInclude(r => r!.Building)
+                .Include(i => i.RentalRecord)
+                .ThenInclude(r => r!.Tenant)
+                .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId && i.LandlordId == landlordId.Value && i.IsDeleted != true);
+
+            if (invoice == null)
+                return NotFound(ApiResponse<InvoiceResponse>.Fail("Khong tim thay hoa don."));
+
+            var payments = await _context.Payments
+                .Where(payment => payment.InvoiceId == invoice.InvoiceId)
+                .ToListAsync();
+
+            _context.Payments.RemoveRange(payments);
+
+            var total = invoice.TotalAmount ?? 0;
+            invoice.PaidAmount = 0;
+            invoice.RemainingAmount = total;
+            invoice.Status = invoice.DueDate.HasValue && invoice.DueDate.Value.Date < DateTime.Today
+                ? "Overdue"
+                : "Unpaid";
+            invoice.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(ApiResponse<InvoiceResponse>.Ok("Da dat lai hoa don ve trang thai chua thanh toan.", MapInvoice(invoice)));
+        }
+
+        [HttpDelete("{invoiceId:int}")]
+        public async Task<ActionResult<ApiResponse<bool>>> DeleteInvoice(int invoiceId)
+        {
+            var landlordId = GetLandlordId();
+            if (landlordId == null)
+                return Unauthorized(ApiResponse<bool>.Fail("Không tìm thấy thông tin chủ trọ."));
+
+            var invoice = await _context.Invoices
+                .FirstOrDefaultAsync(i => i.InvoiceId == invoiceId && i.LandlordId == landlordId.Value && i.IsDeleted != true);
+
+            if (invoice == null)
+                return NotFound(ApiResponse<bool>.Fail("Không tìm thấy hóa đơn."));
+
+            invoice.IsDeleted = true;
+            invoice.DeletedAt = DateTime.UtcNow;
+            invoice.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(ApiResponse<bool>.Ok("Đã xóa hóa đơn.", true));
+        }
+
         private IQueryable<InvoiceResponse> QueryInvoices(int buildingId, int landlordId, int month, int year)
         {
             return _context.Invoices

@@ -4,7 +4,7 @@ namespace SoTro_BE.Repositories
 {
     public interface ITenantRepository
     {
-        Task<List<Tenant>> GetTenantsAsync(int landlordId);
+        Task<List<Tenant>> GetTenantsAsync(int landlordId, int? buildingId = null);
         Task<Tenant?> GetTenantByIdAsync(int tenantId, int landlordId);
         Task<Room?> GetOwnedRoomAsync(int roomId, int landlordId);
         Task<Tenant> CreateTenantAsync(Tenant tenant, RentalRecord rentalRecord, RoomOccupant occupant, Room room);
