@@ -1,0 +1,722 @@
+@page "/admin/dashboard"
+@layout EmptyLayout
+@inject IAdminAccountApiService AdminAccountApi
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>Sổ Trọ - Admin Dashboard</PageTitle>
+
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background: #f6f8fb;
+    }
+
+    .admin-shell {
+        min-height: 100vh;
+        color: #0f172a;
+    }
+
+    .admin-header {
+        height: 72px;
+        background: #ffffff;
+        border-bottom: 1px solid #d8e0ec;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+
+    .admin-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        color: #004a98;
+        font-size: 24px;
+    }
+
+    .admin-logo img {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+    }
+
+    .admin-main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 24px 56px;
+    }
+
+    .admin-page-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .admin-page-title h1 {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.2;
+        font-weight: 800;
+    }
+
+    .admin-page-title p {
+        margin: 8px 0 0;
+        color: #64748b;
+    }
+
+    .admin-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .admin-btn {
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #0f172a;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: 0.2s ease;
+        min-height: 42px;
+    }
+
+    .admin-btn:hover {
+        border-color: #004a98;
+        color: #004a98;
+    }
+
+    .admin-btn-primary {
+        background: #004a98;
+        border-color: #004a98;
+        color: #ffffff;
+    }
+
+    .admin-btn-primary:hover {
+        background: #003b7a;
+        color: #ffffff;
+    }
+
+    .admin-btn-danger {
+        border-color: #fecaca;
+        color: #b91c1c;
+        background: #fff7f7;
+    }
+
+    .admin-btn-success {
+        border-color: #bbf7d0;
+        color: #15803d;
+        background: #f0fdf4;
+    }
+
+    .admin-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .admin-card {
+        background: #ffffff;
+        border: 1px solid #d8e0ec;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .admin-stat {
+        padding: 18px;
+    }
+
+    .admin-stat span {
+        display: block;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .admin-stat strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 28px;
+        line-height: 1;
+        color: #004a98;
+    }
+
+    .admin-toolbar {
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .admin-search {
+        min-width: 280px;
+        flex: 1;
+        max-width: 420px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 0 12px;
+        min-height: 44px;
+    }
+
+    .admin-search input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        font-weight: 600;
+    }
+
+    .admin-select {
+        width: 150px;
+        flex: 0 0 150px;
+        min-height: 42px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 0 12px;
+        background: #ffffff;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .admin-table-wrap {
+        overflow-x: auto;
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1040px;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 16px 18px;
+        border-bottom: 1px solid #d8e0ec;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .admin-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 800;
+    }
+
+    .admin-user-name {
+        font-weight: 800;
+    }
+
+    .admin-muted {
+        color: #64748b;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .admin-badge-admin {
+        background: #ede9fe;
+        color: #6d28d9;
+    }
+
+    .admin-badge-owner {
+        background: #dbeafe;
+        color: #004a98;
+    }
+
+    .admin-badge-active {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .admin-badge-locked {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .admin-alert {
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+        font-weight: 700;
+    }
+
+    .admin-alert-error {
+        color: #b91c1c;
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+    }
+
+    .admin-alert-success {
+        color: #166534;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    .admin-empty {
+        padding: 46px 20px;
+        text-align: center;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 900px) {
+        .admin-header {
+            padding: 0 16px;
+        }
+
+        .admin-page-title,
+        .admin-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .admin-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .admin-actions {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="admin-shell">
+    <header class="admin-header">
+        <div class="admin-logo">
+            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhYXYem8pnyf-x-_Q-OAYvvYT0Eoie3QgsyWlMQv2uEKGvKUp3z6Dbcw9UNfefANq1wABhAS-3ivWQk_fd6YnvgsbRlzbSfL68H4ewsArldRQEyArQD3FljdvTKCm_2ijqMAcHsjfWpBHqpB4T84JuU75OjyVyrjaohxLJmkhMz4OSU_WnfAAq-05ZQvzH7w9KvGBY6PJ7LqpOLwJdwUBAWlrvmRfYzxU7kVNQ4DiIDlk72cWywGIrDHYXL81x1HVYNT6X3BKj98a6" alt="Sổ Trọ" />
+            <span>Admin Sổ Trọ</span>
+        </div>
+        <div class="admin-actions">
+            <button class="admin-btn" @onclick="LoadDataAsync" disabled="@isLoading">
+                <span class="material-symbols-outlined">refresh</span>
+                Tải lại
+            </button>
+            <button class="admin-btn" @onclick="LogoutAsync">
+                <span class="material-symbols-outlined">logout</span>
+                Đăng xuất
+            </button>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <div class="admin-page-title">
+            <div>
+                <h1>Dashboard quản lý account</h1>
+                <p>Xem danh sách tài khoản, khóa account và thay đổi gói dịch vụ cho chủ trọ.</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="admin-alert admin-alert-error">@errorMessage</div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="admin-alert admin-alert-success">@successMessage</div>
+        }
+
+        <section class="admin-stats">
+            <div class="admin-card admin-stat">
+                <span>Tổng account</span>
+                <strong>@accounts.Count</strong>
+            </div>
+            <div class="admin-card admin-stat">
+                <span>Chủ trọ</span>
+                <strong>@accounts.Count(IsOwner)</strong>
+            </div>
+            <div class="admin-card admin-stat">
+                <span>Admin</span>
+                <strong>@accounts.Count(IsAdminAccount)</strong>
+            </div>
+            <div class="admin-card admin-stat">
+                <span>Đang khóa</span>
+                <strong>@accounts.Count(item => IsLocked(item))</strong>
+            </div>
+        </section>
+
+        <section class="admin-card admin-toolbar">
+            <div class="admin-search">
+                <span class="material-symbols-outlined">search</span>
+                <input placeholder="Tìm theo tên, email hoặc số điện thoại" @bind="searchText" @bind:event="oninput" />
+            </div>
+            <select class="admin-select" @bind="roleFilter">
+                <option value="all">Tất cả role</option>
+                <option value="admin">Admin</option>
+                <option value="owner">Chủ trọ</option>
+            </select>
+            <select class="admin-select" @bind="statusFilter">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="locked">Đang khóa</option>
+            </select>
+        </section>
+
+        <section class="admin-card admin-table-wrap">
+            @if (isLoading)
+            {
+                <div class="admin-empty">Đang tải dữ liệu account...</div>
+            }
+            else if (!FilteredAccounts.Any())
+            {
+                <div class="admin-empty">Chưa có account phù hợp với bộ lọc.</div>
+            }
+            else
+            {
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th>Liên hệ</th>
+                            <th>Role</th>
+                            <th>Trạng thái</th>
+                            <th>Gói dịch vụ</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var account in FilteredAccounts)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="admin-user-name">@(string.IsNullOrWhiteSpace(account.FullName) ? "Chưa cập nhật tên" : account.FullName)</div>
+                                    <div class="admin-muted">ID: @account.UserId</div>
+                                </td>
+                                <td>
+                                    <div>@account.Email</div>
+                                    <div class="admin-muted">@(string.IsNullOrWhiteSpace(account.PhoneNumber) ? "Chưa có SĐT" : account.PhoneNumber)</div>
+                                </td>
+                                <td>
+                                    <span class="@GetRoleBadgeClass(account)">@GetRoleText(account)</span>
+                                </td>
+                                <td>
+                                    <span class="@GetStatusBadgeClass(account)">@GetStatusText(account)</span>
+                                </td>
+                                <td>
+                                    @if (IsAdminAccount(account))
+                                    {
+                                        <span class="admin-muted">Không áp dụng</span>
+                                    }
+                                    else
+                                    {
+                                        <div class="admin-actions">
+                                            <select class="admin-select" value="@GetSelectedPlanValue(account)" @onchange="eventArgs => SetSelectedPlan(account.UserId, eventArgs.Value?.ToString())">
+                                                @if (plans.Count == 0)
+                                                {
+                                                    <option value="">Đang tải gói</option>
+                                                }
+                                                else
+                                                {
+                                                    @foreach (var plan in plans)
+                                                    {
+                                                        <option value="@plan.PlanId">@plan.PlanName</option>
+                                                    }
+                                                }
+                                            </select>
+                                            <button class="admin-btn admin-btn-primary"
+                                                    @onclick="() => SaveSubscriptionAsync(account)"
+                                                    disabled="@IsRowBusy(account.UserId)">
+                                                Lưu
+                                            </button>
+                                        </div>
+                                        <div class="admin-muted">
+                                            Hiện tại: @(string.IsNullOrWhiteSpace(account.CurrentPlanName) ? "Basic" : account.CurrentPlanName)
+                                            @if (account.SubscriptionEndDate.HasValue)
+                                            {
+                                                <span> - hết hạn @account.SubscriptionEndDate.Value.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                                <td>@(account.CreatedAt.HasValue ? account.CreatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy") : "-")</td>
+                                <td>
+                                    @if (IsAdminAccount(account))
+                                    {
+                                        <span class="admin-muted">Tài khoản hệ thống</span>
+                                    }
+                                    else if (IsLocked(account))
+                                    {
+                                        <button class="admin-btn admin-btn-success"
+                                                @onclick='() => UpdateStatusAsync(account, "Active")'
+                                                disabled="@IsRowBusy(account.UserId)">
+                                            <span class="material-symbols-outlined">lock_open</span>
+                                            Mở khóa
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="admin-btn admin-btn-danger"
+                                                @onclick='() => UpdateStatusAsync(account, "Locked")'
+                                                disabled="@IsRowBusy(account.UserId)">
+                                            <span class="material-symbols-outlined">lock</span>
+                                            Khóa
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    </main>
+</div>
+
+@code {
+    private readonly List<AdminAccountResponse> accounts = new();
+    private readonly List<AdminSubscriptionPlanResponse> plans = new();
+    private readonly Dictionary<int, string> selectedPlanIds = new();
+    private readonly HashSet<int> busyRows = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string? successMessage;
+    private string searchText = string.Empty;
+    private string roleFilter = "all";
+    private string statusFilter = "all";
+
+    private IEnumerable<AdminAccountResponse> FilteredAccounts => accounts.Where(account =>
+    {
+        var keyword = searchText.Trim();
+        var matchesKeyword = string.IsNullOrWhiteSpace(keyword)
+            || (account.FullName?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false)
+            || account.Email.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+            || (account.PhoneNumber?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false);
+
+        var matchesRole = roleFilter switch
+        {
+            "admin" => IsAdminAccount(account),
+            "owner" => IsOwner(account),
+            _ => true
+        };
+
+        var matchesStatus = statusFilter switch
+        {
+            "active" => !IsLocked(account),
+            "locked" => IsLocked(account),
+            _ => true
+        };
+
+        return matchesKeyword && matchesRole && matchesStatus;
+    });
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_token");
+        var roleId = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_role_id");
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            Navigation.NavigateTo("/dang-nhap");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(roleId) && roleId != "1")
+        {
+            Navigation.NavigateTo("/nha-tro");
+            return;
+        }
+
+        await LoadDataAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        var accountsResponse = await AdminAccountApi.GetAccountsAsync();
+        var plansResponse = await AdminAccountApi.GetPlansAsync();
+
+        if (!accountsResponse.Success)
+        {
+            errorMessage = accountsResponse.Message;
+        }
+        else
+        {
+            accounts.Clear();
+            accounts.AddRange(accountsResponse.Data ?? new List<AdminAccountResponse>());
+        }
+
+        if (!plansResponse.Success)
+        {
+            errorMessage = string.IsNullOrWhiteSpace(errorMessage)
+                ? plansResponse.Message
+                : $"{errorMessage} {plansResponse.Message}";
+        }
+        else
+        {
+            plans.Clear();
+            plans.AddRange(plansResponse.Data ?? new List<AdminSubscriptionPlanResponse>());
+        }
+
+        selectedPlanIds.Clear();
+        var basicPlanId = GetBasicPlanId();
+        foreach (var account in accounts)
+        {
+            selectedPlanIds[account.UserId] = (account.CurrentPlanId ?? basicPlanId)?.ToString() ?? string.Empty;
+        }
+
+        isLoading = false;
+    }
+
+    private async Task UpdateStatusAsync(AdminAccountResponse account, string status)
+    {
+        await WithBusyRow(account.UserId, async () =>
+        {
+            var response = await AdminAccountApi.UpdateAccountStatusAsync(account.UserId, status);
+            if (!response.Success)
+            {
+                errorMessage = response.Message;
+                successMessage = null;
+                return;
+            }
+
+            account.Status = status;
+            successMessage = status == "Locked" ? "Đã khóa account thành công." : "Đã mở khóa account thành công.";
+            errorMessage = null;
+        });
+    }
+
+    private async Task SaveSubscriptionAsync(AdminAccountResponse account)
+    {
+        var selectedValue = selectedPlanIds.TryGetValue(account.UserId, out var value) ? value : string.Empty;
+        var planId = int.TryParse(selectedValue, out var parsedPlanId) ? parsedPlanId : (int?)null;
+
+        await WithBusyRow(account.UserId, async () =>
+        {
+            var response = await AdminAccountApi.UpdateAccountSubscriptionAsync(account.UserId, planId);
+            if (!response.Success)
+            {
+                errorMessage = response.Message;
+                successMessage = null;
+                return;
+            }
+
+            var plan = plans.FirstOrDefault(item => item.PlanId == planId);
+            account.CurrentPlanId = planId;
+            account.CurrentPlanName = plan?.PlanName ?? "Basic";
+            account.SubscriptionEndDate = plan == null ? null : DateTime.UtcNow.AddDays(plan.DurationDays.GetValueOrDefault(30));
+            successMessage = "Đã cập nhật gói dịch vụ cho account.";
+            errorMessage = null;
+        });
+    }
+
+    private async Task WithBusyRow(int userId, Func<Task> action)
+    {
+        busyRows.Add(userId);
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            busyRows.Remove(userId);
+        }
+    }
+
+    private async Task LogoutAsync()
+    {
+        await JS.InvokeVoidAsync("localStorage.clear");
+        Navigation.NavigateTo("/dang-nhap");
+    }
+
+    private string GetSelectedPlanValue(AdminAccountResponse account)
+    {
+        return selectedPlanIds.TryGetValue(account.UserId, out var value)
+            ? value
+            : (account.CurrentPlanId ?? GetBasicPlanId())?.ToString() ?? string.Empty;
+    }
+
+    private void SetSelectedPlan(int userId, string? value)
+    {
+        selectedPlanIds[userId] = value ?? string.Empty;
+    }
+
+    private bool IsRowBusy(int userId) => busyRows.Contains(userId);
+
+    private static bool IsAdminAccount(AdminAccountResponse account) => account.RoleId == 1;
+
+    private static bool IsOwner(AdminAccountResponse account) => account.RoleId == 2 || account.RoleId == null;
+
+    private static bool IsLocked(AdminAccountResponse account) => string.Equals(account.Status, "Locked", StringComparison.OrdinalIgnoreCase);
+
+    private static string GetRoleText(AdminAccountResponse account)
+    {
+        if (account.RoleId == 1)
+        {
+            return "Admin";
+        }
+
+        if (account.RoleId == 2 || account.RoleId == null)
+        {
+            return "Chủ trọ";
+        }
+
+        return account.RoleName ?? $"Role {account.RoleId}";
+    }
+
+    private static string GetRoleBadgeClass(AdminAccountResponse account)
+    {
+        return IsAdminAccount(account) ? "admin-badge admin-badge-admin" : "admin-badge admin-badge-owner";
+    }
+
+    private static string GetStatusText(AdminAccountResponse account)
+    {
+        return IsLocked(account) ? "Đang khóa" : "Đang hoạt động";
+    }
+
+    private static string GetStatusBadgeClass(AdminAccountResponse account)
+    {
+        return IsLocked(account) ? "admin-badge admin-badge-locked" : "admin-badge admin-badge-active";
+    }
+
+    private int? GetBasicPlanId()
+    {
+        return plans.FirstOrDefault(plan => string.Equals(plan.PlanName, "Basic", StringComparison.OrdinalIgnoreCase))?.PlanId;
+    }
+}

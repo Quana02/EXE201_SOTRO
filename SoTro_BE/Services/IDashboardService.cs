@@ -5,6 +5,6 @@ namespace SoTro_BE.Services
 {
     public interface IDashboardService
     {
-        Task<ApiResponse<DashboardSummaryResponse>> GetSummaryAsync(int landlordId);
+        Task<ApiResponse<DashboardSummaryResponse>> GetSummaryAsync(int landlordId, int? buildingId, int month, int year);
     }
 }

@@ -156,6 +156,7 @@ namespace SoTro_BE.Services
                     FullName = pendingRegistration.FullName,
                     PhoneNumber = pendingRegistration.PhoneNumber,
                     PasswordHash = pendingRegistration.PasswordHash,
+                    RoleId = 2,
                     Provider = "Local",
                     IsExternalLogin = false,
                     IsProfileCompleted = !string.IsNullOrWhiteSpace(pendingRegistration.PhoneNumber),
@@ -374,6 +375,7 @@ namespace SoTro_BE.Services
                         IsExternalLogin = true,
                         EmailConfirmed = true,
                         PasswordHash = string.Empty,
+                        RoleId = 2,
                         PhoneNumber = null,
                         IsProfileCompleted = false,
                         Status = "Active",
@@ -385,6 +387,11 @@ namespace SoTro_BE.Services
                 }
                 else
                 {
+                    if (string.Equals(user.Status, "Locked", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return ApiResponse<AuthResponse>.Fail("Tài khoản đã bị khóa.");
+                    }
+
                     if (string.IsNullOrWhiteSpace(user.GoogleId))
                     {
                         user.GoogleId = request.GoogleId;
@@ -654,6 +661,7 @@ namespace SoTro_BE.Services
                 Email = user.Email,
                 FullName = user.FullName,
                 PhoneNumber = user.PhoneNumber,
+                RoleId = user.RoleId,
                 Role = user.Role?.RoleName,
                 Token = GenerateJwtToken(user, expiresAt),
                 ExpiresAt = expiresAt,
@@ -665,6 +673,9 @@ namespace SoTro_BE.Services
                     FullName = user.FullName,
                     Email = user.Email,
                     PhoneNumber = user.PhoneNumber,
+                    RoleId = user.RoleId,
+                    Role = user.Role?.RoleName,
+                    Status = user.Status,
                     IsProfileCompleted = isProfileCompleted,
                     AvatarUrl = user.AvatarUrl,
                     Provider = user.Provider
@@ -685,7 +696,8 @@ namespace SoTro_BE.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("RoleId", (user.RoleId ?? 0).ToString())
             };
 
             if (!string.IsNullOrWhiteSpace(user.Role?.RoleName))

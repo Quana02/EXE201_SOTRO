@@ -14,55 +14,95 @@ namespace SoTro_BE.Services
             _context = context;
         }
 
-        public async Task<ApiResponse<DashboardSummaryResponse>> GetSummaryAsync(int landlordId)
+        public async Task<ApiResponse<DashboardSummaryResponse>> GetSummaryAsync(int landlordId, int? buildingId, int month, int year)
         {
-            var now = DateTime.UtcNow;
-            var currentMonth = now.Month;
-            var currentYear = now.Year;
-            var previousMonth = now.AddMonths(-1);
+            var selectedDate = new DateTime(year, month, 1);
+            var previousMonth = selectedDate.AddMonths(-1);
+            var chartStart = selectedDate.AddMonths(-5);
 
-            var rooms = await _context.Rooms
+            if (buildingId is null or <= 0)
+            {
+                return ApiResponse<DashboardSummaryResponse>.Fail("Vui long chon nha tro truoc khi xem dashboard.");
+            }
+
+            if (buildingId.HasValue)
+            {
+                var ownsBuilding = await _context.Buildings.AnyAsync(b =>
+                    b.BuildingId == buildingId.Value &&
+                    b.LandlordId == landlordId &&
+                    b.IsDeleted != true);
+
+                if (!ownsBuilding)
+                {
+                    return ApiResponse<DashboardSummaryResponse>.Fail("Không tìm thấy nhà trọ hoặc bạn không có quyền truy cập.");
+                }
+            }
+
+            var roomQuery = _context.Rooms
                 .Include(r => r.Building)
-                .Where(r => r.IsDeleted != true && r.Building != null && r.Building.LandlordId == landlordId && r.Building.IsDeleted != true)
+                .Where(r => r.IsDeleted != true && r.Building != null && r.Building.LandlordId == landlordId && r.Building.IsDeleted != true);
+
+            if (buildingId.HasValue)
+            {
+                roomQuery = roomQuery.Where(r => r.BuildingId == buildingId.Value);
+            }
+
+            var rooms = await roomQuery
                 .AsNoTracking()
                 .ToListAsync();
 
-            var invoices = await _context.Invoices
+            var invoiceQuery = _context.Invoices
                 .Include(i => i.Room)
                 .Where(i => i.IsDeleted != true && i.LandlordId == landlordId)
-                .AsNoTracking()
+                .AsNoTracking();
+
+            if (buildingId.HasValue)
+            {
+                invoiceQuery = invoiceQuery.Where(i => i.Room != null && i.Room.BuildingId == buildingId.Value);
+            }
+
+            var selectedInvoices = await invoiceQuery
+                .Where(i => i.Month == month && i.Year == year)
                 .ToListAsync();
 
-            var monthlyRevenue = invoices
-                .Where(i => i.Month == currentMonth && i.Year == currentYear)
-                .Sum(i => i.PaidAmount ?? (i.Status == "Paid" ? i.TotalAmount ?? 0 : 0));
-
-            var previousRevenue = invoices
+            var previousInvoices = await invoiceQuery
                 .Where(i => i.Month == previousMonth.Month && i.Year == previousMonth.Year)
-                .Sum(i => i.PaidAmount ?? (i.Status == "Paid" ? i.TotalAmount ?? 0 : 0));
+                .ToListAsync();
+
+            var chartInvoices = await invoiceQuery
+                .Where(i =>
+                    (i.Year > chartStart.Year || (i.Year == chartStart.Year && i.Month >= chartStart.Month)) &&
+                    (i.Year < year || (i.Year == year && i.Month <= month)))
+                .ToListAsync();
+
+            var monthlyRevenue = selectedInvoices.Sum(GetCollectedAmount);
+            var previousRevenue = previousInvoices.Sum(GetCollectedAmount);
 
             var revenueGrowth = previousRevenue > 0
                 ? Math.Round((monthlyRevenue - previousRevenue) / previousRevenue * 100, 1)
                 : monthlyRevenue > 0 ? 100 : 0;
 
             var lastSixMonths = Enumerable.Range(0, 6)
-                .Select(offset => now.AddMonths(-5 + offset))
+                .Select(offset => selectedDate.AddMonths(-5 + offset))
                 .Select(date => new DashboardRevenuePoint
                 {
                     Month = date.Month,
                     Year = date.Year,
-                    Revenue = invoices
+                    Revenue = chartInvoices
                         .Where(i => i.Month == date.Month && i.Year == date.Year)
-                        .Sum(i => i.PaidAmount ?? (i.Status == "Paid" ? i.TotalAmount ?? 0 : 0))
+                        .Sum(GetCollectedAmount)
                 })
                 .ToList();
 
             var totalRooms = rooms.Count;
             var occupiedRooms = rooms.Count(r => r.Status == "Occupied");
 
-            var recentInvoices = invoices
+            var recentInvoices = await invoiceQuery
                 .OrderByDescending(i => i.CreatedAt ?? i.IssueDate ?? DateTime.MinValue)
                 .Take(5)
+                .ToListAsync();
+
+            var recentActivities = recentInvoices
                 .Select(i => new DashboardActivityItem
                 {
                     TimeLabel = FormatTimeLabel(i.CreatedAt ?? i.IssueDate),
@@ -73,6 +113,11 @@ namespace SoTro_BE.Services
                 })
                 .ToList();
 
+            var pendingInvoices = await invoiceQuery.CountAsync(i =>
+                i.Month == month &&
+                i.Year == year &&
+                (i.Status == "Unpaid" || i.Status == "PartiallyPaid" || i.Status == "Overdue" || (i.RemainingAmount ?? 0) > 0));
+
             var summary = new DashboardSummaryResponse
             {
                 MonthlyRevenue = monthlyRevenue,
@@ -80,12 +125,27 @@ namespace SoTro_BE.Services
                 TotalRooms = totalRooms,
                 OccupiedRooms = occupiedRooms,
                 OccupancyRate = totalRooms > 0 ? Math.Round((decimal)occupiedRooms / totalRooms * 100, 1) : 0,
-                PendingInvoices = invoices.Count(i => i.Status is "Unpaid" or "PartiallyPaid" or "Overdue" || (i.RemainingAmount ?? 0) > 0),
+                PendingInvoices = pendingInvoices,
                 RevenueLastSixMonths = lastSixMonths,
-                RecentActivities = recentInvoices
+                RecentActivities = recentActivities
             };
 
             return ApiResponse<DashboardSummaryResponse>.Ok("Lấy tổng quan dashboard thành công.", summary);
+        }
+
+        private static decimal GetCollectedAmount(Models.Invoice invoice)
+        {
+            if (invoice.Status == "Paid")
+            {
+                return invoice.PaidAmount.GetValueOrDefault(invoice.TotalAmount.GetValueOrDefault());
+            }
+
+            if (invoice.Status == "PartiallyPaid")
+            {
+                return invoice.PaidAmount.GetValueOrDefault();
+            }
+
+            return 0;
         }
 
         private static string FormatTimeLabel(DateTime? value)

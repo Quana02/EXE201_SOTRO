@@ -23,7 +23,7 @@ namespace SoTro_BE.Repositories
                 .Include(user => user.Landlord)
                 .FirstOrDefaultAsync(user => user.Email.ToLower() == normalizedEmail);
 
-            if (user != null && user.Landlord == null)
+            if (user != null && user.Landlord == null && user.RoleId != 1)
             {
                 var landlord = new Landlord
                 {

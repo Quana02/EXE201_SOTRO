@@ -2,7 +2,10 @@
 @layout EmptyLayout
 @inject IJSRuntime JS
 @inject IBuildingApiService BuildingApiService
+@inject IRoomApiService RoomApiService
+@inject ISubscriptionApiService SubscriptionApiService
 @using System.IO
+@using SOTRO_Project.Models.Room
 
 <PageTitle>Cài đặt - SOTRO</PageTitle>
 
@@ -48,8 +51,8 @@
                         <span>Thông tin chung</span>
                         <span class="material-symbols-outlined text-sm" style="@(activeSection == "thong-tin-chung" ? "font-variation-settings: 'FILL' 1;" : "")">info</span>
                     </button>
-                    <button @onclick='() => ScrollToSection("cau-hinh-dich-vu")'
-                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "cau-hinh-dich-vu" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
+                    <button @onclick='() => ScrollToSection("cau-hinh-dich-vu-chung")'
+                            class="w-full text-left px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-between transition-all duration-200 @(activeSection == "cau-hinh-dich-vu-chung" ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-on-surface-variant hover:bg-surface-container")">
                         <span>Cấu hình dịch vụ</span>
                         <span class="material-symbols-outlined text-sm" style="@(activeSection == "cau-hinh-dich-vu" ? "font-variation-settings: 'FILL' 1;" : "")">settings_input_component</span>
                     </button>
@@ -112,6 +115,31 @@
                                     <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Địa chỉ chính</label>
                                     <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="text" @bind="address">
                                 </div>
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2 h-6">
+                                        <label class="block text-xs font-bold text-on-surface-variant uppercase">Ngày khởi tạo hóa đơn</label>
+                                    </div>
+                                    <input min="1" max="28" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" @bind="invoiceCreationDay">
+                                    <p class="text-xs text-on-surface-variant mt-1">Ngày hệ thống tự tạo bill hằng tháng.</p>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2 h-6">
+                                        <label class="block text-xs font-bold text-on-surface-variant uppercase">Ngày xuất/gửi hóa đơn</label>
+                                        @if (!hasPremiumAccess)
+                                        {
+                                            <span class="inline-flex items-center h-5 text-[10px] leading-none font-bold px-2 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Premium</span>
+                                        }
+                                    </div>
+                                    <input min="1" max="28" disabled="@(!hasPremiumAccess)" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:bg-surface-container disabled:text-on-surface-variant disabled:cursor-not-allowed" type="number" @bind="invoiceSendDay">
+                                    @if (!hasPremiumAccess)
+                                    {
+                                        <p class="text-xs text-amber-700 mt-1">Tài khoản Free chỉ được dùng ngày khởi tạo hóa đơn. Nâng cấp Premium để dùng ngày xuất/gửi hóa đơn tự động.</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-xs text-on-surface-variant mt-1">Ngày chủ trọ gửi bill cho người thuê qua Zalo.</p>
+                                    }
+                                </div>
                             </div>
                             <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg">
                                 <InputFile OnChange="HandleLogoSelected" id="logo-upload" class="hidden" accept=".jpg,.jpeg,.png,.webp,.gif" />
@@ -136,11 +164,86 @@
                                     <label for="logo-upload" class="mt-2 inline-block text-xs font-bold text-primary hover:underline cursor-pointer">Thay đổi hình ảnh</label>
                                 </div>
                             </div>
+                            <div id="bank-qr-settings" class="grid grid-cols-1 lg:grid-cols-[180px,1fr] gap-5 p-4 bg-blue-50/70 border border-blue-100 rounded-lg">
+                                <InputFile OnChange="HandleBankQrSelected" id="bank-qr-upload" class="hidden" accept=".jpg,.jpeg,.png,.webp" />
+                                <label for="bank-qr-upload" class="w-44 h-44 rounded-xl bg-white border border-dashed border-blue-300 flex-shrink-0 relative group cursor-pointer overflow-hidden flex items-center justify-center">
+                                    @if (!string.IsNullOrWhiteSpace(EffectiveBankQrDataUrl))
+                                    {
+                                        <img alt="QR chuyển khoản ngân hàng" class="w-full h-full object-contain p-2" src="@EffectiveBankQrDataUrl">
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center px-4">
+                                            <span class="material-symbols-outlined text-blue-500 text-4xl">qr_code_2</span>
+                                            <p class="text-xs text-blue-700 font-bold mt-2">Thêm QR bank</p>
+                                        </div>
+                                    }
+                                    <div class="absolute inset-0 bg-blue-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-white">upload</span>
+                                    </div>
+                                </label>
+                                <div class="space-y-4">
+                                    <div>
+                                        <h5 class="text-sm font-bold text-on-surface">Thông tin chuyển khoản &amp; QR thanh toán</h5>
+                                        <p class="text-xs text-on-surface-variant mt-1">Chọn cách tạo QR thanh toán cho hóa đơn: hệ thống tự tạo từ số tài khoản hoặc bạn tự tải ảnh QR có sẵn.</p>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors @(bankQrMode == "auto" ? "border-primary bg-white shadow-sm" : "border-blue-100 bg-white/60")">
+                                            <input type="radio" class="mt-1 accent-blue-700" name="bankQrMode" checked="@(bankQrMode == "auto")" @onchange='() => bankQrMode = "auto"' />
+                                            <span>
+                                                <span class="block text-sm font-bold text-on-surface">Web tự tạo QR</span>
+                                                <span class="block text-xs text-on-surface-variant mt-1">Nhập ngân hàng, STK và họ tên chủ tài khoản.</span>
+                                            </span>
+                                        </label>
+                                        <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors @(bankQrMode == "upload" ? "border-primary bg-white shadow-sm" : "border-blue-100 bg-white/60")">
+                                            <input type="radio" class="mt-1 accent-blue-700" name="bankQrMode" checked="@(bankQrMode == "upload")" @onchange='() => bankQrMode = "upload"' />
+                                            <span>
+                                                <span class="block text-sm font-bold text-on-surface">Tự upload ảnh QR</span>
+                                                <span class="block text-xs text-on-surface-variant mt-1">Dùng ảnh QR bank đã tạo sẵn từ ứng dụng ngân hàng.</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngân hàng / mã bank</label>
+                                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="VD: VCB, MB, TCB" type="text" @bind="bankName">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Số tài khoản</label>
+                                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="VD: 0123456789" type="text" @bind="bankAccountNumber">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Họ tên chủ STK</label>
+                                            <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="VD: NGUYEN VAN A" type="text" @bind="bankAccountHolder">
+                                        </div>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(EffectiveBankQrDataUrl))
+                                    {
+                                        <button type="button" @onclick="() => showBankQrPreview = true" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:shadow-md transition-all">
+                                            <span class="material-symbols-outlined text-[16px]">qr_code_2</span>
+                                            <span>Xem QR chuyển khoản</span>
+                                        </button>
+                                    }
+                                    @if (bankQrMode == "auto")
+                                    {
+                                        <div class="text-xs text-on-surface-variant bg-white/70 border border-blue-100 rounded-lg p-3">
+                                            Hệ thống sẽ tự tạo QR từ thông tin trên. Mã ngân hàng nên dùng mã VietQR như VCB, MB, TCB, ACB, BIDV, VPB để ảnh QR hiển thị đúng.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <label for="bank-qr-upload" class="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline cursor-pointer">
+                                            <span class="material-symbols-outlined text-[16px]">add_photo_alternate</span>
+                                            <span>Chọn ảnh QR chuyển khoản</span>
+                                        </label>
+                                    }
+                                </div>
+                            </div>
                         </div>
                     </section>
 
                 <!-- Section 2: Cấu hình dịch vụ -->
-                <section id="cau-hinh-dich-vu" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
+                <section id="cau-hinh-dich-vu" class="hidden">
                     <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
                         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">settings_input_component</span>
                         <h3 class="font-headline-sm text-headline-sm text-primary">Cấu hình dịch vụ</h3>
@@ -169,26 +272,74 @@
                 </section>
 
                 <!-- Section 3: Tự động hóa VIP (đứng liền dưới Cấu hình dịch vụ) -->
+                <section id="cau-hinh-dich-vu-chung" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
+                    <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">payments</span>
+                        <h3 class="font-headline-sm text-headline-sm text-primary">Thông số dịch vụ chung</h3>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <p class="text-sm text-on-surface-variant leading-relaxed">Các khoản này áp dụng chung cho tất cả phòng và được cộng vào hóa đơn mới khi hệ thống tạo bill.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền rác chung</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="0" step="1000" @bind="commonTrashFee">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền internet chung</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="0" step="1000" @bind="commonInternetFee">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Tiền vệ sinh chung</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="0" step="1000" @bind="commonCleaningFee">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Phí quản lý chung</label>
+                                <input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" min="0" step="1000" @bind="commonManagementFee">
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-primary/15 bg-primary/5 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                            <div>
+                                <p class="text-sm font-bold text-on-surface">Tổng phí dịch vụ chung áp dụng cho tất cả phòng</p>
+                                <p class="text-xs text-on-surface-variant">Giá trị thực tế sẽ được lưu và dùng cho hóa đơn tháng mới.</p>
+                            </div>
+                            <div class="text-2xl font-bold text-primary">@FormatCurrency(CommonServiceTotal)</div>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="tu-dong-hoa" class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-outline-variant overflow-hidden scroll-mt-24">
                     <div class="bg-primary/5 px-6 py-4 border-b border-outline-variant flex items-center gap-3">
                         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
                         <h3 class="font-headline-sm text-headline-sm text-primary">Tự động hóa VIP</h3>
+                        @if (!hasPremiumAccess)
+                        {
+                            <span class="inline-flex items-center h-6 text-[11px] leading-none font-bold px-2 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Premium</span>
+                        }
                     </div>
                     <div class="p-6 space-y-8">
                         <!-- Zalo/SMS Reminder -->
+                        @if (!hasPremiumAccess)
+                        {
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-start gap-3">
+                                <span class="material-symbols-outlined text-amber-700">lock</span>
+                                <div>
+                                    <p class="text-sm font-bold text-on-surface">Chỉ có thể mở khi nâng cấp dịch vụ "Premium"</p>
+                                </div>
+                            </div>
+                        }
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1">
                                 <h4 class="font-label-md text-label-md font-bold text-on-surface">Tự động nhắc nợ qua Zalo</h4>
                                 <p class="text-sm text-on-surface-variant mt-1 leading-relaxed">Hệ thống sẽ tự động gửi tin nhắn thông báo tiền phòng định kỳ đến khách thuê qua tài khoản Zalo Official. Giảm thiểu việc chậm thanh toán.</p>
                                 <div class="mt-3 flex gap-4">
                                     <label class="flex items-center gap-2 cursor-pointer">
-                                        <input checked="" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary-container" type="checkbox">
+                                        <input checked="@hasPremiumAccess" disabled="@(!hasPremiumAccess)" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary-container disabled:cursor-not-allowed" type="checkbox">
                                         <span class="text-sm font-medium">Zalo Official Account</span>
                                     </label>
                                 </div>
                             </div>
                             <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-                                <input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300" id="toggle-debt" name="toggle" type="checkbox">
+                                <input checked="@hasPremiumAccess" disabled="@(!hasPremiumAccess)" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60" id="toggle-debt" name="toggle" type="checkbox">
                                 <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-300" for="toggle-debt"></label>
                             </div>
                         </div>
@@ -200,7 +351,7 @@
                                 <p class="text-sm text-on-surface-variant mt-1 leading-relaxed">Hệ thống sẽ tự động gửi tin nhắn thông báo tiền phòng định kỳ đến khách thuê qua tài khoản Zalo Official. Giảm thiểu việc chậm thanh toán.</p>
                             </div>
                             <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-                                <input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300" id="toggle-post" name="toggle" type="checkbox">
+                                <input disabled="@(!hasPremiumAccess)" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer border-transparent right-6 checked:right-0 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60" id="toggle-post" name="toggle" type="checkbox">
                                 <label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-colors duration-300" for="toggle-post"></label>
                             </div>
                         </div>
@@ -214,7 +365,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Ngày chốt số hàng tháng</label>
-                                    <select class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                    <select disabled="@(!hasPremiumAccess)" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:bg-surface-container disabled:text-on-surface-variant disabled:cursor-not-allowed">
                                         <option>Ngày 25 hàng tháng</option>
                                         <option selected="">Ngày 30 hàng tháng</option>
                                         <option>Ngày 01 hàng tháng</option>
@@ -223,7 +374,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-on-surface-variant uppercase mb-2">Thông báo cho khách trước</label>
-                                    <select class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all">
+                                    <select disabled="@(!hasPremiumAccess)" class="w-full bg-white border border-outline-variant rounded-lg px-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:bg-surface-container disabled:text-on-surface-variant disabled:cursor-not-allowed">
                                         <option>Không thông báo</option>
                                         <option selected="">1 ngày</option>
                                         <option>2 ngày</option>
@@ -277,6 +428,30 @@
     </a>
 </nav>
 
+@if (showBankQrPreview)
+{
+    <div class="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4" @onclick="() => showBankQrPreview = false">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" @onclick:stopPropagation="true">
+            <div class="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-primary uppercase">QR bank</p>
+                    <h3 class="text-lg font-bold text-on-surface">QR chuyển khoản</h3>
+                </div>
+                <button type="button" @onclick="() => showBankQrPreview = false" class="w-9 h-9 rounded-full hover:bg-surface-variant flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 flex flex-col items-center gap-4">
+                <img alt="QR chuyển khoản" class="w-72 h-72 max-w-full object-contain rounded-xl border border-outline-variant p-3 bg-white" src="@EffectiveBankQrDataUrl" />
+                <div class="text-center text-sm text-on-surface-variant">
+                    <p class="font-bold text-on-surface">@bankName - @bankAccountNumber</p>
+                    <p>@bankAccountHolder</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <script>
     // Global function to scroll smoothly with offset for header
     window.sotroScrollTo = (elementId) => {
@@ -301,10 +476,26 @@
     private string email = string.Empty;
     private string imageUrl = string.Empty;
     private string description = string.Empty;
+    private string bankQrMode = "auto";
+    private string bankName = string.Empty;
+    private string bankAccountNumber = string.Empty;
+    private string bankAccountHolder = string.Empty;
+    private string bankQrDataUrl = string.Empty;
+    private int invoiceCreationDay = 1;
+    private int invoiceSendDay = 5;
+    private decimal commonTrashFee;
+    private decimal commonInternetFee;
+    private decimal commonCleaningFee;
+    private decimal commonManagementFee;
+    private bool showBankQrPreview;
+    private bool hasPremiumAccess;
+    private string currentPlanName = "Free";
     private bool isLoading = true;
     private bool isSaving = false;
     private string? errorMessage;
     private string? successMessage;
+
+    private decimal CommonServiceTotal => commonTrashFee + commonInternetFee + commonCleaningFee + commonManagementFee;
 
     // File upload state for new logo
     private byte[]? newLogoBytes;
@@ -334,11 +525,23 @@
             var idStr = await JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
             var userPhone = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_phone_number");
             var userEmail = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_email");
+            int.TryParse(idStr, out buildingId);
+
+            await LoadSubscriptionStatus();
 
             hotline = userPhone ?? string.Empty;
             email = userEmail ?? string.Empty;
+            bankQrMode = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_qr_mode")) ?? "auto";
+            bankName = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_name")) ?? string.Empty;
+            bankAccountNumber = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_account_number")) ?? string.Empty;
+            bankAccountHolder = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_account_holder")) ?? string.Empty;
+            bankQrDataUrl = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey("sotro_bank_qr_data_url")) ?? string.Empty;
+            commonTrashFee = await GetDecimalSetting("sotro_common_trash_fee");
+            commonInternetFee = await GetDecimalSetting("sotro_common_internet_fee");
+            commonCleaningFee = await GetDecimalSetting("sotro_common_cleaning_fee");
+            commonManagementFee = await GetDecimalSetting("sotro_common_management_fee");
 
-            if (int.TryParse(idStr, out buildingId) && buildingId > 0)
+            if (buildingId > 0)
             {
                 var response = await BuildingApiService.GetBuildingByIdAsync(buildingId);
                 if (response.Success && response.Data != null)
@@ -348,6 +551,8 @@
                     address = activeBuilding.Address ?? string.Empty;
                     imageUrl = activeBuilding.ImageUrl ?? string.Empty;
                     description = activeBuilding.Description ?? string.Empty;
+                    invoiceCreationDay = Math.Clamp(activeBuilding.BillingDay ?? 1, 1, 28);
+                    invoiceSendDay = Math.Clamp(activeBuilding.DueDay ?? 5, 1, 28);
                 }
                 else
                 {
@@ -405,6 +610,58 @@
         }
     }
 
+    private async Task LoadSubscriptionStatus()
+    {
+        try
+        {
+            var response = await SubscriptionApiService.GetCurrentSubscriptionAsync();
+            hasPremiumAccess = response.Success && response.Data?.IsPremium == true;
+            currentPlanName = response.Data?.PlanName ?? "Free";
+        }
+        catch
+        {
+            hasPremiumAccess = false;
+            currentPlanName = "Free";
+        }
+    }
+
+    private async Task HandleBankQrSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        successMessage = null;
+        var file = e.File;
+        if (file == null)
+        {
+            return;
+        }
+
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            errorMessage = "Ảnh QR bank không được vượt quá 5MB.";
+            return;
+        }
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType.ToLower()))
+        {
+            errorMessage = "Chỉ chấp nhận ảnh QR định dạng jpg, png hoặc webp.";
+            return;
+        }
+
+        try
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(5 * 1024 * 1024).ReadExactlyAsync(buffer);
+            bankQrDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            bankQrMode = "upload";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi đọc ảnh QR bank: {ex.Message}";
+        }
+    }
+
     private async Task SaveSettings()
     {
         if (activeBuilding == null || buildingId <= 0)
@@ -439,8 +696,8 @@
                 Address = address.Trim(),
                 Description = string.IsNullOrWhiteSpace(description) ? (activeBuilding.Description ?? "Mô tả nhà trọ") : description.Trim(),
                 TotalFloors = activeBuilding.TotalFloors ?? 1,
-                BillingDay = activeBuilding.BillingDay ?? 30,
-                DueDay = activeBuilding.DueDay ?? 5
+                BillingDay = Math.Clamp(invoiceCreationDay, 1, 28),
+                DueDay = hasPremiumAccess ? Math.Clamp(invoiceSendDay, 1, 28) : (activeBuilding.DueDay ?? 5)
             };
 
             List<(Stream Stream, string FileName)>? imageFiles = null;
@@ -472,6 +729,22 @@
                 {
                     await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", email.Trim());
                 }
+
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_qr_mode"), bankQrMode);
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_name"), bankName.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_account_number"), bankAccountNumber.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_account_holder"), bankAccountHolder.Trim());
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_common_trash_fee"), commonTrashFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_common_internet_fee"), commonInternetFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_common_cleaning_fee"), commonCleaningFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_common_management_fee"), commonManagementFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                if (!string.IsNullOrWhiteSpace(bankQrDataUrl))
+                {
+                    await JS.InvokeVoidAsync("localStorage.setItem", ScopedSettingKey("sotro_bank_qr_data_url"), bankQrDataUrl);
+                }
+
+                var roomApplyResult = await ApplyCommonServiceFeeToRoomsAsync();
+                successMessage = roomApplyResult;
             }
             else
             {
@@ -498,7 +771,85 @@
             address = activeBuilding.Address ?? string.Empty;
             imageUrl = activeBuilding.ImageUrl ?? string.Empty;
             description = activeBuilding.Description ?? string.Empty;
+            invoiceCreationDay = Math.Clamp(activeBuilding.BillingDay ?? 1, 1, 28);
+            invoiceSendDay = Math.Clamp(activeBuilding.DueDay ?? 5, 1, 28);
             newLogoBytes = null;
         }
+    }
+
+    private async Task<string> ApplyCommonServiceFeeToRoomsAsync()
+    {
+        var roomsResponse = await RoomApiService.GetRoomsByBuildingAsync(buildingId);
+        if (!roomsResponse.Success || roomsResponse.Data == null)
+        {
+            return "Đã lưu cài đặt, nhưng chưa áp dụng được phí dịch vụ chung cho phòng.";
+        }
+
+        var failedCount = 0;
+        foreach (var room in roomsResponse.Data)
+        {
+            var updateRequest = new UpdateRoomRequest
+            {
+                RoomCode = room.RoomCode,
+                RoomName = room.RoomName,
+                Zone = room.Zone,
+                FloorNumber = room.FloorNumber,
+                RoomTypeId = room.RoomTypeId,
+                Status = room.Status,
+                BasePrice = room.BasePrice,
+                ElectricPrice = room.ElectricPrice,
+                WaterPrice = room.WaterPrice,
+                ServiceFee = CommonServiceTotal,
+                IncidentFee = room.IncidentFee,
+                Capacity = room.Capacity,
+                CurrentTenantCount = room.CurrentTenantCount,
+                BillingDay = room.BillingDay,
+                PaymentDueDay = room.PaymentDueDay,
+                BankName = room.BankName,
+                BankAccountNumber = room.BankAccountNumber,
+                BankQrUrl = room.BankQrUrl,
+                Note = room.Note
+            };
+
+            var updateResponse = await RoomApiService.UpdateRoomAsync(room.RoomId, updateRequest);
+            if (!updateResponse.Success)
+            {
+                failedCount++;
+            }
+        }
+
+        return failedCount == 0
+            ? $"Đã lưu cài đặt và áp dụng {FormatCurrency(CommonServiceTotal)} phí dịch vụ chung cho tất cả phòng."
+            : $"Đã lưu cài đặt, nhưng có {failedCount} phòng chưa áp dụng được phí dịch vụ chung.";
+    }
+
+    private async Task<decimal> GetDecimalSetting(string key)
+    {
+        var rawValue = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSettingKey(key));
+        if (decimal.TryParse(rawValue, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var value))
+        {
+            return value;
+        }
+
+        return decimal.TryParse(rawValue, out value) ? value : 0m;
+    }
+
+    private string ScopedSettingKey(string key) => buildingId > 0 ? $"{key}_b{buildingId}" : key;
+
+    private static string FormatCurrency(decimal value) => $"{value:N0}đ";
+
+    private string EffectiveBankQrDataUrl => bankQrMode == "auto" ? BuildGeneratedBankQrUrl() : bankQrDataUrl;
+
+    private string BuildGeneratedBankQrUrl()
+    {
+        if (string.IsNullOrWhiteSpace(bankName) || string.IsNullOrWhiteSpace(bankAccountNumber) || string.IsNullOrWhiteSpace(bankAccountHolder))
+        {
+            return string.Empty;
+        }
+
+        var bankCode = Uri.EscapeDataString(bankName.Trim().ToUpperInvariant());
+        var accountNumber = Uri.EscapeDataString(bankAccountNumber.Trim().Replace(" ", ""));
+        var accountName = Uri.EscapeDataString(bankAccountHolder.Trim().ToUpperInvariant());
+        return $"https://img.vietqr.io/image/{bankCode}-{accountNumber}-compact2.png?accountName={accountName}";
     }
 }

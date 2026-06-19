@@ -11,6 +11,11 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
     <!-- Tailwind Config cho design system Sổ trọ -->
     <script id="tailwind-config">
         tailwind.config = {
@@ -262,6 +267,288 @@
             URL.revokeObjectURL(url);
         };
 
+        window.sotroInvoiceTools = {
+            sendZaloMessage: async (message, phoneNumber) => {
+                let copied = false;
+                try {
+                    await navigator.clipboard.writeText(message);
+                    copied = true;
+                } catch {
+                    copied = false;
+                }
+
+                const digits = (phoneNumber || '').replace(/\D/g, '');
+                const zaloUrl = digits ? `https://zalo.me/${digits}` : 'https://chat.zalo.me/';
+                window.open(zaloUrl, '_blank', 'noopener,noreferrer');
+                return copied;
+            },
+            openZaloContact: (phoneNumber) => {
+                const digits = (phoneNumber || '').replace(/\D/g, '');
+                const zaloUrl = digits ? `https://zalo.me/${digits}` : 'https://chat.zalo.me/';
+                window.open(zaloUrl, '_blank', 'noopener,noreferrer');
+                return !!digits;
+            },
+            copyInvoicePng: async (invoice) => {
+                const get = (name, fallback = '') => invoice?.[name] ?? invoice?.[name.charAt(0).toUpperCase() + name.slice(1)] ?? fallback;
+                const canvas = document.createElement('canvas');
+                canvas.width = 900;
+                canvas.height = 1200;
+                const ctx = canvas.getContext('2d');
+                const blue = '#0056b3';
+                const dark = '#111827';
+                const muted = '#64748b';
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+                roundRect(ctx, 50, 40, 800, 1120, 24);
+                ctx.fill();
+                ctx.strokeStyle = '#dbe3ef';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = blue;
+                ctx.font = 'bold 38px Arial';
+                ctx.fillText(get('buildingName', 'Sổ Trọ'), 90, 115);
+                ctx.fillStyle = muted;
+                ctx.font = '18px Arial';
+                ctx.fillText('Hóa đơn thanh toán tiền trọ', 90, 150);
+                wrapText(ctx, `Địa chỉ: ${get('buildingAddress', 'Chưa cập nhật địa chỉ')}`, 90, 185, 460, 24);
+
+                ctx.fillStyle = muted;
+                ctx.font = '16px Arial';
+                ctx.fillText('Mã hóa đơn', 610, 110);
+                ctx.fillStyle = blue;
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText(get('invoiceCode'), 610, 142);
+                ctx.fillStyle = muted;
+                ctx.font = '16px Arial';
+                ctx.fillText(`Kỳ: ${get('periodText')}`, 610, 174);
+
+                ctx.strokeStyle = blue;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(90, 235);
+                ctx.lineTo(810, 235);
+                ctx.stroke();
+
+                ctx.fillStyle = dark;
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText(`Người thuê: ${get('tenantName')}`, 90, 295);
+                ctx.fillText(`SĐT: ${get('tenantPhone', 'Chưa có') || 'Chưa có'}`, 90, 335);
+                ctx.fillText(`Phòng: ${get('roomCode')}`, 90, 375);
+                ctx.fillText(`Ngày đến hạn: ${get('dueDate')}`, 90, 415);
+
+                ctx.fillStyle = '#eff6ff';
+                roundRect(ctx, 90, 455, 430, 70, 14);
+                ctx.fill();
+                ctx.fillStyle = blue;
+                ctx.font = 'bold 19px Arial';
+                wrapText(ctx, get('note'), 110, 485, 390, 25);
+
+                await drawQr(ctx, get('bankQrDataUrl'), 610, 275, 170);
+                ctx.fillStyle = muted;
+                ctx.font = '16px Arial';
+                ctx.fillText(`${get('bankName')} - ${get('bankAccountNumber')}`, 585, 470);
+                ctx.fillText(get('bankAccountHolder'), 585, 500);
+
+                const tableX = 90;
+                let y = 585;
+                ctx.fillStyle = blue;
+                roundRect(ctx, tableX, y, 720, 48, 8);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 18px Arial';
+                ctx.fillText('Khoản thu', tableX + 20, y + 31);
+                ctx.fillText('Số tiền', tableX + 610, y + 31);
+                y += 58;
+
+                const rows = [
+                    ['Tiền phòng', get('roomPrice')],
+                    ['Điện', get('electricFee')],
+                    ['Nước', get('waterFee')],
+                    ['Dịch vụ', get('serviceFee')]
+                ];
+
+                ctx.font = '18px Arial';
+                rows.forEach(([label, value]) => {
+                    ctx.fillStyle = dark;
+                    ctx.fillText(label, tableX + 20, y + 28);
+                    ctx.fillText(value, tableX + 610, y + 28);
+                    ctx.strokeStyle = '#e2e8f0';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(tableX, y + 45);
+                    ctx.lineTo(tableX + 720, y + 45);
+                    ctx.stroke();
+                    y += 54;
+                });
+
+                ctx.fillStyle = blue;
+                ctx.font = 'bold 24px Arial';
+                ctx.fillText('Tổng thanh toán', tableX + 20, y + 42);
+                ctx.fillText(get('totalAmount'), tableX + 585, y + 42);
+
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                if (!blob) return 'failed';
+
+                try {
+                    if (navigator.clipboard && window.ClipboardItem) {
+                        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                        return 'copied';
+                    }
+                } catch {
+                    // Fall back to download below.
+                }
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${get('invoiceCode', 'bill')}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                return 'downloaded';
+
+                function roundRect(context, x, y, width, height, radius) {
+                    context.beginPath();
+                    context.moveTo(x + radius, y);
+                    context.lineTo(x + width - radius, y);
+                    context.quadraticCurveTo(x + width, y, x + width, y + radius);
+                    context.lineTo(x + width, y + height - radius);
+                    context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                    context.lineTo(x + radius, y + height);
+                    context.quadraticCurveTo(x, y + height, x, y + height - radius);
+                    context.lineTo(x, y + radius);
+                    context.quadraticCurveTo(x, y, x + radius, y);
+                    context.closePath();
+                }
+
+                function wrapText(context, text, x, startY, maxWidth, lineHeight) {
+                    const words = String(text || '').split(' ');
+                    let line = '';
+                    let textY = startY;
+                    for (const word of words) {
+                        const testLine = line + word + ' ';
+                        if (context.measureText(testLine).width > maxWidth && line) {
+                            context.fillText(line, x, textY);
+                            line = word + ' ';
+                            textY += lineHeight;
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    context.fillText(line, x, textY);
+                }
+
+                function drawQr(context, src, x, y, size) {
+                    return new Promise(resolve => {
+                        if (!src) {
+                            drawQrPlaceholder(context, x, y, size);
+                            resolve();
+                            return;
+                        }
+                        const image = new Image();
+                        image.crossOrigin = 'anonymous';
+                        image.onload = () => {
+                            context.fillStyle = '#ffffff';
+                            roundRect(context, x, y, size, size, 12);
+                            context.fill();
+                            context.drawImage(image, x + 8, y + 8, size - 16, size - 16);
+                            resolve();
+                        };
+                        image.onerror = () => {
+                            drawQrPlaceholder(context, x, y, size);
+                            resolve();
+                        };
+                        image.src = src;
+                    });
+                }
+
+                function drawQrPlaceholder(context, x, y, size) {
+                    context.strokeStyle = '#94a3b8';
+                    context.lineWidth = 2;
+                    context.setLineDash([8, 6]);
+                    roundRect(context, x, y, size, size, 12);
+                    context.stroke();
+                    context.setLineDash([]);
+                    context.fillStyle = muted;
+                    context.font = '16px Arial';
+                    context.fillText('Chưa có QR', x + 46, y + size / 2);
+                }
+            },
+            printInvoice: (html, title) => {
+                const printWindow = window.open('', '_blank', 'width=900,height=1000');
+                if (!printWindow) {
+                    alert('Trình duyệt đang chặn popup. Vui lòng cho phép popup để xuất hóa đơn PDF.');
+                    return false;
+                }
+
+                printWindow.document.open();
+                printWindow.document.write(html);
+                printWindow.document.close();
+                printWindow.document.title = title || 'Hoa don';
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 350);
+                return true;
+            },
+            printInvoiceThenOpenZalo: (html, title, phoneNumber) => {
+                const printWindow = window.open('', '_blank', 'width=900,height=1000');
+                if (!printWindow) {
+                    alert('Trình duyệt đang chặn popup. Vui lòng cho phép popup để xuất hóa đơn PDF.');
+                    return false;
+                }
+
+                const digits = (phoneNumber || '').replace(/\D/g, '');
+                const zaloUrl = digits ? `https://zalo.me/${digits}` : 'https://chat.zalo.me/';
+                const zaloWindow = window.open('', '_blank');
+
+                printWindow.document.open();
+                printWindow.document.write(html);
+                printWindow.document.close();
+                printWindow.document.title = title || 'Hoa don';
+                printWindow.focus();
+
+                const goToZalo = () => {
+                    if (zaloWindow && !zaloWindow.closed) {
+                        zaloWindow.location.href = zaloUrl;
+                        zaloWindow.focus();
+                    } else {
+                        window.open(zaloUrl, '_blank', 'noopener,noreferrer');
+                    }
+                };
+
+                let movedToZalo = false;
+                const goToZaloOnce = () => {
+                    if (movedToZalo) return;
+                    movedToZalo = true;
+                    goToZalo();
+                };
+
+                if (zaloWindow) {
+                    zaloWindow.document.title = 'Đang chờ gửi Zalo';
+                    zaloWindow.document.body.style.fontFamily = 'Arial, sans-serif';
+                    zaloWindow.document.body.style.padding = '24px';
+                    const titleElement = zaloWindow.document.createElement('h2');
+                    titleElement.textContent = 'Đang chuẩn bị chuyển sang Zalo...';
+                    const noteElement = zaloWindow.document.createElement('p');
+                    noteElement.textContent = 'Sau khi bạn lưu hoặc đóng hộp thoại PDF, tab này sẽ tự mở Zalo người thuê.';
+                    zaloWindow.document.body.appendChild(titleElement);
+                    zaloWindow.document.body.appendChild(noteElement);
+                }
+
+                printWindow.onafterprint = goToZaloOnce;
+                printWindow.addEventListener?.('afterprint', goToZaloOnce);
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(goToZaloOnce, 2500);
+                }, 350);
+
+                return true;
+            }
+        };
+
         window.sotroGuidedOnboarding = {
             activeElement: null,
             activeHandler: null,
@@ -392,6 +679,26 @@
                 this.activeHandler = null;
                 this.activeDotNetRef = null;
                 this.activeScrollHandler = null;
+            }
+        };
+
+        window.sotroLanding = {
+            scrollToSection: function (sectionId) {
+                const element = document.getElementById(sectionId);
+                if (!element) {
+                    return;
+                }
+
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            },
+
+            scrollToCurrentHash: function () {
+                const sectionId = window.location.hash?.replace('#', '');
+                if (!sectionId) {
+                    return;
+                }
+
+                setTimeout(() => this.scrollToSection(sectionId), 80);
             }
         };
     </script>

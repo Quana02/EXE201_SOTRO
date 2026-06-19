@@ -1,4 +1,5 @@
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <aside id="sotro-sidebar" class="fixed left-0 top-0 h-full flex flex-col p-base z-40 bg-surface-container-low border-r border-outline-variant pt-20 transition-all duration-300 overflow-hidden @(_isCollapsed ? "w-[72px]" : "w-64")">
     <div class="mb-6 @(_isCollapsed ? "px-2" : "px-4") transition-all duration-300">
@@ -18,28 +19,28 @@
         </div>
     </div>
     <nav class="flex-1 space-y-1 @(_isCollapsed ? "px-1" : "px-2") transition-all duration-300">
-        <a id="nav-dashboard" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/dashboard" title="Tổng quan">
+        <a id="nav-dashboard" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="@DashboardHref" title="Tổng quan">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="dashboard">dashboard</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Tổng quan</span>
             }
         </a>
-        <a id="nav-rooms" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/quan-ly-phong" title="Phòng trọ">
+        <a id="nav-rooms" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="@RoomsHref" title="Phòng trọ">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="home_work">home_work</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Phòng trọ</span>
             }
         </a>
-        <a id="nav-tenants" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/nguoi-thue" title="Người thuê">
+        <a id="nav-tenants" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="@TenantsHref" title="Người thuê">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="group">group</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Người thuê</span>
             }
         </a>
-        <a id="nav-invoices" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="/hoa-don" title="Hóa đơn">
+        <a id="nav-invoices" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="@InvoicesHref" title="Hóa đơn">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="description">description</span>
             @if (!_isCollapsed)
             {
@@ -58,14 +59,14 @@
                 <div class="w-6 h-px bg-outline-variant"></div>
             </div>
         }
-        <a id="nav-marketing" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#" title="Marketing">
+        <button id="nav-marketing" type="button" @onclick="OpenMarketingPopup" class="w-full flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" title="Marketing">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="campaign">campaign</span>
             @if (!_isCollapsed)
             {
                 <span class="text-label-md font-label-md whitespace-nowrap">Marketing</span>
             }
-        </a>
-        <a id="nav-upgrade" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="#" title="Nâng cấp dịch vụ">
+        </button>
+        <a id="nav-upgrade" class="flex items-center gap-3 @(_isCollapsed ? "justify-center px-2" : "px-3") py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all group" href="/#pricing" title="Nâng cấp dịch vụ">
             <span class="material-symbols-outlined flex-shrink-0" data-icon="workspace_premium">workspace_premium</span>
             @if (!_isCollapsed)
             {
@@ -85,9 +86,44 @@
     </nav>
 </aside>
 
+@if (showMarketingPopup)
+{
+    <div class="fixed inset-0 z-[260] bg-black/45 backdrop-blur-sm flex items-center justify-center p-4" @onclick="CloseMarketingPopup">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-outline-variant overflow-hidden" @onclick:stopPropagation="true">
+            <div class="px-6 py-5 border-b border-outline-variant flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs font-black uppercase text-primary">Marketing</p>
+                    <h3 class="text-xl font-black text-on-surface mt-1">Tính năng đang được cập nhật</h3>
+                </div>
+                <button type="button" @onclick="CloseMarketingPopup" class="w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center" title="Đóng">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                    <span class="material-symbols-outlined text-3xl">campaign</span>
+                </div>
+                <p class="text-body-md text-on-surface-variant leading-7">
+                    Khu vực Marketing đang được phát triển để hỗ trợ đăng tin, nhắc phí và chăm sóc người thuê tốt hơn. Bạn có thể quay lại sau khi hệ thống cập nhật xong.
+                </p>
+                <button type="button" @onclick="CloseMarketingPopup" class="mt-6 w-full px-4 py-3 rounded-xl bg-primary text-white font-bold hover:shadow-md transition-all">
+                    Đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private string buildingName = "SOTRO Apartment";
+    private int? buildingId;
     private bool _isCollapsed;
+    private bool showMarketingPopup;
+    private string BuildingQuery => buildingId is > 0 ? $"?buildingId={buildingId.Value}" : string.Empty;
+    private string DashboardHref => $"/dashboard{BuildingQuery}";
+    private string RoomsHref => $"/quan-ly-phong{BuildingQuery}";
+    private string TenantsHref => $"/nguoi-thue{BuildingQuery}";
+    private string InvoicesHref => $"/hoa-don{BuildingQuery}";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -96,14 +132,25 @@
             try
             {
                 var nameTask = JS.InvokeAsync<string>("localStorage.getItem", "active_building_name");
+                var idTask = JS.InvokeAsync<string>("localStorage.getItem", "active_building_id");
                 var collapsedTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_sidebar_collapsed");
 
-                await Task.WhenAll(nameTask.AsTask(), collapsedTask.AsTask());
+                await Task.WhenAll(nameTask.AsTask(), idTask.AsTask(), collapsedTask.AsTask());
 
                 var name = nameTask.Result;
                 if (!string.IsNullOrWhiteSpace(name))
                 {
                     buildingName = name;
+                }
+
+                var routeBuildingId = GetBuildingIdFromUrl();
+                if (routeBuildingId is > 0)
+                {
+                    buildingId = routeBuildingId;
+                }
+                else if (int.TryParse(idTask.Result, out var id) && id > 0)
+                {
+                    buildingId = id;
                 }
 
                 _isCollapsed = collapsedTask.Result == "true";
@@ -133,5 +180,26 @@
         {
             Console.WriteLine($"Error saving sidebar state: {ex.Message}");
         }
+    }
+
+    private void OpenMarketingPopup()
+    {
+        showMarketingPopup = true;
+    }
+
+    private void CloseMarketingPopup()
+    {
+        showMarketingPopup = false;
+    }
+
+    private int? GetBuildingIdFromUrl()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        return query.TryGetValue("buildingId", out var value) &&
+               int.TryParse(value.FirstOrDefault(), out var id) &&
+               id > 0
+            ? id
+            : null;
     }
 }

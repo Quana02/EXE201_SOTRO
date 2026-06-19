@@ -964,10 +964,10 @@
 
     private async Task LoadSharedFeesFromStorage()
     {
-        var elec = await JS.InvokeAsync<string>("localStorage.getItem", "shared_electric_price");
-        var water = await JS.InvokeAsync<string>("localStorage.getItem", "shared_water_price");
-        var service = await JS.InvokeAsync<string>("localStorage.getItem", "shared_service_fee");
-        var billing = await JS.InvokeAsync<string>("localStorage.getItem", "shared_billing_day");
+        var elec = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSharedFeeKey("shared_electric_price"));
+        var water = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSharedFeeKey("shared_water_price"));
+        var service = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSharedFeeKey("shared_service_fee"));
+        var billing = await JS.InvokeAsync<string>("localStorage.getItem", ScopedSharedFeeKey("shared_billing_day"));
 
         if (decimal.TryParse(elec, out var e)) { request.ElectricPrice = e; electricPriceDisplay = FormatNumber(e); }
         if (decimal.TryParse(water, out var w)) { request.WaterPrice = w; waterPriceDisplay = FormatNumber(w); }
@@ -989,13 +989,15 @@
     {
         try
         {
-            if (request.ElectricPrice.HasValue) await JS.InvokeVoidAsync("localStorage.setItem", "shared_electric_price", request.ElectricPrice.Value.ToString());
-            if (request.WaterPrice.HasValue) await JS.InvokeVoidAsync("localStorage.setItem", "shared_water_price", request.WaterPrice.Value.ToString());
-            if (request.ServiceFee.HasValue) await JS.InvokeVoidAsync("localStorage.setItem", "shared_service_fee", request.ServiceFee.Value.ToString());
-            if (request.BillingDay.HasValue) await JS.InvokeVoidAsync("localStorage.setItem", "shared_billing_day", request.BillingDay.Value.ToString());
+            if (request.ElectricPrice.HasValue) await JS.InvokeVoidAsync("localStorage.setItem", ScopedSharedFeeKey("shared_electric_price"), request.ElectricPrice.Value.ToString());
+            if (request.WaterPrice.HasValue) await JS.InvokeVoidAsync("localStorage.setItem", ScopedSharedFeeKey("shared_water_price"), request.WaterPrice.Value.ToString());
+            if (request.ServiceFee.HasValue) await JS.InvokeVoidAsync("localStorage.setItem", ScopedSharedFeeKey("shared_service_fee"), request.ServiceFee.Value.ToString());
+            if (request.BillingDay.HasValue) await JS.InvokeVoidAsync("localStorage.setItem", ScopedSharedFeeKey("shared_billing_day"), request.BillingDay.Value.ToString());
         }
         catch { }
     }
+
+    private string ScopedSharedFeeKey(string key) => buildingId > 0 ? $"{key}_b{buildingId}" : key;
 
     private void OnRoomCodeInput(ChangeEventArgs e)
     {

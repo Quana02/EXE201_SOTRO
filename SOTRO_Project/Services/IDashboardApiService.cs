@@ -5,6 +5,6 @@ namespace SOTRO_Project.Services
 {
     public interface IDashboardApiService
     {
-        Task<ApiResponse<DashboardSummaryResponse>> GetSummaryAsync();
+        Task<ApiResponse<DashboardSummaryResponse>> GetSummaryAsync(int? buildingId = null, int? month = null, int? year = null);
     }
 }

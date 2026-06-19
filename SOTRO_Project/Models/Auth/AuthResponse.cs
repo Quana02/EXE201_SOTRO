@@ -6,6 +6,7 @@ namespace SOTRO_Project.Models.Auth
         public string Email { get; set; } = string.Empty;
         public string? FullName { get; set; }
         public string? PhoneNumber { get; set; }
+        public int? RoleId { get; set; }
         public string? Role { get; set; }
         public string Token { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }

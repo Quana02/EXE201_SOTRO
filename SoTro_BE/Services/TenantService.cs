@@ -14,9 +14,14 @@ namespace SoTro_BE.Services
             _tenantRepository = tenantRepository;
         }
 
-        public async Task<ApiResponse<List<TenantResponse>>> GetTenantsAsync(int landlordId)
+        public async Task<ApiResponse<List<TenantResponse>>> GetTenantsAsync(int landlordId, int? buildingId = null)
         {
-            var tenants = await _tenantRepository.GetTenantsAsync(landlordId);
+            if (buildingId is null or <= 0)
+            {
+                return ApiResponse<List<TenantResponse>>.Fail("Vui long chon nha tro truoc khi xem danh sach nguoi thue.");
+            }
+
+            var tenants = await _tenantRepository.GetTenantsAsync(landlordId, buildingId);
             return ApiResponse<List<TenantResponse>>.Ok("Lấy danh sách người thuê thành công.", tenants.Select(MapToResponse).ToList());
         }
 
@@ -28,14 +33,23 @@ namespace SoTro_BE.Services
                 : ApiResponse<TenantResponse>.Ok("Lấy thông tin người thuê thành công.", MapToResponse(tenant));
         }
 
-        public async Task<ApiResponse<TenantStatsResponse>> GetTenantStatsAsync(int landlordId)
+        public async Task<ApiResponse<TenantStatsResponse>> GetTenantStatsAsync(int landlordId, int? buildingId = null)
         {
-            var tenants = await _tenantRepository.GetTenantsAsync(landlordId);
-            var active = tenants.Where(t => t.Status == "Active").ToList();
+            if (buildingId is null or <= 0)
+            {
+                return ApiResponse<TenantStatsResponse>.Fail("Vui long chon nha tro truoc khi xem thong ke nguoi thue.");
+            }
+
+            var tenants = await _tenantRepository.GetTenantsAsync(landlordId, buildingId);
             var activeRentals = tenants
                 .SelectMany(t => t.RentalRecords)
                 .Where(r => r.Status == "Active" && r.IsDeleted != true)
                 .ToList();
+            var activeTenantCount = activeRentals
+                .Select(r => r.TenantId)
+                .Where(id => id.HasValue)
+                .Distinct()
+                .Count();
 
             var now = DateOnly.FromDateTime(DateTime.UtcNow);
             var next30Days = now.AddDays(30);
@@ -44,11 +58,11 @@ namespace SoTro_BE.Services
             var stats = new TenantStatsResponse
             {
                 TotalTenants = tenants.Count,
-                ActiveTenants = active.Count,
+                ActiveTenants = activeTenantCount,
                 TotalDepositAmount = activeRentals.Sum(r => r.DepositAmount ?? 0),
                 ExpiringContracts = activeRentals.Count(r => r.EndDate.HasValue && r.EndDate.Value >= now && r.EndDate.Value <= next30Days),
                 NewThisMonth = tenants.Count(t => t.CreatedAt.HasValue && t.CreatedAt.Value.Year == DateTime.UtcNow.Year && t.CreatedAt.Value.Month == DateTime.UtcNow.Month),
-                OccupancyRate = totalRooms > 0 ? Math.Round((decimal)active.Count / totalRooms * 100, 1) : 0
+                OccupancyRate = totalRooms > 0 ? Math.Round((decimal)activeTenantCount / totalRooms * 100, 1) : 0
             };
 
             return ApiResponse<TenantStatsResponse>.Ok("Lấy thống kê người thuê thành công.", stats);

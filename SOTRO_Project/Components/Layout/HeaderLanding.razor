@@ -1,4 +1,5 @@
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <!-- Top Navigation Bar -->
 <nav class="bg-surface-container-lowest fixed top-0 w-full z-50 border-b border-outline-variant shadow-sm">
@@ -10,10 +11,10 @@
             <a href="/" class="font-headline-sm text-headline-sm font-bold text-primary">Sổ Trọ</a>
         </div>
         <div class="hidden md:flex items-center gap-gutter font-body-md text-body-md">
-            <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/">Trang chủ</a>
-            <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/tinh-nang">Tính năng</a>
-            <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/bang-gia">Bảng giá</a>
-            <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/lien-he">Liên hệ</a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/#home" @onclick="ScrollToHomeAsync" @onclick:preventDefault>Trang chủ</a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/#features" @onclick="ScrollToFeaturesAsync" @onclick:preventDefault>Tính năng</a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/#pricing" @onclick="ScrollToPricingAsync" @onclick:preventDefault>Bảng giá</a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/#contact" @onclick="ScrollToContactAsync" @onclick:preventDefault>Liên hệ</a>
         </div>
         <div class="flex items-center gap-4">
             @if (!string.IsNullOrWhiteSpace(_token))
@@ -59,4 +60,23 @@
             Console.WriteLine($"HeaderLanding init error: {ex.Message}");
         }
     }
+
+    private async Task ScrollToSectionAsync(string sectionId)
+    {
+        var currentUri = new Uri(Navigation.Uri);
+        var isHome = currentUri.AbsolutePath is "/" or "";
+
+        if (!isHome)
+        {
+            Navigation.NavigateTo($"/#{sectionId}");
+            return;
+        }
+
+        await JS.InvokeVoidAsync("sotroLanding.scrollToSection", sectionId);
+    }
+
+    private Task ScrollToHomeAsync() => ScrollToSectionAsync("home");
+    private Task ScrollToFeaturesAsync() => ScrollToSectionAsync("features");
+    private Task ScrollToPricingAsync() => ScrollToSectionAsync("pricing");
+    private Task ScrollToContactAsync() => ScrollToSectionAsync("contact");
 }

@@ -149,6 +149,12 @@
         {
             await SaveAuthData(response.Data);
 
+            if (response.Data.RoleId == 1)
+            {
+                Navigation.NavigateTo("/admin/dashboard");
+                return;
+            }
+
             if (response.Data.RequiresProfileCompletion)
             {
                 Navigation.NavigateTo($"/complete-profile?email={Uri.EscapeDataString(response.Data.Email)}");
@@ -220,6 +226,12 @@
             {
                 await SaveAuthData(response.Data);
 
+                if (response.Data.RoleId == 1)
+                {
+                    Navigation.NavigateTo("/admin/dashboard");
+                    return;
+                }
+
                 if (response.Data.RequiresProfileCompletion)
                 {
                     Navigation.NavigateTo($"/complete-profile?email={Uri.EscapeDataString(response.Data.Email)}");
@@ -258,6 +270,8 @@
         var phoneNumber = authResponse.User?.PhoneNumber ?? authResponse.PhoneNumber ?? string.Empty;
         var avatarUrl = authResponse.User?.AvatarUrl ?? string.Empty;
         var provider = authResponse.User?.Provider ?? string.Empty;
+        var roleId = authResponse.User?.RoleId ?? authResponse.RoleId ?? 0;
+        var role = authResponse.User?.Role ?? authResponse.Role ?? string.Empty;
 
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_token", authResponse.Token);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_user_email", email);
@@ -265,6 +279,8 @@
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_phone_number", phoneNumber);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_avatar_url", avatarUrl);
         await JS.InvokeVoidAsync("localStorage.setItem", "sotro_provider", provider);
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_role_id", roleId.ToString());
+        await JS.InvokeVoidAsync("localStorage.setItem", "sotro_role", role);
     }
 
     private bool ValidateLogin()
