@@ -52,6 +52,11 @@ builder.Services.AddHttpClient<IAdminAccountApiService, AdminAccountApiService>(
     var baseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5254/";
     client.BaseAddress = new Uri(baseUrl);
 });
+builder.Services.AddHttpClient<IContactApiService, ContactApiService>(client =>
+{
+    var baseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5254/";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 var app = builder.Build();
 

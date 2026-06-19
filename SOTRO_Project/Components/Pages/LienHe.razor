@@ -1,5 +1,6 @@
 ﻿@page "/lien-he"
 @layout EmptyLayout
+@inject IContactApiService ContactApi
 
 <PageTitle>Liên hệ - Sổ trọ</PageTitle>
 
@@ -49,7 +50,7 @@
 </div>
 <div>
 <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Điện thoại</p>
-<p class="font-body-lg text-body-lg">1900 xxxx</p>
+<p class="font-body-lg text-body-lg">091484896538</p>
 </div>
 </div>
 <div class="flex items-start gap-4">
@@ -58,7 +59,7 @@
 </div>
 <div>
 <p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Email</p>
-<p class="font-body-lg text-body-lg">ho-tro@sotro.vn</p>
+<p class="font-body-lg text-body-lg">sotro.vn@gmail.com</p>
 </div>
 </div>
 <div class="flex items-start gap-4">
@@ -83,30 +84,37 @@
 <!-- Right Column: Contact Form -->
 <div class="bg-surface-container-lowest p-8 md:p-10 rounded-xl border border-outline-variant shadow-sm">
 <h3 class="font-headline-sm text-headline-sm text-on-surface mb-8">Gửi tin nhắn cho chúng tôi</h3>
-<form class="space-y-6" onsubmit="return false">
+<EditForm Model="consultationRequest" OnValidSubmit="SendConsultationAsync" class="space-y-6">
+<DataAnnotationsValidator />
 <div class="space-y-2">
 <label class="font-label-md text-label-md text-on-surface-variant block">Họ và tên</label>
-<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="Nguyễn Văn A" type="text">
+<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="Nguyễn Văn A" type="text" @bind="consultationRequest.FullName">
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div class="space-y-2">
 <label class="font-label-md text-label-md text-on-surface-variant block">Email</label>
-<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="example@gmail.com" type="email">
+<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="example@gmail.com" type="email" @bind="consultationRequest.Email">
 </div>
 <div class="space-y-2">
 <label class="font-label-md text-label-md text-on-surface-variant block">Số điện thoại</label>
-<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="090x xxx xxx" type="tel">
+<input class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="090x xxx xxx" type="tel" @bind="consultationRequest.Phone">
 </div>
 </div>
 <div class="space-y-2">
 <label class="font-label-md text-label-md text-on-surface-variant block">Tin nhắn</label>
-<textarea class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="Tôi cần tư vấn về gói dịch vụ..." rows="5"></textarea>
+<textarea class="w-full px-4 py-3 border border-outline rounded-lg bg-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-md text-body-md" placeholder="Tôi cần tư vấn về gói dịch vụ..." rows="5" @bind="consultationRequest.Message"></textarea>
 </div>
-<button class="w-full bg-primary text-on-primary py-4 rounded-lg font-headline-sm text-headline-sm hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-<span class="">Gửi yêu cầu</span>
+@if (!string.IsNullOrWhiteSpace(consultationStatusMessage))
+{
+<div class="px-4 py-3 rounded-lg border @(consultationSent ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700")">
+@consultationStatusMessage
+</div>
+}
+<button type="submit" disabled="@isSendingConsultation" class="w-full bg-primary text-on-primary py-4 rounded-lg font-headline-sm text-headline-sm hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+<span class="">@(isSendingConsultation ? "Đang gửi..." : "Gửi yêu cầu")</span>
 <span class="material-symbols-outlined">send</span>
 </button>
-</form>
+</EditForm>
 </div>
 </div>
 </section>
@@ -128,41 +136,32 @@
 </main>
 <FooterLanding />
 
-<script>
-        // Simple form interaction
-        document.querySelector('button').addEventListener('click', function(e) {
-            const btn = e.currentTarget;
-            if(btn.innerText.includes('Gá»­i yÃªu cáº§u')) {
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Äang gá»­i...';
-                btn.classList.add('opacity-80');
-                
-                setTimeout(() => {
-                    btn.innerHTML = '<span class="material-symbols-outlined text-green-500">check_circle</span> ÄÃ£ gá»­i thÃ nh cÃ´ng!';
-                    btn.classList.replace('bg-primary', 'bg-surface-container-highest');
-                    btn.classList.replace('text-on-primary', 'text-primary');
-                    
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.classList.replace('bg-surface-container-highest', 'bg-primary');
-                        btn.classList.replace('text-primary', 'text-on-primary');
-                        btn.classList.remove('opacity-80');
-                    }, 3000);
-                }, 1500);
-            }
-        });
-
-        // Atmospheric parallax on scroll
-        window.addEventListener('scroll', () => {
-            const scroll = window.pageYOffset;
-            const hero = document.querySelector('section:first-of-type');
-            hero.style.backgroundPositionY = `${scroll * 0.1}px`;
-        });
-    </script>
-
-
-
-
 @code {
     private const string CustomStyles = "LienHe";
+    private ConsultationRequest consultationRequest = new();
+    private bool isSendingConsultation;
+    private bool consultationSent;
+    private string? consultationStatusMessage;
+
+    private async Task SendConsultationAsync()
+    {
+        if (isSendingConsultation)
+        {
+            return;
+        }
+
+        isSendingConsultation = true;
+        consultationStatusMessage = null;
+
+        var response = await ContactApi.SendConsultationAsync(consultationRequest);
+        consultationSent = response.Success;
+        consultationStatusMessage = response.Message;
+
+        if (response.Success)
+        {
+            consultationRequest = new();
+        }
+
+        isSendingConsultation = false;
+    }
 }
