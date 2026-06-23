@@ -25,7 +25,7 @@
 <HeaderDashboard OnHelpClicked="OpenTenantTour" />
 <SideNavBar />
 <!-- Main Content Area -->
-<main class="ml-64 h-[calc(100vh-64px)] overflow-y-auto bg-surface">
+<main class="sotro-main-content min-h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] overflow-y-auto bg-surface pb-24 md:pb-0">
 <!-- Content Canvas -->
 <div class="flex-1 overflow-y-auto custom-scrollbar p-gutter">
 <!-- Header Section with Actions -->
@@ -36,10 +36,20 @@
 <span class="mx-2 text-outline-variant">/</span>
 <span class="text-primary font-medium">Danh sách người thuê</span>
 </nav>
+<div class="flex items-center justify-between gap-4">
 <h1 class="font-display-lg-mobile md:font-display-lg text-primary leading-tight">Người thuê</h1>
+<div class="flex items-center gap-2 md:hidden">
+<button @onclick="ExportTenantsToExcel" class="w-10 h-10 bg-surface border border-outline text-primary rounded-full shadow-sm flex items-center justify-center transition-transform active:scale-90" title="Xuất danh sách">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+<button @onclick="GoToAddTenant" class="w-10 h-10 bg-primary text-on-primary rounded-full shadow-md flex items-center justify-center transition-transform active:scale-90" title="Thêm người thuê mới">
+<span class="material-symbols-outlined text-[20px]">add</span>
+</button>
+</div>
+</div>
 <p class="text-body-md text-on-surface-variant mt-1">Hiện có @tenantStats.ActiveTenants người thuê đang lưu trú.</p>
 </div>
-<div class="flex flex-wrap gap-3">
+<div class="hidden md:flex flex-wrap gap-3">
 <button @onclick="ExportTenantsToExcel" class="flex items-center px-6 py-3 bg-surface border border-primary text-primary font-bold rounded-xl hover:bg-primary-container/10 transition-all shadow-sm">
 <span class="material-symbols-outlined mr-2">download</span>
                         Xuất danh sách
@@ -391,9 +401,7 @@ else
                   AllowSkip="true"
                   OnCompleted="CloseTenantTour"
                   OnSkipped="CloseTenantTour" />
-<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center md:hidden transition-transform active:scale-90 z-50">
-<span class="material-symbols-outlined">add</span>
-</button>
+
 <script>
         // Simple Interaction logic
         document.addEventListener('DOMContentLoaded', () => {

@@ -1,7 +1,7 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 
-<aside id="sotro-sidebar" class="fixed left-0 top-0 h-full flex flex-col p-base z-40 bg-surface-container-low border-r border-outline-variant pt-20 transition-all duration-300 overflow-hidden @(_isCollapsed ? "w-[72px]" : "w-64")">
+<aside id="sotro-sidebar" class="hidden md:flex fixed left-0 top-0 h-full flex-col p-base z-40 bg-surface-container-low border-r border-outline-variant pt-20 transition-all duration-300 overflow-hidden @(_isCollapsed ? "w-[72px]" : "w-64")">
     <div class="mb-6 @(_isCollapsed ? "px-2" : "px-4") transition-all duration-300">
         <div class="flex items-center @(_isCollapsed ? "justify-center" : "gap-3")">
             <button @onclick="ToggleSidebar" type="button"
@@ -85,6 +85,44 @@
         </a>
     </nav>
 </aside>
+
+<nav class="hidden">
+    <a class="flex flex-col items-center justify-center gap-0.5 text-on-surface-variant active:text-primary" href="@DashboardHref" title="Tá»•ng quan">
+        <span class="material-symbols-outlined text-[22px]">dashboard</span>
+        <span class="text-[10px] font-bold leading-none">Tá»•ng quan</span>
+    </a>
+    <a class="flex flex-col items-center justify-center gap-0.5 text-on-surface-variant active:text-primary" href="@RoomsHref" title="PhÃ²ng">
+        <span class="material-symbols-outlined text-[22px]">home_work</span>
+        <span class="text-[10px] font-bold leading-none">PhÃ²ng</span>
+    </a>
+    <a class="flex flex-col items-center justify-center gap-0.5 text-on-surface-variant active:text-primary" href="@TenantsHref" title="NgÆ°á»i thuÃª">
+        <span class="material-symbols-outlined text-[22px]">group</span>
+        <span class="text-[10px] font-bold leading-none">NgÆ°á»i thuÃª</span>
+    </a>
+    <a class="flex flex-col items-center justify-center gap-0.5 text-on-surface-variant active:text-primary" href="@InvoicesHref" title="HÃ³a Ä‘Æ¡n">
+        <span class="material-symbols-outlined text-[22px]">description</span>
+        <span class="text-[10px] font-bold leading-none">HÃ³a Ä‘Æ¡n</span>
+    </a>
+</nav>
+
+<nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 h-14 bg-surface-container-lowest border-t border-outline-variant shadow-[0_-6px_18px_rgba(15,23,42,0.08)] grid grid-cols-4" aria-label="Điều hướng chính">
+    <a class="flex flex-col items-center justify-center gap-0 text-on-surface-variant active:text-primary" href="@DashboardHref" title="Tổng quan">
+        <span class="material-symbols-outlined text-[20px] leading-none">dashboard</span>
+        <span class="text-[11px] font-bold leading-tight">Tổng quan</span>
+    </a>
+    <a class="flex flex-col items-center justify-center gap-0 text-on-surface-variant active:text-primary" href="@RoomsHref" title="Phòng">
+        <span class="material-symbols-outlined text-[20px] leading-none">home_work</span>
+        <span class="text-[11px] font-bold leading-tight">Phòng</span>
+    </a>
+    <a class="flex flex-col items-center justify-center gap-0 text-on-surface-variant active:text-primary" href="@TenantsHref" title="Người thuê">
+        <span class="material-symbols-outlined text-[20px] leading-none">group</span>
+        <span class="text-[11px] font-bold leading-tight">Người thuê</span>
+    </a>
+    <a class="flex flex-col items-center justify-center gap-0 text-on-surface-variant active:text-primary" href="@InvoicesHref" title="Hóa đơn">
+        <span class="material-symbols-outlined text-[20px] leading-none">description</span>
+        <span class="text-[11px] font-bold leading-tight">Hóa đơn</span>
+    </a>
+</nav>
 
 @if (showMarketingPopup)
 {

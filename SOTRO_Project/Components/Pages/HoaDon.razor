@@ -24,8 +24,8 @@
 <HeaderDashboard OnHelpClicked="OpenInvoiceTour" />
 <SideNavBar />
 
-<main class="flex-1 flex flex-col min-w-0 overflow-hidden relative ml-64">
-    <div class="flex-1 overflow-y-auto bg-background p-gutter">
+<main class="flex-1 flex flex-col min-w-0 overflow-hidden relative md:ml-64 pb-24 md:pb-0">
+    <div class="flex-1 overflow-y-auto bg-background p-4 md:p-gutter">
         <div id="invoice-page-header" class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
                 <h1 class="font-headline-md text-headline-md text-on-surface mb-1">Quản lý Hóa đơn</h1>
@@ -144,7 +144,7 @@
                     </button>
                     @if (showMonthFilterPanel)
                     {
-                        <div class="absolute left-0 top-full mt-2 z-40 w-[330px] bg-white rounded-xl border border-outline-variant shadow-xl p-4">
+                        <div class="absolute left-0 top-full mt-2 z-40 w-[330px] max-w-[calc(100vw-2rem)] bg-white rounded-xl border border-outline-variant shadow-xl p-4">
                             <div class="flex items-center justify-between mb-4">
                                 <button type="button" @onclick="PreviousFilterYear" class="w-9 h-9 rounded-lg hover:bg-surface-variant flex items-center justify-center">
                                     <span class="material-symbols-outlined text-[20px]">chevron_left</span>
@@ -190,7 +190,7 @@
             </button>
         </div>
 
-        <div id="invoice-table" class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+        <div id="invoice-table" class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-x-auto shadow-sm">
             @if (isLoading)
             {
                 <div class="py-20 flex flex-col items-center gap-3">
@@ -200,7 +200,7 @@
             }
             else
             {
-                <table class="w-full text-left border-collapse">
+                <table class="w-full min-w-[900px] text-left border-collapse">
                     <thead>
                         <tr class="bg-surface-container-low border-b border-outline-variant">
                             <th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Mã hóa đơn</th>
@@ -264,7 +264,7 @@
                     </tbody>
                 </table>
 
-                <div id="invoice-pagination" class="px-6 py-4 flex items-center justify-between border-t border-outline-variant bg-surface-container-low">
+                <div id="invoice-pagination" class="px-4 md:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-outline-variant bg-surface-container-low">
                     <span class="text-caption text-on-surface-variant">
                         Hiển thị @PageStart - @PageEnd trong tổng số @filteredInvoices.Count hóa đơn
                     </span>

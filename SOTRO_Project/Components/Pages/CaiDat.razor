@@ -37,7 +37,7 @@
 <SideNavBar />
 
 <main class="flex-1 md:ml-64 bg-surface min-h-screen pb-20">
-    <div class="max-w-container-max-width mx-auto px-6 py-8">
+    <div class="max-w-container-max-width mx-auto px-4 md:px-6 py-6 md:py-8">
         <div class="mb-10">
             <h1 class="font-headline-sm text-headline-sm text-on-surface mb-2">Cài đặt hệ thống</h1>
             <p class="text-on-surface-variant font-body-md text-body-md">Quản lý các thiết lập vận hành, tự động hóa và thông tin cơ sở kinh doanh của bạn.</p>
@@ -141,7 +141,7 @@
                                     }
                                 </div>
                             </div>
-                            <div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-surface-container-low rounded-lg">
                                 <InputFile OnChange="HandleLogoSelected" id="logo-upload" class="hidden" accept=".jpg,.jpeg,.png,.webp,.gif" />
                                 <label for="logo-upload" class="w-24 h-24 rounded-lg bg-surface-variant flex-shrink-0 relative group cursor-pointer overflow-hidden block">
                                     @if (!string.IsNullOrEmpty(imageUrl))
@@ -164,9 +164,9 @@
                                     <label for="logo-upload" class="mt-2 inline-block text-xs font-bold text-primary hover:underline cursor-pointer">Thay đổi hình ảnh</label>
                                 </div>
                             </div>
-                            <div id="bank-qr-settings" class="grid grid-cols-1 lg:grid-cols-[180px,1fr] gap-5 p-4 bg-blue-50/70 border border-blue-100 rounded-lg">
+                            <div id="bank-qr-settings" class="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-5 p-4 bg-blue-50/70 border border-blue-100 rounded-lg">
                                 <InputFile OnChange="HandleBankQrSelected" id="bank-qr-upload" class="hidden" accept=".jpg,.jpeg,.png,.webp" />
-                                <label for="bank-qr-upload" class="w-44 h-44 rounded-xl bg-white border border-dashed border-blue-300 flex-shrink-0 relative group cursor-pointer overflow-hidden flex items-center justify-center">
+                                <label for="bank-qr-upload" class="w-full max-w-44 h-44 rounded-xl bg-white border border-dashed border-blue-300 flex-shrink-0 relative group cursor-pointer overflow-hidden flex items-center justify-center">
                                     @if (!string.IsNullOrWhiteSpace(EffectiveBankQrDataUrl))
                                     {
                                         <img alt="QR chuyển khoản ngân hàng" class="w-full h-full object-contain p-2" src="@EffectiveBankQrDataUrl">
@@ -388,9 +388,9 @@
 
 
                 <!-- Footer Actions -->
-                <div class="flex items-center justify-end gap-4 pb-12">
-                    <button @onclick="CancelChanges" type="button" class="px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">Hủy thay đổi</button>
-                    <button @onclick="SaveSettings" disabled="@isSaving" type="button" class="px-8 py-2.5 rounded-lg bg-primary text-white font-label-md text-label-md hover:shadow-lg hover:bg-primary-container transition-all flex items-center gap-2">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 sm:gap-4 pb-20 md:pb-12">
+                    <button @onclick="CancelChanges" type="button" class="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-outline-variant text-on-surface font-label-md text-label-md hover:bg-surface-container transition-colors">Hủy thay đổi</button>
+                    <button @onclick="SaveSettings" disabled="@isSaving" type="button" class="w-full sm:w-auto justify-center px-8 py-2.5 rounded-lg bg-primary text-white font-label-md text-label-md hover:shadow-lg hover:bg-primary-container transition-all flex items-center gap-2">
                         @if (isSaving)
                         {
                             <span class="material-symbols-outlined text-sm animate-spin">sync</span>
@@ -409,7 +409,7 @@
 </main>
 
 <!-- BottomNavBar for Mobile (Logic: Hidden on md:flex) -->
-<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant flex justify-around items-center h-16 z-50">
+<nav class="hidden">
     <a class="flex flex-col items-center justify-center text-on-surface-variant" href="#">
         <span class="material-symbols-outlined" data-icon="home_work">home_work</span>
         <span class="text-[10px] mt-1">Phòng</span>
