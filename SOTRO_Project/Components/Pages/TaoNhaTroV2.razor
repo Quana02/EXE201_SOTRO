@@ -533,6 +533,19 @@
                                         {
                                             <img src="@img.PreviewUrl" alt="Preview" class="w-full h-full object-cover" />
                                         }
+                                        else
+                                        {
+                                            <div class="w-full h-full flex flex-col items-center justify-center gap-1 text-slate-400">
+                                                <span class="material-symbols-outlined text-2xl animate-spin">progress_activity</span>
+                                                <span class="text-[10px] font-semibold text-center px-1">Đang tải</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(img.ErrorMessage))
+                                        {
+                                            <div class="absolute inset-0 bg-red-50/95 text-red-600 text-[10px] font-bold flex items-center justify-center text-center px-2">
+                                                @img.ErrorMessage
+                                            </div>
+                                        }
                                         @if (index == 0)
                                         {
                                             <div class="absolute bottom-0 left-0 right-0 bg-blue-600/80 text-white text-[10px] font-bold text-center py-0.5">
@@ -666,6 +679,7 @@
     private List<ImagePreview> selectedImages = new();
     private string? errorMessage;
     private bool isSubmitting;
+    private bool isReadingImages;
     private bool isSuccess;
     private bool showBuildingTour;
     private bool hasCheckedBuildingTour;
@@ -778,6 +792,8 @@
         public string ContentType { get; set; } = string.Empty;
         public long FileSize { get; set; }
         public string? PreviewUrl { get; set; }
+        public bool IsLoading { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 
     // ── Computed ──
@@ -789,7 +805,8 @@
         4 => !string.IsNullOrWhiteSpace(model.BuildingName)
              && !string.IsNullOrWhiteSpace(model.Address)
              && model.TotalFloors.HasValue
-             && selectedImages.Count > 0,
+             && selectedImages.Any(img => !img.IsLoading && img.FileData.Length > 0 && string.IsNullOrWhiteSpace(img.ErrorMessage))
+             && !isReadingImages,
         _ => false
     };
 
@@ -827,6 +844,7 @@
         if (firstRender)
         {
             dotNetHelper = DotNetObjectReference.Create(this);
+
             try
             {
                 await JS.InvokeVoidAsync("window.initAddressAutocomplete",
@@ -968,6 +986,64 @@
     private async Task HandleFilesSelected(InputFileChangeEventArgs e)
     {
         errorMessage = null;
+        isReadingImages = true;
+        StateHasChanged();
+
+        foreach (var file in e.GetMultipleFiles(10))
+        {
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                errorMessage = $"'{file.Name}' vượt 5MB.";
+                continue;
+            }
+
+            var contentType = file.ContentType?.ToLowerInvariant() ?? string.Empty;
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+            if (!allowedTypes.Contains(contentType))
+            {
+                errorMessage = $"'{file.Name}' không phải ảnh hợp lệ.";
+                continue;
+            }
+
+            var preview = new ImagePreview
+            {
+                FileName = file.Name,
+                ContentType = contentType,
+                FileSize = file.Size,
+                IsLoading = true
+            };
+
+            selectedImages.Add(preview);
+            StateHasChanged();
+
+            try
+            {
+                var buf = new byte[file.Size];
+                await file.OpenReadStream(5 * 1024 * 1024).ReadExactlyAsync(buf);
+                preview.FileData = buf;
+                preview.PreviewUrl = $"data:{contentType};base64,{Convert.ToBase64String(buf)}";
+                preview.IsLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                preview.IsLoading = false;
+                preview.ErrorMessage = "Lỗi ảnh";
+                errorMessage = $"Lỗi đọc file '{file.Name}': {ex.Message}";
+            }
+        }
+
+        isReadingImages = selectedImages.Any(img => img.IsLoading);
+        StateHasChanged();
+    }
+
+#if false
+    private async Task HandleFilesSelectedOld(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        isReadingImages = true;
+        StateHasChanged();
+
         foreach (var file in e.GetMultipleFiles(10))
         {
             if (file.Size > 5 * 1024 * 1024) { errorMessage = $"'{file.Name}' vượt 5MB."; continue; }
@@ -975,18 +1051,17 @@
             {
                 var buf = new byte[file.Size];
                 await file.OpenReadStream(5 * 1024 * 1024).ReadExactlyAsync(buf);
-                selectedImages.Add(new ImagePreview
-                {
-                    FileData = buf, FileName = file.Name,
-                    ContentType = file.ContentType, FileSize = file.Size,
-                    PreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buf)}"
-                });
+                preview.FileData = buf;
+                preview.PreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buf)}";
+                preview.IsLoading = false;
                 StateHasChanged();
             }
             catch (Exception ex) { errorMessage = $"Lỗi đọc file: {ex.Message}"; }
         }
         StateHasChanged();
     }
+
+#endif
 
     private void RemoveImage(int index)
     {

@@ -35,7 +35,16 @@
             <span class="material-symbols-outlined">notifications</span>
             <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
         </button>
-        <div class="hidden md:block">
+        <div class="hidden md:block relative">
+            @if (_showHelpHint && OnHelpClicked.HasDelegate)
+            {
+                <button type="button"
+                        @onclick="HandleHelpClick"
+                        class="sotro-help-hint absolute right-12 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-primary text-white px-3 py-1.5 text-xs font-bold shadow-lg border border-white/70"
+                        aria-label="Mở hướng dẫn trang này">
+                    Hướng dẫn
+                </button>
+            }
             <button type="button"
                     id="header-help-button"
                     @onclick="HandleHelpClick"
@@ -209,6 +218,32 @@
         animation: popupIn 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         will-change: transform, opacity;
     }
+
+    .sotro-help-hint {
+        animation: sotroHelpHintFloat 1.35s ease-in-out infinite;
+    }
+
+    .sotro-help-hint::after {
+        content: "";
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        background: #003f87;
+        transform: translateY(-50%) rotate(45deg);
+        border-top: 1px solid rgba(255,255,255,0.7);
+        border-right: 1px solid rgba(255,255,255,0.7);
+    }
+
+    @@keyframes sotroHelpHintFloat {
+        0%, 100% {
+            transform: translateY(-50%) translateY(-3px);
+        }
+        50% {
+            transform: translateY(-50%) translateY(5px);
+        }
+    }
 </style>
 
 @code {
@@ -223,8 +258,10 @@
     private bool _isDropdownOpen;
     private bool _isInitialized;
     private bool _showPopup;
+    private bool _showHelpHint;
     private int _countdownSeconds = 5;
     private System.Threading.CancellationTokenSource? _countdownCts;
+    private System.Threading.CancellationTokenSource? _helpHintCts;
 
     private string _inputText = string.Empty;
     private System.Threading.CancellationTokenSource? _searchCts;
@@ -302,6 +339,7 @@
 
             // Token may still be rejected after deploy if it was issued by another backend/JWT key.
             _ = BuildingApiService.GetBuildingsAsync();
+            StartHelpHintTimer();
         }
         catch (Exception ex)
         {
@@ -321,10 +359,41 @@
 
     private async Task HandleHelpClick()
     {
+        _showHelpHint = false;
+        _helpHintCts?.Cancel();
         if (OnHelpClicked.HasDelegate)
         {
             await OnHelpClicked.InvokeAsync();
         }
+    }
+
+    private void StartHelpHintTimer()
+    {
+        if (!OnHelpClicked.HasDelegate)
+        {
+            return;
+        }
+
+        _helpHintCts?.Cancel();
+        _helpHintCts = new System.Threading.CancellationTokenSource();
+        var token = _helpHintCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), token);
+                if (token.IsCancellationRequested) return;
+                await InvokeAsync(() =>
+                {
+                    _showHelpHint = true;
+                    StateHasChanged();
+                });
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        }, token);
     }
 
     private void NavigateToProfile()
@@ -486,5 +555,7 @@
         _searchCts?.Dispose();
         _countdownCts?.Cancel();
         _countdownCts?.Dispose();
+        _helpHintCts?.Cancel();
+        _helpHintCts?.Dispose();
     }
 }
