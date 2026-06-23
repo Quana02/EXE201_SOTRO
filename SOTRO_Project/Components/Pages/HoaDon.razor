@@ -1079,7 +1079,8 @@
         }
 
         zaloInvoice = invoice;
-        showZaloPopupTour = true;
+        var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_zalo_bill_popup_guided_seen");
+        showZaloPopupTour = string.IsNullOrWhiteSpace(dismissed);
         StateHasChanged();
     }
 

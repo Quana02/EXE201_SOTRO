@@ -537,7 +537,23 @@
         if (firstRender)
         {
             await LoadData();
+            await StartRoomManagementTourIfNeeded();
             StateHasChanged();
+        }
+    }
+
+    private async Task StartRoomManagementTourIfNeeded()
+    {
+        try
+        {
+            var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_room_management_guided_seen");
+            showRoomManagementTour = !isLoading
+                && string.IsNullOrEmpty(errorMessage)
+                && string.IsNullOrWhiteSpace(dismissed);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Room management guided tour error: {ex.Message}");
         }
     }
 

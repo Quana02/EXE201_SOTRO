@@ -235,6 +235,10 @@
         CurrentStepIndex = 0;
         currentRect = null;
         lastFocusedStepIndex = -1;
+        if (!string.IsNullOrWhiteSpace(StorageKey))
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, "true");
+        }
         if (OnSkipped.HasDelegate)
         {
             await OnSkipped.InvokeAsync();

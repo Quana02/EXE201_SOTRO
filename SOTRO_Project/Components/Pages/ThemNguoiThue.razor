@@ -126,8 +126,8 @@
 <div class="flex flex-col gap-2 relative">
 <label class="font-label-md text-label-md text-on-surface-variant">Quê quán</label>
 <input id="tenant-hometown-input"
-       value="@tenant.PermanentAddress"
-       @oninput="(e) => { tenant.PermanentAddress = e.Value?.ToString() ?? string.Empty; }"
+       @bind-value="tenant.PermanentAddress"
+       @bind-value:event="oninput"
        class="px-4 py-2.5 rounded-lg border @(errors.ContainsKey("PermanentAddress") ? "border-red-500 focus:ring-red-500/20" : "border-[#DEE2E6] focus:border-primary focus:ring-2 focus:ring-primary/20") transition-all outline-none"
        placeholder="Thành phố Hồ Chí Minh (Gợi ý địa chỉ thật)"
        type="text">

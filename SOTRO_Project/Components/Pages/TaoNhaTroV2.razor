@@ -343,7 +343,7 @@
                                                    type="text" inputmode="numeric" placeholder="3.500" />
                                         </div>
                                         <div class="space-y-1.5">
-                                            <label class="text-xs font-semibold text-slate-600">Nước (đ/m³)</label>
+                                            <label class="text-xs font-semibold text-slate-600">Nước</label>
                                             <input class="form-field text-sm" value="@defaultWaterPriceDisplay"
                                                    @oninput="OnDefaultWaterPriceInput"
                                                    type="text" inputmode="numeric" placeholder="15.000" />
@@ -418,8 +418,8 @@
                             <div class="relative">
                                 <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">location_on</span>
                                 <input class="form-field pl-11" id="address-input-v2"
-                                       value="@model.Address"
-                                       @oninput="e => model.Address = e.Value?.ToString() ?? string.Empty"
+                                       @bind-value="model.Address"
+                                       @bind-value:event="oninput"
                                        placeholder="Số nhà, đường, phường, quận, thành phố"
                                        type="text" />
                             </div>
@@ -853,9 +853,6 @@
             if (!string.IsNullOrWhiteSpace(forceTour))
             {
                 await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_force_create_building_tour");
-                showBuildingTour = true;
-                StateHasChanged();
-                return;
             }
 
             var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_create_building_guided_seen");

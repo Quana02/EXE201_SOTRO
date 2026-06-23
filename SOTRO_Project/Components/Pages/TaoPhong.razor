@@ -309,7 +309,7 @@
                     <!-- Tiền nước -->
                     <div class="p-5 rounded-xl bg-surface-container-low border border-outline-variant space-y-3">
                         <div class="flex justify-between items-center">
-                            <span class="font-label-md font-bold text-on-surface uppercase text-[11px] tracking-wider">Đơn giá nước</span>
+                            <span class="font-label-md font-bold text-on-surface uppercase text-[11px] tracking-wider">Phí nước</span>
                             <span class="material-symbols-outlined text-blue-500">water_drop</span>
                         </div>
                         <div class="price-input-wrap">
@@ -318,7 +318,7 @@
                                    @oninput="OnWaterPriceInput"
                                    @onblur="SaveSharedFees"
                                    class="form-input" type="text" inputmode="numeric" placeholder="0" />
-                            <span class="unit">đ/m³</span>
+                            <span class="unit">đồng</span>
                         </div>
                     </div>
                     <!-- Phí dịch vụ -->
@@ -408,7 +408,7 @@
                         <p class="text-caption text-on-surface-variant">Mã phòng tự động tăng — bạn có thể chỉnh sửa trong danh sách bên dưới</p>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 items-start">
                     <!-- Tầng / Dãy -->
                     <div class="space-y-2">
                         <label class="font-label-md text-label-md text-on-surface-variant">@(IsBasicLevel ? "Dãy" : "Tầng") <span class="text-error">*</span></label>
@@ -422,7 +422,7 @@
                     <!-- Số phòng -->
                     <div class="space-y-2">
                         <label class="font-label-md text-label-md text-on-surface-variant">Số phòng muốn tạo <span class="text-error">*</span></label>
-                        <input @bind="batchCount" class="form-input" type="number" min="1" max="50" placeholder="5" />
+                        <input value="@batchCount" @oninput="OnBatchCountInput" class="form-input" type="number" min="1" max="50" placeholder="5" />
                         <p class="text-caption text-on-surface-variant">Tối đa 50 phòng mỗi lần</p>
                     </div>
                     <!-- Khu vực -->
@@ -432,7 +432,7 @@
                     </div>
 
                     <!-- Loại phòng -->
-                    <div class="space-y-2 col-span-1 md:col-span-2">
+                    <div class="space-y-2 sm:col-span-2">
                         <label class="font-label-md text-label-md text-on-surface-variant">Loại phòng</label>
                         <div class="flex gap-4">
                             <button type="button" @onclick='() => SetBatchRoomModel("Private")'
@@ -492,7 +492,7 @@
                         </div>
                     }
                     <!-- Generate button -->
-                    <div class="flex items-end @(request.Status == "Available" ? "md:col-span-2" : "")">
+                    <div class="hidden">
                         <button type="button" @onclick="GenerateBatchRooms"
                                 class="w-full py-3 bg-secondary text-on-secondary rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-sm">
                             <span class="material-symbols-outlined text-sm">refresh</span>
@@ -658,8 +658,9 @@
             }
             else
             {
-                <div class="flex flex-col items-center justify-center py-16 gap-4 bg-surface-container-lowest rounded-2xl border-2 border-dashed border-outline-variant">
+                <div class="flex flex-col items-center justify-center py-16 gap-4 bg-surface-container-lowest rounded-2xl border-2 border-dashed border-outline-variant [&>p:nth-of-type(2)]:hidden">
                     <span class="material-symbols-outlined text-on-surface-variant text-5xl">add_home_work</span>
+                    <p class="text-on-surface-variant font-medium">Nhập số phòng muốn tạo để hệ thống tự tạo danh sách xem trước</p>
                     <p class="text-on-surface-variant font-medium">Bấm <strong>"Tạo danh sách phòng"</strong> để xem trước các phòng sẽ được tạo</p>
                 </div>
             }
@@ -790,6 +791,7 @@
     private bool batchComplete = false;
     private string batchRoomModel = "Private"; // "Private" | "Shared"
     private int batchTotalBeds = 4;
+    private int batchGenerationVersion = 0;
 
     private void SetBatchRoomModel(string model)
     {
@@ -805,7 +807,7 @@
         public string? ErrorMessage { get; set; }
     }
 
-    private void SetMode(string mode)
+    private async Task SetMode(string mode)
     {
         createMode = mode;
         errorMessage = null;
@@ -813,8 +815,7 @@
         batchComplete = false;
         if (mode == "batch" && batchItems.Count == 0)
         {
-            // auto-generate on switch if empty
-            _ = GenerateBatchRooms();
+            await GenerateBatchRooms();
         }
     }
 
@@ -922,12 +923,41 @@
         if (int.TryParse(e.Value?.ToString(), out var floorNum))
         {
             request.FloorNumber = floorNum;
-            await AutoGenerateRoomCode(floorNum);
+            if (createMode == "batch")
+            {
+                await GenerateBatchRooms();
+            }
+            else
+            {
+                await AutoGenerateRoomCode(floorNum);
+            }
         }
         else
         {
             request.FloorNumber = null;
+            if (createMode == "batch")
+            {
+                batchGenerationVersion++;
+                batchItems.Clear();
+            }
         }
+    }
+
+    private async Task OnBatchCountInput(ChangeEventArgs e)
+    {
+        errorMessage = null;
+        batchComplete = false;
+
+        if (!int.TryParse(e.Value?.ToString(), out var count))
+        {
+            batchGenerationVersion++;
+            batchItems.Clear();
+            StateHasChanged();
+            return;
+        }
+
+        batchCount = Math.Max(1, Math.Min(50, count));
+        await GenerateBatchRooms();
     }
 
     private async Task AutoGenerateRoomCode(int floorNum)
@@ -1236,8 +1266,8 @@
     private async Task GenerateBatchRooms()
     {
         if (buildingId <= 0) return;
+        var generation = ++batchGenerationVersion;
         var count = Math.Max(1, Math.Min(50, batchCount));
-        batchItems.Clear();
 
         // Find highest existing numeric room code across ALL rooms (not just this floor)
         int startCode = (request.FloorNumber ?? 1) * 100 + 1;
@@ -1257,10 +1287,18 @@
         }
         catch { }
 
+        if (generation != batchGenerationVersion)
+        {
+            return;
+        }
+
+        var generatedItems = new List<BatchRoomItem>();
         for (int i = 0; i < count; i++)
         {
-            batchItems.Add(new BatchRoomItem { RoomCode = (startCode + i).ToString() });
+            generatedItems.Add(new BatchRoomItem { RoomCode = (startCode + i).ToString() });
         }
+
+        batchItems = generatedItems;
         StateHasChanged();
     }
 

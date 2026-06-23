@@ -142,7 +142,12 @@
             const input = document.getElementById(inputElementId);
             if (!input) return;
 
+            if (input._sotroAddressAutocomplete?.destroy) {
+                input._sotroAddressAutocomplete.destroy();
+            }
+
             let timeout = null;
+            let requestId = 0;
             let listContainer = document.createElement('div');
 
             listContainer.className =
@@ -151,16 +156,23 @@
             input.parentNode.style.position = 'relative';
             input.parentNode.appendChild(listContainer);
 
-            input.addEventListener('input', () => {
+            const hideList = () => {
+                listContainer.classList.add('hidden');
+            };
+
+            const inputHandler = () => {
                 clearTimeout(timeout);
+                requestId++;
 
                 const query = input.value.trim();
 
                 if (query.length < 3) {
-                    listContainer.classList.add('hidden');
+                    listContainer.innerHTML = '';
+                    hideList();
                     return;
                 }
 
+                const currentRequestId = requestId;
                 timeout = setTimeout(async () => {
                     try {
                         const suggestions =
@@ -169,10 +181,14 @@
                                 query
                             );
 
+                        if (currentRequestId !== requestId || input.value.trim() !== query) {
+                            return;
+                        }
+
                         listContainer.innerHTML = '';
 
                         if (!suggestions || suggestions.length === 0) {
-                            listContainer.classList.add('hidden');
+                            hideList();
                             return;
                         }
 
@@ -184,9 +200,11 @@
 
                             itemEl.textContent = item;
 
-                            itemEl.addEventListener('click', () => {
+                            itemEl.addEventListener('mousedown', e => {
+                                e.preventDefault();
                                 input.value = item;
-                                listContainer.classList.add('hidden');
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                                hideList();
 
                                 dotNetHelper.invokeMethodAsync(
                                     callbackMethodName,
@@ -203,16 +221,29 @@
                         console.error(err);
                     }
                 }, 500);
-            });
+            };
 
-            document.addEventListener('click', e => {
+            const documentClickHandler = e => {
                 if (
                     e.target !== input &&
                     !listContainer.contains(e.target)
                 ) {
-                    listContainer.classList.add('hidden');
+                    hideList();
                 }
-            });
+            };
+
+            input.addEventListener('input', inputHandler);
+            document.addEventListener('click', documentClickHandler);
+
+            input._sotroAddressAutocomplete = {
+                destroy: () => {
+                    clearTimeout(timeout);
+                    requestId++;
+                    input.removeEventListener('input', inputHandler);
+                    document.removeEventListener('click', documentClickHandler);
+                    listContainer.remove();
+                }
+            };
         };
 
         window.sotroGoogleAuth = {

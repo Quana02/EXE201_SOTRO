@@ -279,18 +279,29 @@
 
         try
         {
-            // Đọc song song 3 key từ localStorage — giảm round-trip JS interop
+            // Đọc song song các key từ localStorage — giảm round-trip JS interop
+            var tokenTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_token");
             var nameTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_name");
             var emailTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_user_email");
             var avatarTask = JS.InvokeAsync<string>("localStorage.getItem", "sotro_avatar_url");
 
-            await Task.WhenAll(nameTask.AsTask(), emailTask.AsTask(), avatarTask.AsTask());
+            await Task.WhenAll(tokenTask.AsTask(), nameTask.AsTask(), emailTask.AsTask(), avatarTask.AsTask());
+
+            var token = tokenTask.Result ?? string.Empty;
+            if (!IsTokenUsable(token))
+            {
+                await RedirectToLoginAsync();
+                return;
+            }
 
             _userName = nameTask.Result ?? string.Empty;
             _userEmail = emailTask.Result ?? string.Empty;
             _avatarUrl = avatarTask.Result ?? string.Empty;
 
             StateHasChanged();
+
+            // Token may still be rejected after deploy if it was issued by another backend/JWT key.
+            _ = BuildingApiService.GetBuildingsAsync();
         }
         catch (Exception ex)
         {
@@ -397,22 +408,69 @@
     {
         _isDropdownOpen = false;
 
+        await ClearAuthStorageAsync();
+        Navigation.NavigateTo("/dang-nhap", forceLoad: true);
+    }
+
+    private async Task RedirectToLoginAsync()
+    {
+        await ClearAuthStorageAsync();
+        Navigation.NavigateTo("/dang-nhap", forceLoad: true);
+    }
+
+    private async Task ClearAuthStorageAsync()
+    {
         try
         {
-            // Xóa toàn bộ dữ liệu auth khỏi localStorage
             await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_token");
             await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_user_email");
             await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_user_name");
             await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_phone_number");
             await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_avatar_url");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_provider");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_role_id");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_role");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "active_building_id");
             await JS.InvokeVoidAsync("localStorage.removeItem", "active_building_name");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Logout cleanup error: {ex.Message}");
+            Console.WriteLine($"Auth cleanup error: {ex.Message}");
+        }
+    }
+
+    private static bool IsTokenUsable(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return false;
         }
 
-        Navigation.NavigateTo("/dang-nhap", forceLoad: true);
+        try
+        {
+            var parts = token.Split('.');
+            if (parts.Length < 2)
+            {
+                return false;
+            }
+
+            var payload = parts[1].Replace('-', '+').Replace('_', '/');
+            payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+            var json = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(payload));
+
+            using var document = System.Text.Json.JsonDocument.Parse(json);
+            if (!document.RootElement.TryGetProperty("exp", out var expElement) ||
+                !expElement.TryGetInt64(out var exp))
+            {
+                return false;
+            }
+
+            return DateTimeOffset.FromUnixTimeSeconds(exp) > DateTimeOffset.UtcNow.AddSeconds(30);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void HandleAvatarError()

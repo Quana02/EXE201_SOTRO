@@ -333,7 +333,8 @@
         {
             await LoadHelpButtonIntroStateAsync();
 
-            if (!isLoading && Houses.Count == 0)
+            var dismissed = await JS.InvokeAsync<string>("localStorage.getItem", "sotro_nha_tro_guided_seen");
+            if (!isLoading && Houses.Count == 0 && string.IsNullOrWhiteSpace(dismissed))
             {
                 await StartOnboardingAsync();
                 StateHasChanged();
@@ -368,19 +369,7 @@
 
     private async Task GoToCreateHouse()
     {
-        if (Houses.Count == 0)
-        {
-            try
-            {
-                await JS.InvokeVoidAsync("localStorage.setItem", "sotro_force_create_building_tour", "true");
-                await JS.InvokeVoidAsync("localStorage.removeItem", "sotro_create_building_guided_seen");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Prepare create building tour error: {ex.Message}");
-            }
-        }
-
+        await Task.CompletedTask;
         Navigation.NavigateTo("/tao-nha-tro-v2");
     }
 

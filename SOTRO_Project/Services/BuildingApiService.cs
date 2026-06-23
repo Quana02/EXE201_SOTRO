@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using SOTRO_Project.Models.Auth;
 using SOTRO_Project.Models.Building;
@@ -15,11 +16,13 @@ namespace SOTRO_Project.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IJSRuntime _jsRuntime;
+        private readonly NavigationManager _navigation;
 
-        public BuildingApiService(HttpClient httpClient, IJSRuntime jsRuntime)
+        public BuildingApiService(HttpClient httpClient, IJSRuntime jsRuntime, NavigationManager navigation)
         {
             _httpClient = httpClient;
             _jsRuntime = jsRuntime;
+            _navigation = navigation;
         }
 
         private async Task SetAuthorizationHeaderAsync()
@@ -191,7 +194,7 @@ namespace SOTRO_Project.Services
             }
         }
 
-        private static async Task<ApiResponse<T>> ReadApiResponseAsync<T>(HttpResponseMessage response)
+        private async Task<ApiResponse<T>> ReadApiResponseAsync<T>(HttpResponseMessage response)
         {
             var body = await response.Content.ReadAsStringAsync();
 
@@ -199,6 +202,7 @@ namespace SOTRO_Project.Services
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
+                    await RedirectToLoginAsync();
                     return new ApiResponse<T>
                     {
                         Success = false,
@@ -245,6 +249,29 @@ namespace SOTRO_Project.Services
                 Success = false,
                 Message = $"Không đọc được phản hồi từ API. Status: {(int)response.StatusCode} {response.ReasonPhrase}."
             };
+        }
+
+        private async Task RedirectToLoginAsync()
+        {
+            try
+            {
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "sotro_token");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "sotro_user_email");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "sotro_user_name");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "sotro_phone_number");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "sotro_avatar_url");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "sotro_provider");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "sotro_role_id");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "sotro_role");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "active_building_id");
+                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "active_building_name");
+            }
+            catch
+            {
+                // Best-effort cleanup; redirect even if browser storage is unavailable.
+            }
+
+            _navigation.NavigateTo("/dang-nhap", forceLoad: true);
         }
 
         private static string GetMimeType(string fileName)
