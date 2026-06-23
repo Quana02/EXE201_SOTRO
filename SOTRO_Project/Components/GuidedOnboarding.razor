@@ -130,6 +130,7 @@
     private int lastFocusedStepIndex = -1;
     private int panelRenderKey;
     private bool wasVisible;
+    private bool markedVisibleSession;
 
     protected override void OnParametersSet()
     {
@@ -138,6 +139,7 @@
             CurrentStepIndex = 0;
             currentRect = null;
             lastFocusedStepIndex = -1;
+            markedVisibleSession = false;
         }
     }
 
@@ -156,10 +158,28 @@
         }
 
         wasVisible = true;
+        await MarkSeenOnOpenAsync();
         dotNetRef ??= DotNetObjectReference.Create(this);
         if (currentRect == null || lastFocusedStepIndex != CurrentStepIndex)
         {
             await PositionCurrentStepAsync();
+        }
+    }
+
+    private async Task MarkSeenOnOpenAsync()
+    {
+        if (markedVisibleSession || string.IsNullOrWhiteSpace(StorageKey))
+        {
+            return;
+        }
+
+        markedVisibleSession = true;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, "true");
+        }
+        catch
+        {
         }
     }
 
