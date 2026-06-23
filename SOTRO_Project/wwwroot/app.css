@@ -1,5 +1,7 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 :root {
@@ -9,6 +11,18 @@ html, body {
 .sotro-main-content {
     margin-left: var(--sidebar-width, 16rem);
     transition: margin-left 0.3s ease;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+img, video, canvas, svg {
+    max-width: 100%;
+}
+
+input, select, textarea, button {
+    max-width: 100%;
 }
 
 a, .btn-link {
@@ -57,4 +71,164 @@ h1:focus {
 
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
+}
+
+@media (max-width: 767.98px) {
+    :root {
+        --sidebar-width: 0px;
+    }
+
+    .sotro-main-content {
+        margin-left: 0 !important;
+        padding-bottom: 4.75rem;
+    }
+
+    .content {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    /* === Compact items: Spacing & Paddings & Gaps Overrides === */
+    .p-gutter {
+        padding: 1rem !important; /* Compact from 24px to 16px */
+    }
+    .p-6 {
+        padding: 1rem !important; /* Compact from 24px to 16px */
+    }
+    .p-8 {
+        padding: 1.25rem !important; /* Compact from 32px to 20px */
+    }
+    .p-10 {
+        padding: 1.25rem !important;
+    }
+    .px-6 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    .px-8 {
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+    .py-6 {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+    .py-8 {
+        padding-top: 1.25rem !important;
+        padding-bottom: 1.25rem !important;
+    }
+    .py-12 {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+    .py-16 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+    .py-20 {
+        padding-top: 2.5rem !important;
+        padding-bottom: 2.5rem !important;
+    }
+    .py-32 {
+        padding-top: 3.5rem !important;
+        padding-bottom: 3.5rem !important;
+    }
+    
+    /* Gaps */
+    .gap-6 {
+        gap: 0.875rem !important; /* Compact from 24px to 14px */
+    }
+    .gap-8 {
+        gap: 1rem !important; /* Compact from 32px to 16px */
+    }
+    .gap-12 {
+        gap: 1.5rem !important; /* Compact from 48px to 24px */
+    }
+
+    /* Margins */
+    .mb-6 {
+        margin-bottom: 0.75rem !important;
+    }
+    .mb-8 {
+        margin-bottom: 1rem !important;
+    }
+    .mb-10 {
+        margin-bottom: 1.25rem !important;
+    }
+    .mb-12 {
+        margin-bottom: 1.5rem !important;
+    }
+    .mt-8 {
+        margin-top: 1rem !important;
+    }
+    .mt-12 {
+        margin-top: 1.5rem !important;
+    }
+
+    /* Rounded borders scale down on mobile for a tighter look */
+    .rounded-xl {
+        border-radius: 0.5rem !important; /* 8px */
+    }
+    .rounded-2xl {
+        border-radius: 0.75rem !important; /* 12px */
+    }
+
+    /* === Font sizing & contrast for high legibility ("to rõ dễ nhìn") === */
+    .text-caption, .font-caption {
+        font-size: 13.5px !important;
+        line-height: 18px !important;
+        font-weight: 500 !important; /* Make slightly bolder for readability */
+    }
+    .text-label-md, .font-label-md {
+        font-size: 15.5px !important;
+        line-height: 22px !important;
+        font-weight: 600 !important;
+    }
+    .text-body-md, .font-body-md {
+        font-size: 17px !important;
+        line-height: 25px !important;
+    }
+    .text-body-lg, .font-body-lg {
+        font-size: 19px !important;
+        line-height: 28px !important;
+    }
+    
+    /* Ensure clear text colors and higher contrast on mobile */
+    .text-on-surface-variant {
+        color: #374151 !important; /* Darker grey for better accessibility */
+    }
+
+    /* === Form inputs and buttons styling on mobile === */
+    /* Set input font size to 16px to prevent iOS auto-zoom on focus while keeping text large and clear */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="password"],
+    input[type="number"],
+    select,
+    textarea {
+        padding-top: 0.625rem !important;
+        padding-bottom: 0.625rem !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        font-size: 16px !important;
+        line-height: 24px !important;
+    }
+
+    /* Make buttons compact but text remains large & easy to click */
+    button, 
+    .btn,
+    a[class*="bg-primary"],
+    a[class*="border-primary"] {
+        padding-top: 0.625rem !important;
+        padding-bottom: 0.625rem !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        font-size: 16px !important;
+        line-height: 24px !important;
+        font-weight: 600 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 }

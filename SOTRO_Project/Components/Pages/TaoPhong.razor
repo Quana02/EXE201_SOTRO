@@ -87,13 +87,23 @@
         padding: 0.15rem 0.6rem;
         border-radius: 9999px;
     }
+
+    @@media (max-width: 767px) {
+        section {
+            padding: 1rem !important;
+        }
+
+        .shared-badge {
+            white-space: normal;
+        }
+    }
 </style>
 
 <HeaderDashboard OnHelpClicked="OpenCreateRoomTour" />
 <SideNavBar />
 
-<main class="min-h-[calc(100vh-64px)] ml-64 pb-10">
-    <div class="p-margin-desktop max-w-[1000px] mx-auto">
+<main class="sotro-main-content min-h-[calc(100vh-64px)] pb-24 md:pb-10">
+    <div class="p-4 md:p-margin-desktop max-w-[1000px] mx-auto">
         <!-- Breadcrumb -->
         <div class="mb-8 flex items-center gap-2 text-label-md text-on-surface-variant">
             <button @onclick="GoBack" class="hover:text-primary transition-colors">Quản lý phòng</button>
@@ -117,14 +127,14 @@
                 ? "bg-secondary text-on-secondary shadow"
                 : "text-on-surface-variant hover:bg-surface-container";
         }
-        <div class="mb-8 flex items-center gap-2 p-1 bg-surface-container-low rounded-full border border-outline-variant w-fit">
+        <div class="mb-8 flex items-center gap-2 p-1 bg-surface-container-low rounded-full border border-outline-variant w-full sm:w-fit overflow-x-auto">
             <button id="room-single-mode-tab" @onclick='() => SetMode("single")'
-                    class="px-5 py-2.5 rounded-full text-label-md font-bold transition-all flex items-center gap-2 @singleTabClass">
+                    class="shrink-0 px-5 py-2.5 rounded-full text-label-md font-bold transition-all flex items-center gap-2 @singleTabClass">
                 <span class="material-symbols-outlined text-sm">meeting_room</span>
                 Thêm 1 phòng
             </button>
             <button @onclick='() => SetMode("batch")'
-                    class="px-5 py-2.5 rounded-full text-label-md font-bold transition-all flex items-center gap-2 @batchTabClass">
+                    class="shrink-0 px-5 py-2.5 rounded-full text-label-md font-bold transition-all flex items-center gap-2 @batchTabClass">
                 <span class="material-symbols-outlined text-sm">add_home_work</span>
                 Thêm nhiều phòng
             </button>
@@ -356,14 +366,14 @@
             </section>
 
             <!-- Actions -->
-            <div class="flex items-center justify-end gap-4 pt-4 mb-16">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 sm:gap-4 pt-4 mb-20 sm:mb-16">
                 <button @onclick="GoBack"
-                        class="px-8 py-3 rounded-xl border border-outline text-on-surface font-bold hover:bg-surface-container-high transition-all"
+                        class="w-full sm:w-auto px-8 py-3 rounded-xl border border-outline text-on-surface font-bold hover:bg-surface-container-high transition-all"
                         disabled="@isSaving">
                     Hủy
                 </button>
                 <button id="save-room-submit" @onclick="HandleSubmit"
-                        class="px-12 py-3 rounded-xl bg-primary text-white font-bold shadow-lg hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-60"
+                        class="w-full sm:w-auto justify-center px-12 py-3 rounded-xl bg-primary text-white font-bold shadow-lg hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-60"
                         disabled="@isSaving">
                     @if (isSaving)
                     {
@@ -655,21 +665,21 @@
             }
 
             <!-- Batch Actions -->
-            <div class="flex items-center justify-end gap-4 pt-4 mb-16">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 sm:gap-4 pt-4 mb-20 sm:mb-16">
                 <button @onclick="GoBack"
-                        class="px-8 py-3 rounded-xl border border-outline text-on-surface font-bold hover:bg-surface-container-high transition-all"
+                        class="w-full sm:w-auto px-8 py-3 rounded-xl border border-outline text-on-surface font-bold hover:bg-surface-container-high transition-all"
                         disabled="@isBatchSaving">
                     Hủy
                 </button>
                 <button @onclick="GenerateBatchRooms"
-                        class="px-6 py-3 rounded-xl border border-secondary text-secondary font-bold hover:bg-secondary-container transition-all flex items-center gap-2"
+                        class="w-full sm:w-auto justify-center px-6 py-3 rounded-xl border border-secondary text-secondary font-bold hover:bg-secondary-container transition-all flex items-center gap-2"
                         disabled="@isBatchSaving">
                     <span class="material-symbols-outlined text-sm">refresh</span>
                     Làm mới
                 </button>
                 <button @onclick="HandleBatchSubmit"
                         disabled="@(isBatchSaving || batchItems.Count == 0)"
-                        class="px-10 py-3 rounded-xl bg-secondary text-on-secondary font-bold shadow-lg hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-60">
+                        class="w-full sm:w-auto justify-center px-10 py-3 rounded-xl bg-secondary text-on-secondary font-bold shadow-lg hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center gap-2 disabled:opacity-60">
                     @if (isBatchSaving)
                     {
                         <span class="material-symbols-outlined animate-spin">sync</span>
