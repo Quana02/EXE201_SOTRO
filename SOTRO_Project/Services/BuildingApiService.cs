@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 using SOTRO_Project.Models.Auth;
@@ -47,8 +47,8 @@ namespace SOTRO_Project.Services
             await SetAuthorizationHeaderAsync();
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<BuildingResponse>>>("api/building");
-                return response ?? new ApiResponse<List<BuildingResponse>> { Success = false, Message = "Không nhận được phản hồi từ máy chủ." };
+                var response = await _httpClient.GetAsync("api/building");
+                return await ReadApiResponseAsync<List<BuildingResponse>>(response);
             }
             catch (Exception ex)
             {
@@ -61,8 +61,8 @@ namespace SOTRO_Project.Services
             await SetAuthorizationHeaderAsync();
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<ApiResponse<BuildingResponse>>($"api/building/{id}");
-                return response ?? new ApiResponse<BuildingResponse> { Success = false, Message = "Không nhận được phản hồi từ máy chủ." };
+                var response = await _httpClient.GetAsync($"api/building/{id}");
+                return await ReadApiResponseAsync<BuildingResponse>(response);
             }
             catch (Exception ex)
             {
@@ -101,8 +101,7 @@ namespace SOTRO_Project.Services
                 }
 
                 var response = await _httpClient.PostAsync("api/building", content);
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<BuildingResponse>>();
-                return apiResponse ?? new ApiResponse<BuildingResponse> { Success = false, Message = "Không đọc được phản hồi từ API." };
+                return await ReadApiResponseAsync<BuildingResponse>(response);
             }
             catch (Exception ex)
             {
@@ -144,8 +143,7 @@ namespace SOTRO_Project.Services
                 }
 
                 var response = await _httpClient.PutAsync($"api/building/{id}", content);
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<BuildingResponse>>();
-                return apiResponse ?? new ApiResponse<BuildingResponse> { Success = false, Message = "Không đọc được phản hồi từ API." };
+                return await ReadApiResponseAsync<BuildingResponse>(response);
             }
             catch (Exception ex)
             {
@@ -159,8 +157,7 @@ namespace SOTRO_Project.Services
             try
             {
                 var response = await _httpClient.DeleteAsync($"api/building/{id}");
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
-                return apiResponse ?? new ApiResponse<bool> { Success = false, Message = "Không đọc được phản hồi từ API." };
+                return await ReadApiResponseAsync<bool>(response);
             }
             catch (Exception ex)
             {
@@ -172,8 +169,8 @@ namespace SOTRO_Project.Services
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<BuildingTypeResponse>>>("api/building/types");
-                return response ?? new ApiResponse<List<BuildingTypeResponse>> { Success = false, Message = "Không nhận được phản hồi từ máy chủ." };
+                var response = await _httpClient.GetAsync("api/building/types");
+                return await ReadApiResponseAsync<List<BuildingTypeResponse>>(response);
             }
             catch (Exception ex)
             {
@@ -185,14 +182,71 @@ namespace SOTRO_Project.Services
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<string>>>($"api/building/suggest-address?query={Uri.EscapeDataString(query)}");
-                return response ?? new ApiResponse<List<string>> { Success = false, Message = "Không nhận được phản hồi từ máy chủ." };
+                var response = await _httpClient.GetAsync($"api/building/suggest-address?query={Uri.EscapeDataString(query)}");
+                return await ReadApiResponseAsync<List<string>>(response);
             }
             catch (Exception ex)
             {
                 return new ApiResponse<List<string>> { Success = false, Message = $"Lỗi kết nối: {ex.Message}" };
             }
         }
+
+        private static async Task<ApiResponse<T>> ReadApiResponseAsync<T>(HttpResponseMessage response)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return new ApiResponse<T>
+                    {
+                        Success = false,
+                        Message = "Phiên đăng nhập đã hết hạn hoặc không hợp lệ. Vui lòng đăng xuất rồi đăng nhập lại."
+                    };
+                }
+
+                return new ApiResponse<T>
+                {
+                    Success = false,
+                    Message = $"API không trả về nội dung. Status: {(int)response.StatusCode} {response.ReasonPhrase}."
+                };
+            }
+
+            try
+            {
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse<T>>(body, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (apiResponse != null)
+                {
+                    if (!response.IsSuccessStatusCode && string.IsNullOrWhiteSpace(apiResponse.Message))
+                    {
+                        apiResponse.Message = $"API trả về lỗi {(int)response.StatusCode} {response.ReasonPhrase}.";
+                    }
+
+                    return apiResponse;
+                }
+            }
+            catch (JsonException)
+            {
+                var preview = body.Length > 200 ? body[..200] + "..." : body;
+                return new ApiResponse<T>
+                {
+                    Success = false,
+                    Message = $"API không trả về JSON hợp lệ. Status: {(int)response.StatusCode} {response.ReasonPhrase}. Nội dung: {preview}"
+                };
+            }
+
+            return new ApiResponse<T>
+            {
+                Success = false,
+                Message = $"Không đọc được phản hồi từ API. Status: {(int)response.StatusCode} {response.ReasonPhrase}."
+            };
+        }
+
         private static string GetMimeType(string fileName)
         {
             var ext = Path.GetExtension(fileName).ToLowerInvariant();
