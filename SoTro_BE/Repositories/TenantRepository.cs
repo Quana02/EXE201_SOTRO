@@ -52,6 +52,7 @@ namespace SoTro_BE.Repositories
         {
             return await _context.Rooms
                 .Include(r => r.Building)
+                .Include(r => r.RoomOccupants.Where(o => o.Status == "Living"))
                 .FirstOrDefaultAsync(r =>
                     r.RoomId == roomId &&
                     r.IsDeleted != true &&

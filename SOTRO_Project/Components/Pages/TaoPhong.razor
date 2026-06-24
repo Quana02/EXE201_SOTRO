@@ -102,8 +102,8 @@
 <HeaderDashboard OnHelpClicked="OpenCreateRoomTour" />
 <SideNavBar />
 
-<main class="sotro-main-content min-h-[calc(100vh-64px)] pb-24 md:pb-10">
-    <div class="p-4 md:p-margin-desktop max-w-[1000px] mx-auto">
+<main class="sotro-main-content min-h-[calc(100vh-64px)] bg-surface pb-24 md:pb-10">
+    <div class="sotro-page-container-narrow">
         <!-- Breadcrumb -->
         <div class="mb-8 flex items-center gap-2 text-label-md text-on-surface-variant">
             <button @onclick="GoBack" class="hover:text-primary transition-colors">Quản lý phòng</button>
@@ -1085,7 +1085,10 @@
         errorMessage = null;
         if (int.TryParse(e.Value?.ToString(), out var val))
         {
-            request.CurrentTenantCount = val;
+            var maxCount = batchRoomModel == "Shared" ? batchTotalBeds : request.Capacity;
+            request.CurrentTenantCount = maxCount.HasValue && maxCount.Value > 0
+                ? Math.Clamp(val, 0, maxCount.Value)
+                : Math.Max(0, val);
         }
         else
         {

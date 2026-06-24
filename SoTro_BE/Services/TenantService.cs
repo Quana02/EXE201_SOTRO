@@ -74,7 +74,8 @@ namespace SoTro_BE.Services
             if (room == null)
                 return ApiResponse<TenantResponse>.Fail("Không tìm thấy phòng.");
 
-            if (room.Capacity.HasValue && (room.CurrentTenantCount ?? 0) >= room.Capacity.Value)
+            var roomTenantCount = GetLivingTenantCount(room);
+            if (room.Capacity.HasValue && room.Capacity.Value > 0 && roomTenantCount >= room.Capacity.Value)
                 return ApiResponse<TenantResponse>.Fail("Phòng đã đủ số người ở.");
 
             var now = DateTime.UtcNow;
@@ -147,7 +148,7 @@ namespace SoTro_BE.Services
 
             if (request.Status == "Active" && isMovingToAnotherRoom && currentRoom.Capacity.HasValue && currentRoom.Capacity.Value > 0)
             {
-                var currentTenantCount = currentRoom.CurrentTenantCount ?? 0;
+                var currentTenantCount = GetLivingTenantCount(currentRoom);
                 if (currentTenantCount >= currentRoom.Capacity.Value)
                     return ApiResponse<TenantResponse>.Fail("Phòng đã đủ số người ở, không thể chuyển thêm người thuê vào phòng này.");
             }
@@ -187,6 +188,12 @@ namespace SoTro_BE.Services
 
             await _tenantRepository.DeleteTenantAsync(tenant);
             return ApiResponse<bool>.Ok("Xóa người thuê thành công.", true);
+        }
+
+        private static int GetLivingTenantCount(Room room)
+        {
+            var occupantCount = room.RoomOccupants?.Count(o => o.Status == "Living") ?? 0;
+            return occupantCount;
         }
 
         private static TenantResponse MapToResponse(Tenant tenant)

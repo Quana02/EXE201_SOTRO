@@ -405,6 +405,7 @@ namespace SoTro_BE.Services
                     IsPrimary = o.IsPrimaryTenant,
                     MoveInDate = o.MoveInDate
                 }).ToList() ?? new List<OccupantDto>();
+            var currentTenantCount = occupants.Count;
 
             LatestInvoiceDto? latestInvoiceDto = null;
             if (latestInvoice != null)
@@ -441,7 +442,7 @@ namespace SoTro_BE.Services
                 ServiceFee = extra.ServiceFee,
                 IncidentFee = extra.IncidentFee,
                 Capacity = room.Capacity,
-                CurrentTenantCount = room.CurrentTenantCount,
+                CurrentTenantCount = currentTenantCount,
                 BillingDay = extra.BillingDay,
                 PaymentDueDay = extra.PaymentDueDay,
                 PaymentStatus = latestInvoice?.Status,

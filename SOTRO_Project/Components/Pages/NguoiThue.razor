@@ -25,9 +25,9 @@
 <HeaderDashboard OnHelpClicked="OpenTenantTour" />
 <SideNavBar />
 <!-- Main Content Area -->
-<main class="sotro-main-content min-h-[calc(100vh-64px)] md:h-[calc(100vh-64px)] overflow-y-auto bg-surface pb-24 md:pb-0">
+<main class="sotro-main-content min-h-[calc(100vh-64px)] bg-surface pb-24 md:pb-10">
 <!-- Content Canvas -->
-<div class="flex-1 overflow-y-auto custom-scrollbar p-gutter">
+<div class="sotro-page-container space-y-8">
 <!-- Header Section with Actions -->
 <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
 <div>
@@ -122,9 +122,9 @@
 <div class="text-caption text-on-surface-variant italic">Hiển thị @tenants.Count trên @tenantStats.TotalTenants kết quả</div>
 </div>
 <!-- Table Container -->
-<div id="tenant-table-container" class="bg-surface rounded-b-xl border border-outline-variant overflow-hidden shadow-[0px_8px_24px_rgba(0,0,0,0.05)]">
+<div id="tenant-table-container" class="bg-surface rounded-b-xl border border-outline-variant overflow-hidden shadow-[0px_8px_24px_rgba(0,0,0,0.05)] min-w-0">
 <div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
+<table class="w-full min-w-[900px] text-left border-collapse">
 <thead class="bg-surface-container-low border-b border-outline-variant">
 <tr>
 <th class="px-6 py-4 font-label-md text-on-surface-variant text-[12px] uppercase tracking-wider">Họ tên</th>

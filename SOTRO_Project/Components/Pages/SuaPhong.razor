@@ -52,8 +52,8 @@
 <HeaderDashboard />
 <SideNavBar />
 
-<main class="flex-grow flex flex-col min-h-screen md:ml-64 pb-24 md:pb-0">
-    <div class="p-margin-mobile md:p-margin-desktop flex-grow max-w-[1000px] mx-auto w-full">
+<main class="sotro-main-content min-h-[calc(100vh-64px)] bg-surface pb-24 md:pb-10">
+    <div class="sotro-page-container-narrow">
 
         <!-- Breadcrumbs -->
         <nav class="flex items-center gap-2 mb-6 text-on-surface-variant font-label-md">
@@ -682,7 +682,10 @@
         errorMessage = null;
         if (int.TryParse(e.Value?.ToString(), out var val))
         {
-            request.CurrentTenantCount = val;
+            var maxCount = editRoomModel == "Shared" ? editTotalBeds : request.Capacity;
+            request.CurrentTenantCount = maxCount.HasValue && maxCount.Value > 0
+                ? Math.Clamp(val, 0, maxCount.Value)
+                : Math.Max(0, val);
         }
         else
         {

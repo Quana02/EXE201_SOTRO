@@ -37,8 +37,8 @@
 <HeaderDashboard OnHelpClicked="OpenTenantFormTour" />
 <SideNavBar />
 <!-- Main Content Area -->
-<main class="sotro-main-content p-4 md:p-gutter pb-24 md:pb-0">
-<div class="flex flex-col gap-6 max-w-[1280px] mx-auto">
+<main class="sotro-main-content min-h-[calc(100vh-64px)] bg-surface pb-24 md:pb-10">
+<div class="sotro-page-container-wide flex flex-col gap-6">
 <!-- Page Header -->
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
 <div>
@@ -343,6 +343,7 @@ else
     };
     private List<SOTRO_Project.Models.Room.RoomResponse> availableRooms = new();
     private int? activeBuildingId;
+    private int originalRoomId;
     private bool isSaving;
     private string? portraitPreviewUrl;
     private string? identityFrontPreviewUrl;
@@ -423,7 +424,8 @@ else
         }
 
         var rooms = await RoomApi.GetRoomsByBuildingAsync(activeBuildingId.Value);
-        availableRooms = rooms.Data?.Where(IsRoomAvailableForNewTenant).ToList() ?? new();
+        var roomOptions = await LoadRoomOptionsAsync(rooms.Data ?? new());
+        availableRooms = roomOptions.Where(IsRoomAvailableForNewTenant).ToList();
 
         if (IsEditMode)
         {
@@ -439,14 +441,15 @@ else
             tenant.DateOfBirth = data.DateOfBirth;
             tenant.PermanentAddress = data.PermanentAddress;
             tenant.RoomId = data.RoomId ?? 0;
+            originalRoomId = tenant.RoomId;
             tenant.StartDate = data.StartDate ?? DateOnly.FromDateTime(DateTime.Today);
             tenant.EndDate = data.EndDate;
             tenant.DepositAmount = data.DepositAmount;
             tenant.MonthlyRent = data.MonthlyRent;
             tenant.Status = data.Status ?? "Active";
 
-            var currentRoom = rooms.Data?.FirstOrDefault(r => r.RoomId == tenant.RoomId);
-            if (currentRoom != null && availableRooms.All(r => r.RoomId != currentRoom.RoomId))
+            var currentRoom = roomOptions.FirstOrDefault(r => r.RoomId == tenant.RoomId);
+            if (currentRoom != null && IsRoomAvailableForNewTenant(currentRoom) && availableRooms.All(r => r.RoomId != currentRoom.RoomId))
                 availableRooms.Insert(0, currentRoom);
 
             return;
@@ -468,6 +471,26 @@ else
             await JS.InvokeVoidAsync("window.initAddressAutocomplete", "tenant-hometown-input", dotNetHelper, nameof(OnAddressSelected));
             await StartTenantFormTourIfNeeded();
         }
+    }
+
+    private async Task<List<SOTRO_Project.Models.Room.RoomResponse>> LoadRoomOptionsAsync(List<SOTRO_Project.Models.Room.RoomResponse> rooms)
+    {
+        var detailTasks = rooms.Select(async room =>
+        {
+            try
+            {
+                var detailResponse = await RoomApi.GetRoomByIdAsync(room.RoomId);
+                return detailResponse.Success && detailResponse.Data != null
+                    ? detailResponse.Data
+                    : room;
+            }
+            catch
+            {
+                return room;
+            }
+        });
+
+        return (await Task.WhenAll(detailTasks)).ToList();
     }
 
     private async Task StartTenantFormTourIfNeeded()
@@ -608,6 +631,11 @@ else
             errors["RoomId"] = "Vui lòng chọn phòng thuê.";
         }
 
+        if (tenant.RoomId > 0 && availableRooms.All(r => r.RoomId != tenant.RoomId) && (!IsEditMode || tenant.RoomId != originalRoomId))
+        {
+            errors["RoomId"] = "PhÃ²ng nÃ y Ä‘Ã£ Ä‘á»§ sá»‘ ngÆ°á»i á»Ÿ. Vui lÃ²ng chá»n phÃ²ng cÃ²n sá»©c chá»©a.";
+        }
+
         if (tenant.StartDate == default)
         {
             errors["StartDate"] = "Ngày bắt đầu ở là bắt buộc.";
@@ -633,6 +661,12 @@ else
     private async Task SaveTenant()
     {
         if (!Validate())
+        {
+            StateHasChanged();
+            return;
+        }
+
+        if (!await ValidateSelectedRoomCapacityAsync())
         {
             StateHasChanged();
             return;
@@ -686,15 +720,46 @@ else
         Navigation.NavigateTo(TenantListHref);
     }
 
+    private async Task<bool> ValidateSelectedRoomCapacityAsync()
+    {
+        if (IsEditMode && tenant.RoomId == originalRoomId)
+            return true;
+
+        var roomResponse = await RoomApi.GetRoomByIdAsync(tenant.RoomId);
+        if (!roomResponse.Success || roomResponse.Data == null)
+        {
+            errors["RoomId"] = "Khong kiem tra duoc suc chua phong. Vui long tai lai trang va thu lai.";
+            return false;
+        }
+
+        var room = roomResponse.Data;
+        if (!IsRoomAvailableForNewTenant(room))
+        {
+            var currentTenantCount = GetRoomOccupancyCount(room);
+            errors["RoomId"] = room.Capacity.HasValue && room.Capacity.Value > 0
+                ? $"Phong {room.RoomCode} da du {currentTenantCount}/{room.Capacity.Value} nguoi. Vui long chon phong khac."
+                : $"Phong {room.RoomCode} khong con suc chua hop le de them nguoi thue.";
+            return false;
+        }
+
+        return true;
+    }
+
     private static bool IsRoomAvailableForNewTenant(SOTRO_Project.Models.Room.RoomResponse room)
     {
         if (room.Status == "Maintenance")
             return false;
 
+        var currentTenantCount = GetRoomOccupancyCount(room);
         if (!room.Capacity.HasValue || room.Capacity.Value <= 0)
-            return true;
+            return room.Status == "Available" && currentTenantCount == 0;
 
-        return (room.CurrentTenantCount ?? 0) < room.Capacity.Value;
+        return currentTenantCount < room.Capacity.Value;
+    }
+
+    private static int GetRoomOccupancyCount(SOTRO_Project.Models.Room.RoomResponse room)
+    {
+        return room.Occupants.Count > 0 ? room.Occupants.Count : room.CurrentTenantCount ?? 0;
     }
 
     private async Task OnPortraitSelected(InputFileChangeEventArgs e)
